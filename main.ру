@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import os
 
 from openai import OpenAI
@@ -10,6 +11,12 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 CONSENT_MENU = ReplyKeyboardMarkup(
     [["✅ Согласен, начать консультацию"]],
+    resize_keyboard=True,
+    one_time_keyboard=True,
+)
+
+MEDIA_CONSENT_MENU = ReplyKeyboardMarkup(
+    [["✅ Согласен на анализ файла"], ["❌ Отмена"]],
     resize_keyboard=True,
     one_time_keyboard=True,
 )
@@ -29,27 +36,19 @@ SYSTEM_PROMPT = """
 Правила работы:
 1. Сначала собери недостающие данные: вид животного, порода, возраст, пол,
    масса тела, жалобы, длительность симптомов, аппетит, вода, мочеиспускание,
-   стул, температура (если измеряли), хронические болезни, препараты и дозы.
+   стул, температура, хронические болезни, препараты и дозы.
 2. Задавай не более 3 коротких вопросов за одно сообщение.
-3. Не выдавай предположение за установленный диагноз. Чётко разделяй:
-   возможные причины, что проверить и что делать сейчас.
-4. Если возможна экстренная ситуация (тяжёлое дыхание, потеря сознания,
-   судороги, сильное кровотечение, невозможность мочиться, многократная рвота,
-   выраженное вздутие живота, отравление, травма, резкое ухудшение), начинай
-   ответ словами «🚨 Срочно обратитесь в ближайшую ветеринарную клинику».
+3. Не выдавай предположение за установленный диагноз. Разделяй возможные
+   причины, что проверить и что делать сейчас.
+4. При экстренных признаках начинай ответ словами:
+   «🚨 Срочно обратитесь в ближайшую ветеринарную клинику».
 5. Не советуй человеческие обезболивающие. Не назначай рецептурные препараты
-   и не рассчитывай дозу, пока нет точного вида, массы, возраста,
-   противопоказаний и достаточных клинических данных. Для опасных или спорных
-   назначений направляй на очный осмотр или консультацию ветеринарного врача.
-6. Давай практичный и понятный ответ: оценка срочности, возможные причины,
-   безопасные действия сейчас, необходимые обследования и признаки ухудшения.
-7. Отвечай по-русски, спокойно, без запугивания и длинных вступлений.
-8. Напоминай, что дистанционная оценка не заменяет осмотр, когда это важно
-   для безопасности.
-9. Пиши только обычным текстом: не используй Markdown, звёздочки, решётки
-   и другие символы форматирования.
-10. Ответ должен быть компактным, обычно не более 1200 знаков. Не повторяй
-    сведения, которые уже сообщил пользователь.
+   и не рассчитывай дозу без достаточных клинических данных.
+6. При разборе анализов сверяй значение с референсным интервалом именно
+   из документа. Не придумывай неразборчивые цифры. Укажи, что повышено,
+   что понижено, возможное значение отклонений и следующие шаги.
+7. Пиши по-русски обычным текстом, без Markdown, звёздочек и решёток.
+8. Ответ должен быть компактным, обычно не более 1200 знаков.
 """
 
 client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
@@ -62,8 +61,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Для анализа обращения текст ваших сообщений будет передаваться "
         "в OpenAI API. Не отправляйте ФИО, адрес, телефон и другие лишние "
         "персональные данные.\n\n"
-        "Нажимая «Согласен», вы разрешаете обработать текст обращения "
-        "для формирования ответа.",
+        "Нажимая «Согласен», вы разрешаете обработать текст обращения.",
         reply_markup=CONSENT_MENU,
     )
 
@@ -73,7 +71,6 @@ async def ask_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
     history = context.user_data.setdefault("history", [])
     history.append({"role": "user", "content": user_text})
     history[:] = history[-12:]
-
     await update.message.chat.send_action("typing")
 
     try:
@@ -97,6 +94,75 @@ async def ask_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(answer, reply_markup=MENU)
 
 
+async def analyze_pending_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    pending = context.user_data.pop("pending_file", None)
+    if not pending:
+        await update.message.reply_text(
+            "Сначала пришлите фотографию анализа или PDF-файл.",
+            reply_markup=MENU,
+        )
+        return
+
+    await update.message.reply_text("Анализирую файл…", reply_markup=MENU)
+    await update.message.chat.send_action("typing")
+
+    try:
+        telegram_file = await context.bot.get_file(pending["file_id"])
+        file_bytes = bytes(await telegram_file.download_as_bytearray())
+        encoded = base64.b64encode(file_bytes).decode("ascii")
+        mime_type = pending["mime_type"]
+        caption = pending["caption"]
+
+        if pending["input_type"] == "input_file":
+            media_part = {
+                "type": "input_file",
+                "filename": pending["filename"],
+                "file_data": f"data:{mime_type};base64,{encoded}",
+                "detail": "high",
+            }
+        else:
+            media_part = {
+                "type": "input_image",
+                "image_url": f"data:{mime_type};base64,{encoded}",
+                "detail": "high",
+            }
+
+        history = context.user_data.setdefault("history", [])
+        response_input = history[-8:] + [
+            {
+                "role": "user",
+                "content": [
+                    media_part,
+                    {"type": "input_text", "text": caption},
+                ],
+            }
+        ]
+
+        response = await asyncio.to_thread(
+            client.responses.create,
+            model="gpt-5.6-sol",
+            instructions=SYSTEM_PROMPT,
+            input=response_input,
+        )
+        answer = response.output_text.strip()
+        if not answer:
+            answer = "Не удалось прочитать документ. Пришлите более чёткое фото."
+
+        history.append({
+            "role": "user",
+            "content": f"Загружен документ {pending['filename']}. Запрос: {caption}",
+        })
+        history.append({"role": "assistant", "content": answer})
+        history[:] = history[-12:]
+    except Exception:
+        answer = (
+            "Не удалось обработать файл. Проверьте, что это чёткое изображение "
+            "или PDF не больше 10 МБ, и попробуйте снова."
+        )
+
+    await update.message.reply_text(answer, reply_markup=MENU)
+
+
 async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
@@ -106,6 +172,18 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             "Спасибо. Опишите, что происходит с питомцем, или выберите раздел 👇",
             reply_markup=MENU,
+        )
+        return
+
+    if text == "✅ Согласен на анализ файла":
+        context.user_data["media_consent"] = True
+        await analyze_pending_file(update, context)
+        return
+
+    if text == "❌ Отмена":
+        context.user_data.pop("pending_file", None)
+        await update.message.reply_text(
+            "Файл не был передан на анализ.", reply_markup=MENU
         )
         return
 
@@ -127,28 +205,27 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     elif text == "📄 Загрузить анализы":
         await update.message.reply_text(
-            "Сейчас ИИ анализирует только текст. Перепишите основные показатели "
-            "из анализа и укажите нормы лаборатории.",
+            "Пришлите чёткую фотографию анализа или PDF. "
+            "Можно добавить подпись с вопросом.",
             reply_markup=MENU,
         )
     elif text == "💊 Разобрать назначения":
         await update.message.reply_text(
-            "Напишите диагноз, препараты, дозировки, вес питомца и результаты "
-            "обследований. Я объясню назначения и отмечу возможные вопросы.",
+            "Пришлите фото или PDF с назначениями либо напишите препараты "
+            "и дозировки текстом. Укажите вес питомца.",
             reply_markup=MENU,
         )
     elif text == "👨‍⚕️ Записаться на консультацию":
         await update.message.reply_text(
-            "Онлайн-консультации проходят по понедельникам, средам и пятницам.\n\n"
-            "Первичная консультация — 3000 ₽ / $35.\n"
-            "Повторная консультация — 1500 ₽ / $20.\n\n"
-            "Напишите удобный день и способ связи: видео, голосовые сообщения или чат.",
+            "Онлайн-консультации: понедельник, среда и пятница.\n\n"
+            "Первичная — 3000 ₽ / $35.\n"
+            "Повторная — 1500 ₽ / $20.\n\n"
+            "Напишите удобный день и способ связи: видео, голосовые или чат.",
             reply_markup=MENU,
         )
     elif client is None:
         await update.message.reply_text(
-            "ИИ временно не подключён. Выберите запись на консультацию.",
-            reply_markup=MENU,
+            "ИИ временно не подключён.", reply_markup=MENU
         )
     else:
         await ask_ai(update, context)
@@ -162,11 +239,63 @@ async def media(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    await update.message.reply_text(
-        "Файл получен, но текущая версия ИИ пока анализирует только текст. "
-        "Напишите основные данные из документа сообщением.",
-        reply_markup=MENU,
+    if client is None:
+        await update.message.reply_text("ИИ временно не подключён.", reply_markup=MENU)
+        return
+
+    if update.message.photo:
+        item = update.message.photo[-1]
+        file_id = item.file_id
+        file_size = item.file_size or 0
+        mime_type = "image/jpeg"
+        filename = "analysis.jpg"
+        input_type = "input_image"
+    elif update.message.document:
+        document = update.message.document
+        mime_type = document.mime_type or ""
+        if mime_type not in {"application/pdf", "image/jpeg", "image/png", "image/webp"}:
+            await update.message.reply_text(
+                "Поддерживаются фотографии JPG/PNG/WEBP и PDF.",
+                reply_markup=MENU,
+            )
+            return
+        file_id = document.file_id
+        file_size = document.file_size or 0
+        filename = document.file_name or "document.pdf"
+        input_type = "input_file" if mime_type == "application/pdf" else "input_image"
+    else:
+        return
+
+    if file_size > 10 * 1024 * 1024:
+        await update.message.reply_text(
+            "Файл больше 10 МБ. Пришлите уменьшенную копию или отдельные страницы.",
+            reply_markup=MENU,
+        )
+        return
+
+    caption = update.message.caption or (
+        "Разбери этот ветеринарный анализ или медицинский документ. "
+        "Перечисли отклонения, объясни их значение и укажи следующие шаги."
     )
+    context.user_data["pending_file"] = {
+        "file_id": file_id,
+        "mime_type": mime_type,
+        "filename": filename,
+        "input_type": input_type,
+        "caption": caption,
+    }
+
+    if not context.user_data.get("media_consent"):
+        await update.message.reply_text(
+            "Для распознавания этот файл будет передан в OpenAI API. "
+            "Не отправляйте документы с ФИО, телефоном, адресом и другими "
+            "лишними персональными данными.\n\n"
+            "Разрешаете передать этот файл для анализа?",
+            reply_markup=MEDIA_CONSENT_MENU,
+        )
+        return
+
+    await analyze_pending_file(update, context)
 
 
 def main():
@@ -176,9 +305,7 @@ def main():
     app = Application.builder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message))
-    app.add_handler(
-        MessageHandler(filters.PHOTO | filters.Document.ALL | filters.VIDEO, media)
-    )
+    app.add_handler(MessageHandler(filters.PHOTO | filters.Document.ALL, media))
     app.run_polling()
 
 
