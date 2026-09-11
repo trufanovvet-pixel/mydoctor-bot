@@ -1,0 +1,43 @@
+import os
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+
+TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "🐾 Добро пожаловать в «МойДоктор»!\n\n"
+        "Я ветеринарный онлайн-помощник.\n\n"
+        "В дальнейшем здесь можно будет:\n"
+        "• описать симптомы питомца;\n"
+        "• получить предварительный разбор ситуации;\n"
+        "• разобрать диагноз и назначения;\n"
+        "• получить второе мнение;\n"
+        "• загрузить анализы и медицинские документы.\n\n"
+        "Напишите ваш вопрос 👇"
+    )
+
+
+async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Сообщение получено 🐾\n\n"
+        "Сейчас работает тестовая версия «МойДоктор». "
+        "Следующим этапом мы подключим ветеринарную базу знаний и ИИ."
+    )
+
+
+def main():
+    if not TOKEN:
+        raise RuntimeError("TELEGRAM_BOT_TOKEN is not set")
+
+    app = Application.builder().token(TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message))
+
+    app.run_polling()
+
+
+if __name__ == "__main__":
+    main()
