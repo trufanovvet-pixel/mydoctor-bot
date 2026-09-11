@@ -1,1 +1,2 @@
-python-telegram-bot\nopenai\n
+python-telegram-bot
+openai
