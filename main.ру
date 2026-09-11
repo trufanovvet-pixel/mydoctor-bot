@@ -1,8 +1,18 @@
+import asyncio
 import os
+
+from openai import OpenAI
 from telegram import ReplyKeyboardMarkup, Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+CONSENT_MENU = ReplyKeyboardMarkup(
+    [["✅ Согласен, начать консультацию"]],
+    resize_keyboard=True,
+    one_time_keyboard=True,
+)
 
 MENU = ReplyKeyboardMarkup(
     [
@@ -12,58 +22,145 @@ MENU = ReplyKeyboardMarkup(
     resize_keyboard=True,
 )
 
+SYSTEM_PROMPT = """
+Ты — «МойДоктор», русскоязычный ветеринарный ИИ-помощник Ивана Труфанова.
+Ты помогаешь владельцам собак и кошек разобраться в состоянии питомца.
+
+Правила работы:
+1. Сначала собери недостающие данные: вид животного, порода, возраст, пол,
+   масса тела, жалобы, длительность симптомов, аппетит, вода, мочеиспускание,
+   стул, температура (если измеряли), хронические болезни, препараты и дозы.
+2. Задавай не более 3 коротких вопросов за одно сообщение.
+3. Не выдавай предположение за установленный диагноз. Чётко разделяй:
+   возможные причины, что проверить и что делать сейчас.
+4. Если возможна экстренная ситуация (тяжёлое дыхание, потеря сознания,
+   судороги, сильное кровотечение, невозможность мочиться, многократная рвота,
+   выраженное вздутие живота, отравление, травма, резкое ухудшение), начинай
+   ответ словами «🚨 Срочно обратитесь в ближайшую ветеринарную клинику».
+5. Не советуй человеческие обезболивающие. Не назначай рецептурные препараты
+   и не рассчитывай дозу, пока нет точного вида, массы, возраста,
+   противопоказаний и достаточных клинических данных. Для опасных или спорных
+   назначений направляй на очный осмотр или консультацию ветеринарного врача.
+6. Давай практичный и понятный ответ: оценка срочности, возможные причины,
+   безопасные действия сейчас, необходимые обследования и признаки ухудшения.
+7. Отвечай по-русски, спокойно, без запугивания и длинных вступлений.
+8. Напоминай, что дистанционная оценка не заменяет осмотр, когда это важно
+   для безопасности.
+"""
+
+client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data.clear()
     await update.message.reply_text(
         "🐾 Добро пожаловать в «МойДоктор»!\n\n"
-        "Я ветеринарный онлайн-помощник.\n\n"
-        "Выберите нужный раздел 👇",
-        reply_markup=MENU,
+        "Для анализа обращения текст ваших сообщений будет передаваться "
+        "в OpenAI API. Не отправляйте ФИО, адрес, телефон и другие лишние "
+        "персональные данные.\n\n"
+        "Нажимая «Согласен», вы разрешаете обработать текст обращения "
+        "для формирования ответа.",
+        reply_markup=CONSENT_MENU,
     )
 
 
-async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
+async def ask_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_text = update.message.text
+    history = context.user_data.setdefault("history", [])
+    history.append({"role": "user", "content": user_text})
+    history[:] = history[-12:]
 
-    if text == "🩺 Описать симптомы":
-        answer = (
-            "Опишите, пожалуйста:\n"
-            "• кто ваш питомец, порода, возраст и вес;\n"
-            "• что именно вас беспокоит;\n"
-            "• когда появились симптомы;\n"
-            "• какое лечение уже проводилось.\n\n"
-            "Можно приложить фото или видео."
+    await update.message.chat.send_action("typing")
+
+    try:
+        response = await asyncio.to_thread(
+            client.responses.create,
+            model="gpt-5.6-sol",
+            instructions=SYSTEM_PROMPT,
+            input=history,
         )
-    elif text == "📄 Загрузить анализы":
+        answer = response.output_text.strip()
+        if not answer:
+            answer = "Не удалось сформировать ответ. Пожалуйста, повторите сообщение."
+        history.append({"role": "assistant", "content": answer})
+        history[:] = history[-12:]
+    except Exception:
         answer = (
-            "Пришлите сюда анализы, заключения или другие медицинские документы.\n\n"
-            "Можно отправить фотографию, скриншот или файл."
-        )
-    elif text == "💊 Разобрать назначения":
-        answer = (
-            "Пришлите диагноз и назначения, которые получил питомец. "
-            "Если есть результаты обследований — приложите их тоже."
-        )
-    elif text == "👨‍⚕️ Записаться на консультацию":
-        answer = (
-            "Онлайн-консультации проходят по понедельникам, средам и пятницам.\n\n"
-            "Первичная консультация — 3000 ₽ / $35.\n"
-            "Повторная консультация — 1500 ₽ / $20.\n\n"
-            "Напишите удобный день и способ связи: видео, голосовые сообщения или чат."
-        )
-    else:
-        answer = (
-            "Сообщение получено 🐾\n\n"
-            "Выберите нужный раздел с помощью кнопок внизу."
+            "Сейчас не удалось выполнить анализ. Попробуйте ещё раз через несколько "
+            "минут или выберите «👨‍⚕️ Записаться на консультацию»."
         )
 
     await update.message.reply_text(answer, reply_markup=MENU)
 
 
+async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+
+    if text == "✅ Согласен, начать консультацию":
+        context.user_data["consent"] = True
+        context.user_data["history"] = []
+        await update.message.reply_text(
+            "Спасибо. Опишите, что происходит с питомцем, или выберите раздел 👇",
+            reply_markup=MENU,
+        )
+        return
+
+    if not context.user_data.get("consent"):
+        await update.message.reply_text(
+            "Для начала нажмите «✅ Согласен, начать консультацию».",
+            reply_markup=CONSENT_MENU,
+        )
+        return
+
+    if text == "🩺 Описать симптомы":
+        await update.message.reply_text(
+            "Напишите:\n"
+            "• кто ваш питомец, порода, возраст и вес;\n"
+            "• что именно беспокоит;\n"
+            "• когда появились симптомы;\n"
+            "• какое лечение уже проводилось.",
+            reply_markup=MENU,
+        )
+    elif text == "📄 Загрузить анализы":
+        await update.message.reply_text(
+            "Сейчас ИИ анализирует только текст. Перепишите основные показатели "
+            "из анализа и укажите нормы лаборатории.",
+            reply_markup=MENU,
+        )
+    elif text == "💊 Разобрать назначения":
+        await update.message.reply_text(
+            "Напишите диагноз, препараты, дозировки, вес питомца и результаты "
+            "обследований. Я объясню назначения и отмечу возможные вопросы.",
+            reply_markup=MENU,
+        )
+    elif text == "👨‍⚕️ Записаться на консультацию":
+        await update.message.reply_text(
+            "Онлайн-консультации проходят по понедельникам, средам и пятницам.\n\n"
+            "Первичная консультация — 3000 ₽ / $35.\n"
+            "Повторная консультация — 1500 ₽ / $20.\n\n"
+            "Напишите удобный день и способ связи: видео, голосовые сообщения или чат.",
+            reply_markup=MENU,
+        )
+    elif client is None:
+        await update.message.reply_text(
+            "ИИ временно не подключён. Выберите запись на консультацию.",
+            reply_markup=MENU,
+        )
+    else:
+        await ask_ai(update, context)
+
+
 async def media(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.user_data.get("consent"):
+        await update.message.reply_text(
+            "Сначала отправьте /start и подтвердите согласие на обработку текста.",
+            reply_markup=CONSENT_MENU,
+        )
+        return
+
     await update.message.reply_text(
-        "Файл получен 🐾\n\n"
-        "Если есть другие анализы, снимки или заключения — отправьте их следующим сообщением.",
+        "Файл получен, но текущая версия ИИ пока анализирует только текст. "
+        "Напишите основные данные из документа сообщением.",
         reply_markup=MENU,
     )
 
@@ -76,10 +173,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message))
     app.add_handler(
-        MessageHandler(
-            filters.PHOTO | filters.Document.ALL | filters.VIDEO,
-            media,
-        )
+        MessageHandler(filters.PHOTO | filters.Document.ALL | filters.VIDEO, media)
     )
     app.run_polling()
 
