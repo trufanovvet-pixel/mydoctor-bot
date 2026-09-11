@@ -1,30 +1,63 @@
 import os
-from telegram import Update
+from telegram import ReplyKeyboardMarkup, Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+
+MENU = ReplyKeyboardMarkup(
+    [
+        ["🩺 Описать симптомы", "📄 Загрузить анализы"],
+        ["💊 Разобрать назначения", "👨‍⚕️ Записаться на консультацию"],
+    ],
+    resize_keyboard=True,
+)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🐾 Добро пожаловать в «МойДоктор»!\n\n"
         "Я ветеринарный онлайн-помощник.\n\n"
-        "В дальнейшем здесь можно будет:\n"
-        "• описать симптомы питомца;\n"
-        "• получить предварительный разбор ситуации;\n"
-        "• разобрать диагноз и назначения;\n"
-        "• получить второе мнение;\n"
-        "• загрузить анализы и медицинские документы.\n\n"
-        "Напишите ваш вопрос 👇"
+        "Выберите нужный раздел 👇",
+        reply_markup=MENU,
     )
 
 
 async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Сообщение получено 🐾\n\n"
-        "Сейчас работает тестовая версия «МойДоктор». "
-        "Следующим этапом мы подключим ветеринарную базу знаний и ИИ."
-    )
+    text = update.message.text
+
+    if text == "🩺 Описать симптомы":
+        answer = (
+            "Опишите, пожалуйста:\n"
+            "• кто ваш питомец, порода, возраст и вес;\n"
+            "• что именно вас беспокоит;\n"
+            "• когда появились симптомы;\n"
+            "• какое лечение уже проводилось.\n\n"
+            "Можно приложить фото или видео."
+        )
+    elif text == "📄 Загрузить анализы":
+        answer = (
+            "Пришлите сюда анализы, заключения или другие медицинские документы.\n\n"
+            "Можно отправить фотографию, скриншот или файл."
+        )
+    elif text == "💊 Разобрать назначения":
+        answer = (
+            "Пришлите диагноз и назначения, которые получил питомец. "
+            "Если есть результаты обследований — приложите их тоже."
+        )
+    elif text == "👨‍⚕️ Записаться на консультацию":
+        answer = (
+            "Онлайн-консультации проходят по понедельникам, средам и пятницам.\n\n"
+            "Первичная консультация — 3000 ₽ / $35.\n"
+            "Повторная консультация — 1500 ₽ / $20.\n\n"
+            "Напишите удобный день и способ связи: видео, голосовые сообщения или чат."
+        )
+    else:
+        answer = (
+            "Сообщение получено 🐾\n\n"
+            "Выберите нужный раздел с помощью кнопок внизу."
+        )
+
+    await update.message.reply_text(answer, reply_markup=MENU)
 
 
 def main():
@@ -32,13 +65,10 @@ def main():
         raise RuntimeError("TELEGRAM_BOT_TOKEN is not set")
 
     app = Application.builder().token(TOKEN).build()
-
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message))
-
     app.run_polling()
 
 
 if __name__ == "__main__":
     main()
-
