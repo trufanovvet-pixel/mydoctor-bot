@@ -1,12 +1,20 @@
 import asyncio
 import os
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardButton,
+    KeyboardButtonRequestChat,
+    ReplyKeyboardMarkup,
+    ReplyKeyboardRemove,
+)
 
 from storage import get_bot_setting, set_bot_setting
 
 
 FALLBACK_ADMIN_TELEGRAM_ID = 754526258
+ADMIN_CHAT_REQUEST_ID = 7401
 
 
 def _admin_user_id() -> int:
@@ -35,24 +43,76 @@ def install(bot):
         chat = update.effective_chat
 
         if not user or user.id != _admin_user_id():
-            await update.message.reply_text("Эта команда доступна только администратору бота.")
+            if update.message:
+                await update.message.reply_text("Эта команда доступна только администратору бота.")
             return
 
-        if not chat or chat.type not in {"group", "supergroup"}:
+        if chat and chat.type in {"group", "supergroup"}:
+            await asyncio.to_thread(
+                set_bot_setting,
+                "admin_notification_chat_id",
+                str(chat.id),
+            )
             await update.message.reply_text(
-                "Добавьте бота в отдельную приватную группу «МойДоктор — заявки» "
-                "и отправьте /setadminchat уже внутри этой группы."
+                "✅ Эта группа назначена для заявок.\n\n"
+                "Теперь новые записи на консультацию будут приходить сюда."
             )
             return
 
+        picker = ReplyKeyboardMarkup(
+            [[KeyboardButton(
+                "📥 Выбрать группу для заявок",
+                request_chat=KeyboardButtonRequestChat(
+                    request_id=ADMIN_CHAT_REQUEST_ID,
+                    chat_is_channel=False,
+                    bot_is_member=True,
+                ),
+            )]],
+            resize_keyboard=True,
+            one_time_keyboard=True,
+        )
+        await update.message.reply_text(
+            "Нажмите кнопку ниже и выберите группу «МойДоктор — заявки».\n\n"
+            "Важно: бот уже должен быть добавлен в эту группу.",
+            reply_markup=picker,
+        )
+
+    async def admin_chat_shared(update, context):
+        message = update.message
+        shared = getattr(message, "chat_shared", None) if message else None
+        user = update.effective_user
+        if not shared or not user or user.id != _admin_user_id():
+            return
+        if shared.request_id != ADMIN_CHAT_REQUEST_ID:
+            return
+
+        chat_id = int(shared.chat_id)
         await asyncio.to_thread(
             set_bot_setting,
             "admin_notification_chat_id",
-            str(chat.id),
+            str(chat_id),
         )
-        await update.message.reply_text(
-            "✅ Эта группа назначена для заявок.\n\n"
-            "Теперь новые записи на консультацию будут приходить сюда."
+
+        try:
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=(
+                    "✅ Группа подключена к МойДоктор.\n\n"
+                    "Новые заявки на онлайн-консультации будут приходить сюда."
+                ),
+            )
+        except Exception as exc:
+            print(f"admin group test message error chat={chat_id}: {exc!r}", flush=True)
+            await message.reply_text(
+                "Группу выбрал, но не смог отправить туда сообщение. "
+                "Проверьте, что бот добавлен в группу и ему разрешено отправлять сообщения.",
+                reply_markup=ReplyKeyboardRemove(),
+            )
+            return
+
+        await message.reply_text(
+            "✅ Готово. Группа для заявок подключена и проверена.",
+            reply_markup=ReplyKeyboardRemove(),
         )
 
     async def reliable_consult_callback(update, context):
@@ -155,3 +215,4 @@ def install(bot):
 
     bot.consult_callback = reliable_consult_callback
     bot.set_admin_chat_command = set_admin_chat_command
+    bot.admin_chat_shared = admin_chat_shared
