@@ -5,6 +5,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).parent
 PROTOCOL_DIR = BASE_DIR / "protocols"
 DIAGNOSTICS_FILE = BASE_DIR / "diagnostics" / "test_comparisons.json"
+LAB_INTERPRETATION_FILE = BASE_DIR / "diagnostics" / "lab_interpretation.json"
 
 
 def _load_protocols() -> list[dict]:
@@ -19,15 +20,16 @@ def _load_protocols() -> list[dict]:
     return protocols
 
 
-def _load_diagnostics() -> dict:
+def _load_json(path: Path) -> dict:
     try:
-        return json.loads(DIAGNOSTICS_FILE.read_text(encoding="utf-8"))
+        return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return {}
 
 
 PROTOCOLS = _load_protocols()
-DIAGNOSTICS = _load_diagnostics()
+DIAGNOSTICS = _load_json(DIAGNOSTICS_FILE)
+LAB_INTERPRETATION = _load_json(LAB_INTERPRETATION_FILE)
 
 
 DIAGNOSTIC_TERMS = (
@@ -44,17 +46,28 @@ def is_diagnostics_query(text: str) -> bool:
 
 
 def diagnostics_context() -> str:
-    if not DIAGNOSTICS:
+    chunks = []
+    if DIAGNOSTICS:
+        chunks.append(
+            "ПРОВЕРЕННАЯ БАЗА СРАВНЕНИЯ АНАЛИЗОВ И ОБСЛЕДОВАНИЙ:\n"
+            + json.dumps(DIAGNOSTICS, ensure_ascii=False)
+        )
+    if LAB_INTERPRETATION:
+        chunks.append(
+            "ПРОВЕРЕННАЯ БАЗА ИНТЕРПРЕТАЦИИ ГОТОВЫХ АНАЛИЗОВ:\n"
+            + json.dumps(LAB_INTERPRETATION, ensure_ascii=False)
+        )
+    if not chunks:
         return ""
     return (
-        "\n\nПРОВЕРЕННАЯ БАЗА СРАВНЕНИЯ АНАЛИЗОВ И ОБСЛЕДОВАНИЙ:\n"
-        + json.dumps(DIAGNOSTICS, ensure_ascii=False)
-        + "\n\nИспользуй эту базу как правила выбора, а не как текст для дословного пересказа. "
-          "Объясняй владельцу простыми словами: что показывает каждый тест, когда он полезнее, "
-          "какие есть ограничения и какой тест сдавать первым. Если бюджет ограничен, расставляй "
-          "исследования по приоритету исходя из того, что сильнее всего изменит ближайшую тактику. "
-          "Не называй один метод универсально лучшим. Если для выбора ПЦР/ИФА или другого теста "
-          "нужно знать конкретную инфекцию, срок болезни, вакцинацию или материал — сначала уточни это."
+        "\n\n"
+        + "\n\n".join(chunks)
+        + "\n\nИспользуй эту базу как клинические правила, а не как текст для дословного пересказа. "
+          "При сравнении исследований объясняй владельцу простыми словами, что показывает каждый тест, "
+          "когда он полезнее и какие есть ограничения. При разборе готового анализа выделяй взаимосвязанные "
+          "изменения и возможные артефакты вместо механического перечисления показателей. "
+          "Не называй один метод универсально лучшим. Если для выбора теста нужны дополнительные клинические "
+          "данные, сначала уточни их. Не упоминай бюджет, цену или экономию, если пользователь сам об этом не спросил."
     )
 
 
