@@ -1,4 +1,5 @@
 import enhanced_app2
+import history_patch
 import media_patch
 import notification_patch
 
@@ -10,6 +11,7 @@ def _install_with_patches(bot):
     _original_install(bot)
     notification_patch.install(bot)
     media_patch.install(bot)
+    history_patch.install(bot)
 
 
 enhanced_app2.enhanced.install_features = _install_with_patches
