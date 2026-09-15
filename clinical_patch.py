@@ -40,6 +40,7 @@ TREATMENT_MODE = """
 - не пиши лечение одним полотном;
 - один препарат или одно клиническое действие = один нумерованный пункт;
 - лекарственную схему пиши в одном формате: «Препарат — доза — путь — кратность — срок»;
+- делай пустую строку между разделами;
 - не дублируй одну и ту же мысль в нескольких разделах;
 - не перечисляй все возможные осложнения, если они не относятся к текущему пациенту;
 - не добавляй гастропротекторы, антибиотики, стероиды, инфузию, витамины или другие препараты автоматически, если для них нет показаний в протоколе/контексте;
@@ -54,7 +55,37 @@ TREATMENT_MODE = """
 """
 
 
+ASSESSMENT_FORMAT_PRIORITY = """
+
+ФОРМАТ ОТВЕТА — ВЫСОКИЙ ПРИОРИТЕТ:
+Не выдавай клинический план сплошным абзацем. Разделяй информацию визуально.
+Если пользователь просит диагноз/лечение/схему/дозировку, используй именно такой порядок:
+
+Предварительный диагноз:
+...
+
+Лечение:
+1. ...
+2. ...
+3. ...
+
+Контроль:
+1. ...
+2. ...
+
+Дополнительная диагностика:
+— добавляй этот раздел только если она действительно меняет решение.
+
+Стационар / срочно:
+— добавляй только при конкретных показаниях.
+
+Каждый пункт лечения должен быть самостоятельным и легко копироваться владельцу.
+Не превращай раздел «Лечение» в объяснительный текст: сначала конкретная схема, затем максимум одна короткая поясняющая фраза при необходимости.
+"""
+
+
 _original_is_diagnostics_query = base_app.is_diagnostics_query
+_original_phase_instruction = base_app._phase_instruction
 
 
 def _clinical_aware_is_diagnostics_query(text: str) -> bool:
@@ -64,6 +95,14 @@ def _clinical_aware_is_diagnostics_query(text: str) -> bool:
     return _original_is_diagnostics_query(text)
 
 
+def _structured_phase_instruction(decision: dict, budget_requested: bool = False) -> str:
+    base = _original_phase_instruction(decision, budget_requested)
+    if str(decision.get("stage", "")).upper() == "ASSESSMENT":
+        return base + ASSESSMENT_FORMAT_PRIORITY
+    return base
+
+
 def install(bot):
     base_app.is_diagnostics_query = _clinical_aware_is_diagnostics_query
+    base_app._phase_instruction = _structured_phase_instruction
     bot.SYSTEM_PROMPT = (bot.SYSTEM_PROMPT or "") + TREATMENT_MODE
