@@ -204,6 +204,8 @@ def main():
     application.add_handler(CommandHandler("myid", bot.myid_command))
     if hasattr(bot, "set_admin_chat_command"):
         application.add_handler(CommandHandler("setadminchat", bot.set_admin_chat_command))
+    if hasattr(bot, "admin_chat_shared"):
+        application.add_handler(MessageHandler(filters.StatusUpdate.CHAT_SHARED, bot.admin_chat_shared))
     application.add_handler(CallbackQueryHandler(bot.add_pet_callback, pattern=r"^pets:add$"))
     application.add_handler(CallbackQueryHandler(bot.pet_callback, pattern=r"^pet:\d+$"))
     application.add_handler(CallbackQueryHandler(bot.consult_callback, pattern=r"^consult:"))
