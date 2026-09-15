@@ -99,7 +99,6 @@ class _ReferenceAwareResponses:
 
         instructions = _strip_pet_context(kwargs.get("instructions") or "") + REFERENCE_MODE
         kwargs["instructions"] = instructions
-        # Справочный вопрос должен быть независим от предыдущего клинического диалога.
         kwargs["input"] = [{"role": "user", "content": latest_text}]
 
         raw_client = getattr(self._base_client, "_client", None)
@@ -203,6 +202,8 @@ def main():
     application.add_handler(CommandHandler("start", bot.start))
     application.add_handler(CommandHandler("menu", bot.menu_command))
     application.add_handler(CommandHandler("myid", bot.myid_command))
+    if hasattr(bot, "set_admin_chat_command"):
+        application.add_handler(CommandHandler("setadminchat", bot.set_admin_chat_command))
     application.add_handler(CallbackQueryHandler(bot.add_pet_callback, pattern=r"^pets:add$"))
     application.add_handler(CallbackQueryHandler(bot.pet_callback, pattern=r"^pet:\d+$"))
     application.add_handler(CallbackQueryHandler(bot.consult_callback, pattern=r"^consult:"))
