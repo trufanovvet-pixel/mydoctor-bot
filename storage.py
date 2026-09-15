@@ -66,6 +66,14 @@ class UsageEvent(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True, nullable=False)
 
 
+class BotSetting(Base):
+    __tablename__ = "bot_settings"
+
+    key: Mapped[str] = mapped_column(String(100), primary_key=True)
+    value: Mapped[str] = mapped_column(Text, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+
 engine_kwargs = {"pool_pre_ping": True}
 if _database_url().startswith("sqlite"):
     engine_kwargs["connect_args"] = {"check_same_thread": False}
@@ -179,6 +187,24 @@ def save_consultation(
         session.add(item)
         session.add(UsageEvent(user_id=user.id, event_type=kind))
         session.commit()
+
+
+def set_bot_setting(key: str, value: str) -> None:
+    with SessionLocal() as session:
+        item = session.get(BotSetting, key)
+        if item is None:
+            item = BotSetting(key=key, value=value)
+            session.add(item)
+        else:
+            item.value = value
+            item.updated_at = datetime.utcnow()
+        session.commit()
+
+
+def get_bot_setting(key: str) -> str | None:
+    with SessionLocal() as session:
+        item = session.get(BotSetting, key)
+        return item.value if item else None
 
 
 def _user_dict(user: User) -> dict:
