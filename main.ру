@@ -3,8 +3,17 @@ import base64
 import os
 
 from openai import OpenAI
-from telegram import ReplyKeyboardMarkup, Update
-from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, Update
+from telegram.ext import (
+    Application,
+    CallbackQueryHandler,
+    CommandHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
+)
+
+from storage import add_pet, ensure_user, get_active_pet, init_db, list_pets, save_consultation, set_active_pet
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -24,9 +33,22 @@ MEDIA_CONSENT_MENU = ReplyKeyboardMarkup(
 MENU = ReplyKeyboardMarkup(
     [
         ["🩺 Описать симптомы", "📄 Загрузить анализы"],
-        ["💊 Разобрать назначения", "👨‍⚕️ Записаться на консультацию"],
+        ["💊 Разобрать назначения", "🐾 Мои питомцы"],
+        ["➕ Добавить питомца", "👨‍⚕️ Записаться на консультацию"],
     ],
     resize_keyboard=True,
+)
+
+SPECIES_MENU = ReplyKeyboardMarkup(
+    [["🐶 Собака", "🐱 Кошка"], ["❌ Отмена"]],
+    resize_keyboard=True,
+    one_time_keyboard=True,
+)
+
+SEX_MENU = ReplyKeyboardMarkup(
+    [["Самец", "Самка"], ["❌ Отмена"]],
+    resize_keyboard=True,
+    one_time_keyboard=True,
 )
 
 SYSTEM_PROMPT = """
@@ -34,34 +56,60 @@ SYSTEM_PROMPT = """
 Ты помогаешь владельцам собак и кошек разобраться в состоянии питомца.
 
 Правила работы:
-1. Сначала собери недостающие данные: вид животного, порода, возраст, пол,
-   масса тела, жалобы, длительность симптомов, аппетит, вода, мочеиспускание,
-   стул, температура, хронические болезни, препараты и дозы.
-2. Задавай не более 3 коротких вопросов за одно сообщение.
-3. Не выдавай предположение за установленный диагноз. Разделяй возможные
-   причины, что проверить и что делать сейчас.
-4. При экстренных признаках начинай ответ словами:
+1. Используй уже известные данные активного питомца и не переспрашивай их без необходимости.
+2. Собери недостающие клинические данные: жалобы, длительность симптомов, аппетит,
+   воду, мочеиспускание, стул, температуру, хронические болезни, препараты и дозы.
+3. Задавай не более 3 коротких вопросов за одно сообщение.
+4. Не выдавай предположение за установленный диагноз. Разделяй возможные причины,
+   что проверить и что делать сейчас.
+5. При экстренных признаках начинай ответ словами:
    «🚨 Срочно обратитесь в ближайшую ветеринарную клинику».
-5. Не советуй человеческие обезболивающие. Не назначай рецептурные препараты
+6. Не советуй человеческие обезболивающие. Не назначай рецептурные препараты
    и не рассчитывай дозу без достаточных клинических данных.
-6. При разборе анализов сверяй значение с референсным интервалом именно
+7. При разборе анализов сверяй значение с референсным интервалом именно
    из документа. Не придумывай неразборчивые цифры. Укажи, что повышено,
    что понижено, возможное значение отклонений и следующие шаги.
-7. Пиши по-русски обычным текстом, без Markdown, звёздочек и решёток.
-8. Ответ должен быть компактным, обычно не более 1200 знаков.
+8. Пиши по-русски обычным текстом, без Markdown, звёздочек и решёток.
+9. Ответ должен быть компактным, обычно не более 1200 знаков.
 """
 
 client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 
 
+def telegram_id(update: Update) -> int:
+    return update.effective_user.id
+
+
+def pet_summary(pet: dict | None) -> str:
+    if not pet:
+        return "Активный питомец не выбран."
+    parts = [f"Имя: {pet['name']}", f"Вид: {pet['species']}"]
+    if pet.get("breed"):
+        parts.append(f"Порода: {pet['breed']}")
+    if pet.get("age"):
+        parts.append(f"Возраст: {pet['age']}")
+    if pet.get("sex"):
+        parts.append(f"Пол: {pet['sex']}")
+    if pet.get("weight_kg") is not None:
+        parts.append(f"Вес: {pet['weight_kg']:g} кг")
+    return "; ".join(parts)
+
+
+async def ensure_current_user(update: Update) -> None:
+    user = update.effective_user
+    await asyncio.to_thread(ensure_user, user.id, user.username, user.first_name)
+
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
+    await ensure_current_user(update)
     await update.message.reply_text(
         "🐾 Добро пожаловать в «МойДоктор»!\n\n"
-        "Для анализа обращения текст ваших сообщений будет передаваться "
-        "в OpenAI API. Не отправляйте ФИО, адрес, телефон и другие лишние "
-        "персональные данные.\n\n"
-        "Нажимая «Согласен», вы разрешаете обработать текст обращения.",
+        "Для работы сервиса текст сообщений и загруженные медицинские файлы могут "
+        "передаваться в OpenAI API. Данные карточки питомца и история обращений могут "
+        "сохраняться, чтобы бот помнил питомца между диалогами.\n\n"
+        "Не отправляйте ФИО владельца, адрес, телефон и другие лишние персональные данные.\n\n"
+        "Нажимая «Согласен», вы разрешаете такую обработку данных.",
         reply_markup=CONSENT_MENU,
     )
 
@@ -73,11 +121,14 @@ async def ask_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
     history[:] = history[-12:]
     await update.message.chat.send_action("typing")
 
+    pet = await asyncio.to_thread(get_active_pet, telegram_id(update))
+    instructions = SYSTEM_PROMPT + "\n\nДанные активного питомца:\n" + pet_summary(pet)
+
     try:
         response = await asyncio.to_thread(
             client.responses.create,
             model="gpt-5.6-sol",
-            instructions=SYSTEM_PROMPT,
+            instructions=instructions,
             input=history,
         )
         answer = response.output_text.strip()
@@ -85,6 +136,7 @@ async def ask_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
             answer = "Не удалось сформировать ответ. Пожалуйста, повторите сообщение."
         history.append({"role": "assistant", "content": answer})
         history[:] = history[-12:]
+        await asyncio.to_thread(save_consultation, telegram_id(update), user_text, answer, "chat")
     except Exception:
         answer = (
             "Сейчас не удалось выполнить анализ. Попробуйте ещё раз через несколько "
@@ -97,10 +149,7 @@ async def ask_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def analyze_pending_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     pending = context.user_data.pop("pending_file", None)
     if not pending:
-        await update.message.reply_text(
-            "Сначала пришлите фотографию анализа или PDF-файл.",
-            reply_markup=MENU,
-        )
+        await update.message.reply_text("Сначала пришлите фотографию анализа или PDF-файл.", reply_markup=MENU)
         return
 
     await update.message.reply_text("Анализирую файл…", reply_markup=MENU)
@@ -127,21 +176,20 @@ async def analyze_pending_file(update: Update, context: ContextTypes.DEFAULT_TYP
                 "detail": "high",
             }
 
+        pet = await asyncio.to_thread(get_active_pet, telegram_id(update))
+        instructions = SYSTEM_PROMPT + "\n\nДанные активного питомца:\n" + pet_summary(pet)
         history = context.user_data.setdefault("history", [])
         response_input = history[-8:] + [
             {
                 "role": "user",
-                "content": [
-                    media_part,
-                    {"type": "input_text", "text": caption},
-                ],
+                "content": [media_part, {"type": "input_text", "text": caption}],
             }
         ]
 
         response = await asyncio.to_thread(
             client.responses.create,
             model="gpt-5.6-sol",
-            instructions=SYSTEM_PROMPT,
+            instructions=instructions,
             input=response_input,
         )
         answer = response.output_text.strip()
@@ -154,6 +202,13 @@ async def analyze_pending_file(update: Update, context: ContextTypes.DEFAULT_TYP
         })
         history.append({"role": "assistant", "content": answer})
         history[:] = history[-12:]
+        await asyncio.to_thread(
+            save_consultation,
+            telegram_id(update),
+            f"Файл: {pending['filename']}. {caption}",
+            answer,
+            "file_analysis",
+        )
     except Exception:
         answer = (
             "Не удалось обработать файл. Проверьте, что это чёткое изображение "
@@ -163,14 +218,151 @@ async def analyze_pending_file(update: Update, context: ContextTypes.DEFAULT_TYP
     await update.message.reply_text(answer, reply_markup=MENU)
 
 
+async def show_pets(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    pets = await asyncio.to_thread(list_pets, telegram_id(update))
+    active = await asyncio.to_thread(get_active_pet, telegram_id(update))
+    if not pets:
+        await update.message.reply_text(
+            "У вас пока нет сохранённых питомцев. Нажмите «➕ Добавить питомца».",
+            reply_markup=MENU,
+        )
+        return
+
+    buttons = []
+    lines = ["Ваши питомцы:"]
+    for pet in pets:
+        marker = "✅" if active and active["id"] == pet["id"] else "▫️"
+        lines.append(f"{marker} {pet['name']} — {pet['species']}")
+        buttons.append([InlineKeyboardButton(f"Выбрать: {pet['name']}", callback_data=f"pet:{pet['id']}")])
+
+    await update.message.reply_text(
+        "\n".join(lines) + "\n\nНажмите на питомца, с которым сейчас работаете.",
+        reply_markup=InlineKeyboardMarkup(buttons),
+    )
+
+
+async def pet_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    try:
+        pet_id = int(query.data.split(":", 1)[1])
+    except (ValueError, AttributeError):
+        return
+    pet = await asyncio.to_thread(set_active_pet, update.effective_user.id, pet_id)
+    if not pet:
+        await query.edit_message_text("Не удалось выбрать питомца.")
+        return
+    await query.edit_message_text(f"✅ Активный питомец: {pet['name']}\n{pet_summary(pet)}")
+
+
+async def begin_add_pet(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data["pet_flow"] = {"step": "name", "data": {}}
+    await update.message.reply_text(
+        "Как зовут питомца?",
+        reply_markup=ReplyKeyboardMarkup([["❌ Отмена"]], resize_keyboard=True, one_time_keyboard=True),
+    )
+
+
+async def handle_pet_flow(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
+    flow = context.user_data.get("pet_flow")
+    if not flow:
+        return False
+
+    text = (update.message.text or "").strip()
+    if text == "❌ Отмена":
+        context.user_data.pop("pet_flow", None)
+        await update.message.reply_text("Добавление питомца отменено.", reply_markup=MENU)
+        return True
+
+    step = flow["step"]
+    data = flow["data"]
+
+    if step == "name":
+        data["name"] = text[:120]
+        flow["step"] = "species"
+        await update.message.reply_text("Это собака или кошка?", reply_markup=SPECIES_MENU)
+    elif step == "species":
+        species_map = {"🐶 собака": "собака", "🐱 кошка": "кошка", "собака": "собака", "кошка": "кошка"}
+        species = species_map.get(text.lower())
+        if not species:
+            await update.message.reply_text("Выберите «🐶 Собака» или «🐱 Кошка».", reply_markup=SPECIES_MENU)
+            return True
+        data["species"] = species
+        flow["step"] = "breed"
+        await update.message.reply_text(
+            "Порода? Если метис или порода неизвестна — напишите «нет».",
+            reply_markup=ReplyKeyboardMarkup([["Нет"], ["❌ Отмена"]], resize_keyboard=True, one_time_keyboard=True),
+        )
+    elif step == "breed":
+        data["breed"] = None if text.lower() in {"нет", "не знаю", "-"} else text[:120]
+        flow["step"] = "age"
+        await update.message.reply_text(
+            "Возраст питомца? Например: 8 лет или 7 месяцев.",
+            reply_markup=ReplyKeyboardMarkup([["❌ Отмена"]], resize_keyboard=True, one_time_keyboard=True),
+        )
+    elif step == "age":
+        data["age"] = text[:80]
+        flow["step"] = "sex"
+        await update.message.reply_text("Пол питомца?", reply_markup=SEX_MENU)
+    elif step == "sex":
+        if text not in {"Самец", "Самка"}:
+            await update.message.reply_text("Выберите «Самец» или «Самка».", reply_markup=SEX_MENU)
+            return True
+        data["sex"] = text.lower()
+        flow["step"] = "weight"
+        await update.message.reply_text(
+            "Вес в килограммах? Например: 8.8. Если не знаете — напишите «нет».",
+            reply_markup=ReplyKeyboardMarkup([["Нет"], ["❌ Отмена"]], resize_keyboard=True, one_time_keyboard=True),
+        )
+    elif step == "weight":
+        if text.lower() in {"нет", "не знаю", "-"}:
+            data["weight_kg"] = None
+        else:
+            try:
+                weight = float(text.replace(",", "."))
+                if weight <= 0 or weight > 150:
+                    raise ValueError
+                data["weight_kg"] = weight
+            except ValueError:
+                await update.message.reply_text(
+                    "Введите вес числом, например 8.8, либо напишите «нет».",
+                    reply_markup=ReplyKeyboardMarkup([["Нет"], ["❌ Отмена"]], resize_keyboard=True, one_time_keyboard=True),
+                )
+                return True
+
+        pet = await asyncio.to_thread(
+            add_pet,
+            telegram_id(update),
+            data["name"],
+            data["species"],
+            data.get("breed"),
+            data.get("age"),
+            data.get("sex"),
+            data.get("weight_kg"),
+        )
+        context.user_data.pop("pet_flow", None)
+        await update.message.reply_text(
+            "✅ Питомец сохранён и выбран как активный.\n\n" + pet_summary(pet),
+            reply_markup=MENU,
+        )
+    return True
+
+
 async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
     if text == "✅ Согласен, начать консультацию":
+        await ensure_current_user(update)
         context.user_data["consent"] = True
         context.user_data["history"] = []
+        active = await asyncio.to_thread(get_active_pet, telegram_id(update))
+        extra = (
+            f"\n\nАктивный питомец: {active['name']}."
+            if active
+            else "\n\nСовет: сначала добавьте питомца — тогда бот будет помнить его данные."
+        )
         await update.message.reply_text(
-            "Спасибо. Опишите, что происходит с питомцем, или выберите раздел 👇",
+            "Спасибо. Опишите, что происходит с питомцем, или выберите раздел 👇" + extra,
             reply_markup=MENU,
         )
         return
@@ -180,11 +372,9 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await analyze_pending_file(update, context)
         return
 
-    if text == "❌ Отмена":
+    if text == "❌ Отмена" and context.user_data.get("pending_file"):
         context.user_data.pop("pending_file", None)
-        await update.message.reply_text(
-            "Файл не был передан на анализ.", reply_markup=MENU
-        )
+        await update.message.reply_text("Файл не был передан на анализ.", reply_markup=MENU)
         return
 
     if not context.user_data.get("consent"):
@@ -194,27 +384,35 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
+    if await handle_pet_flow(update, context):
+        return
+
     if text == "🩺 Описать симптомы":
+        active = await asyncio.to_thread(get_active_pet, telegram_id(update))
+        intro = f"Сейчас выбран питомец: {active['name']}.\n" if active else ""
         await update.message.reply_text(
-            "Напишите:\n"
-            "• кто ваш питомец, порода, возраст и вес;\n"
+            intro
+            + "Напишите:\n"
             "• что именно беспокоит;\n"
             "• когда появились симптомы;\n"
+            "• аппетит, вода, стул и мочеиспускание;\n"
             "• какое лечение уже проводилось.",
             reply_markup=MENU,
         )
     elif text == "📄 Загрузить анализы":
         await update.message.reply_text(
-            "Пришлите чёткую фотографию анализа или PDF. "
-            "Можно добавить подпись с вопросом.",
+            "Пришлите чёткую фотографию анализа или PDF. Можно добавить подпись с вопросом.",
             reply_markup=MENU,
         )
     elif text == "💊 Разобрать назначения":
         await update.message.reply_text(
-            "Пришлите фото или PDF с назначениями либо напишите препараты "
-            "и дозировки текстом. Укажите вес питомца.",
+            "Пришлите фото или PDF с назначениями либо напишите препараты и дозировки текстом.",
             reply_markup=MENU,
         )
+    elif text == "🐾 Мои питомцы":
+        await show_pets(update, context)
+    elif text == "➕ Добавить питомца":
+        await begin_add_pet(update, context)
     elif text == "👨‍⚕️ Записаться на консультацию":
         await update.message.reply_text(
             "Онлайн-консультации: понедельник, среда и пятница.\n\n"
@@ -224,9 +422,7 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=MENU,
         )
     elif client is None:
-        await update.message.reply_text(
-            "ИИ временно не подключён.", reply_markup=MENU
-        )
+        await update.message.reply_text("ИИ временно не подключён.", reply_markup=MENU)
     else:
         await ask_ai(update, context)
 
@@ -234,7 +430,7 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def media(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.user_data.get("consent"):
         await update.message.reply_text(
-            "Сначала отправьте /start и подтвердите согласие на обработку текста.",
+            "Сначала отправьте /start и подтвердите согласие на обработку данных.",
             reply_markup=CONSENT_MENU,
         )
         return
@@ -302,8 +498,10 @@ def main():
     if not TOKEN:
         raise RuntimeError("TELEGRAM_BOT_TOKEN is not set")
 
+    init_db()
     app = Application.builder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CallbackQueryHandler(pet_callback, pattern=r"^pet:\d+$"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message))
     app.add_handler(MessageHandler(filters.PHOTO | filters.Document.ALL, media))
     app.run_polling()
