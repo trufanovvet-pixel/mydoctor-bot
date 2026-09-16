@@ -21,6 +21,15 @@ async def _run_with_typing(update, handler, *args, **kwargs):
     task = asyncio.create_task(_typing_loop(update))
     try:
         return await handler(update, *args, **kwargs)
+    except Exception as exc:
+        print(f"handler error: {exc!r}", flush=True)
+        message = getattr(update, "effective_message", None)
+        if message is not None:
+            with suppress(Exception):
+                await message.reply_text(
+                    "Не удалось завершить запрос. Попробуйте отправить его ещё раз через несколько секунд."
+                )
+        return None
     finally:
         task.cancel()
         with suppress(asyncio.CancelledError):
