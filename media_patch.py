@@ -23,6 +23,9 @@ MEDIA_ANALYSIS_MODE = """
 - если на бланке перечислены варианты вроде «ровные / неровные», «чёткие / нечёткие», «расширены / не расширены», не считай все варианты находками. Учитывай только явно выбранный, отмеченный, выделенный или заполненный вариант;
 - если по изображению невозможно понять, какой вариант выбран, прямо скажи об этом и не делай вывод на основании списка вариантов;
 - не считай документ принадлежащим активному питомцу только потому, что он выбран в боте. Используй данные активного питомца только если пользователь явно связал документ с ним или это однозначно видно из текущего диалога;
+- если изображение прислано в продолжение текущего клинического вопроса (например, пользователь ранее попросил проверить дозу и затем прислал упаковку препарата), обязательно используй предыдущие сообщения диалога и ответь на исходный вопрос, а не ограничивайся описанием фотографии;
+- если на упаковке читаются действующее вещество и концентрация/дозировка, назови их явно и используй для расчёта, если известен вес пациента;
+- если пользователь прямо просит пересчитать дозировку и уже сообщил вес, не отправляй его обратно к врачу вместо расчёта. Сначала рассчитай дозу в мг и соответствующее количество таблетки/объём по проверенной ветеринарной схеме; затем коротко укажи важные противопоказания/ограничения;
 - ответ начинай с краткого итога, затем основные находки, затем их возможное значение и что логично делать дальше.
 """
 
@@ -47,7 +50,6 @@ def _jpeg_bytes(image: Image.Image, quality: int = 92) -> bytes:
 
 
 def _preprocess_image(file_bytes: bytes) -> list[bytes]:
-    """Return one enhanced full image plus enlarged overlapping crops."""
     image = Image.open(io.BytesIO(file_bytes))
     image = ImageOps.exif_transpose(image)
     if image.mode not in {"RGB", "RGBA"}:
@@ -55,9 +57,6 @@ def _preprocess_image(file_bytes: bytes) -> list[bytes]:
 
     width, height = image.size
     long_side = max(width, height)
-
-    # Telegram often compresses screenshots. Upscale small screenshots so fine table text
-    # is presented to the vision model at a useful size, while avoiding absurd dimensions.
     if long_side < 2800:
         scale = min(2.5, 2800 / max(long_side, 1))
         if scale > 1.05:
@@ -68,10 +67,8 @@ def _preprocess_image(file_bytes: bytes) -> list[bytes]:
 
     width, height = image.size
     results = [_jpeg_bytes(image)]
-
     overlap = 0.12
     if height >= width * 1.25:
-        # Tall report/screenshot: three overlapping horizontal bands.
         band = int(height * 0.46)
         starts = [0, max(0, int(height * 0.27)), max(0, height - band)]
         seen = set()
@@ -81,10 +78,8 @@ def _preprocess_image(file_bytes: bytes) -> list[bytes]:
             if key in seen or bottom - top < 200:
                 continue
             seen.add(key)
-            crop = image.crop((0, top, width, bottom))
-            results.append(_jpeg_bytes(crop))
+            results.append(_jpeg_bytes(image.crop((0, top, width, bottom))))
     elif width >= height * 1.25:
-        # Wide screenshot/table: three overlapping vertical bands.
         band = int(width * 0.46)
         starts = [0, max(0, int(width * 0.27)), max(0, width - band)]
         seen = set()
@@ -94,10 +89,8 @@ def _preprocess_image(file_bytes: bytes) -> list[bytes]:
             if key in seen or right - left < 200:
                 continue
             seen.add(key)
-            crop = image.crop((left, 0, right, height))
-            results.append(_jpeg_bytes(crop))
+            results.append(_jpeg_bytes(image.crop((left, 0, right, height))))
     else:
-        # Near-square page: four overlapping quadrants.
         x_margin = int(width * overlap)
         y_margin = int(height * overlap)
         mid_x = width // 2
@@ -109,16 +102,37 @@ def _preprocess_image(file_bytes: bytes) -> list[bytes]:
             (max(0, mid_x - x_margin), max(0, mid_y - y_margin), width, height),
         ]
         for box in boxes:
-            crop = image.crop(box)
-            results.append(_jpeg_bytes(crop))
-
+            results.append(_jpeg_bytes(image.crop(box)))
     return results[:5]
+
+
+def _safe_history(history):
+    """Keep only text turns for multimodal calls; older rich/list payloads can break routing logic."""
+    safe = []
+    for item in history[-8:]:
+        if not isinstance(item, dict):
+            continue
+        role = item.get("role")
+        content = item.get("content")
+        if role not in {"user", "assistant"}:
+            continue
+        if isinstance(content, str):
+            safe.append({"role": role, "content": content})
+        elif isinstance(content, list):
+            texts = []
+            for part in content:
+                if isinstance(part, dict):
+                    value = part.get("text")
+                    if isinstance(value, str) and value.strip():
+                        texts.append(value.strip())
+            if texts:
+                safe.append({"role": role, "content": "\n".join(texts)})
+    return safe[-6:]
 
 
 def install(bot):
     async def media(update, context):
         await bot.ensure_current_user(update)
-
         if bot.client is None:
             await update.message.reply_text("ИИ временно не подключён.", reply_markup=bot.MENU)
             return
@@ -134,10 +148,7 @@ def install(bot):
             document = update.message.document
             mime_type = document.mime_type or ""
             if mime_type not in {"application/pdf", "image/jpeg", "image/png", "image/webp"}:
-                await update.message.reply_text(
-                    "Можно прислать фото/скриншот JPG, PNG, WEBP или PDF.",
-                    reply_markup=bot.MENU,
-                )
+                await update.message.reply_text("Можно прислать фото/скриншот JPG, PNG, WEBP или PDF.", reply_markup=bot.MENU)
                 return
             file_id = document.file_id
             file_size = document.file_size or 0
@@ -147,18 +158,15 @@ def install(bot):
             return
 
         if file_size > 10 * 1024 * 1024:
-            await update.message.reply_text(
-                "Файл больше 10 МБ. Пришлите уменьшенную копию или отдельные страницы.",
-                reply_markup=bot.MENU,
-            )
+            await update.message.reply_text("Файл больше 10 МБ. Пришлите уменьшенную копию или отдельные страницы.", reply_markup=bot.MENU)
             return
 
         user_request = (update.message.caption or "").strip()
         if not user_request:
             user_request = (
-                "Прочитай этот ветеринарный медицинский документ. Сначала определи, какие данные "
-                "и находки реально указаны или отмечены, затем кратко объясни их значение. "
-                "Не проси PDF, если текст можно прочитать с изображения."
+                "Прочитай изображение в контексте последних сообщений. Если оно прислано как ответ на твою просьбу показать упаковку, "
+                "определи препарат, действующее вещество и дозировку/концентрацию и продолжи отвечать на предыдущий клинический вопрос. "
+                "Если это самостоятельный документ, прочитай его и кратко объясни содержание."
             )
 
         await update.message.reply_text("Читаю документ…", reply_markup=bot.MENU)
@@ -167,40 +175,22 @@ def install(bot):
         try:
             tg_file = await context.bot.get_file(file_id)
             file_bytes = bytes(await tg_file.download_as_bytearray())
-            print(
-                f"media received type={input_type} mime={mime_type} bytes={len(file_bytes)} filename={filename}",
-                flush=True,
-            )
+            print(f"media received type={input_type} mime={mime_type} bytes={len(file_bytes)} filename={filename}", flush=True)
 
             if input_type == "input_file":
                 encoded = base64.b64encode(file_bytes).decode("ascii")
-                media_parts = [{
-                    "type": "input_file",
-                    "filename": filename,
-                    "file_data": f"data:{mime_type};base64,{encoded}",
-                }]
+                media_parts = [{"type": "input_file", "filename": filename, "file_data": f"data:{mime_type};base64,{encoded}"}]
             else:
                 processed = await asyncio.to_thread(_preprocess_image, file_bytes)
                 print(f"media image variants={len(processed)}", flush=True)
-                media_parts = [
-                    {
-                        "type": "input_image",
-                        "image_url": _data_url(part),
-                        "detail": "high",
-                    }
-                    for part in processed
-                ]
+                media_parts = [{"type": "input_image", "image_url": _data_url(part), "detail": "high"} for part in processed]
 
             instructions = bot.SYSTEM_PROMPT + MEDIA_ANALYSIS_MODE
             history = context.user_data.setdefault("history", [])
-            response_input = history[-4:] + [
-                {
-                    "role": "user",
-                    "content": media_parts + [
-                        {"type": "input_text", "text": user_request},
-                    ],
-                }
-            ]
+            response_input = _safe_history(history) + [{
+                "role": "user",
+                "content": media_parts + [{"type": "input_text", "text": user_request}],
+            }]
 
             response = await asyncio.to_thread(
                 bot.client.responses.create,
@@ -209,36 +199,18 @@ def install(bot):
                 input=response_input,
             )
             answer = (response.output_text or "").strip()
-            print(
-                f"media model response chars={len(answer)}",
-                flush=True,
-            )
+            print(f"media model response chars={len(answer)}", flush=True)
             if not answer:
-                answer = (
-                    "Не удалось уверенно прочитать изображение. Попробуйте прислать его крупнее "
-                    "или отдельными фрагментами — PDF не обязателен."
-                )
+                answer = "Не удалось уверенно прочитать изображение. Попробуйте прислать его крупнее или отдельными фрагментами — PDF не обязателен."
 
-            history.append({
-                "role": "user",
-                "content": f"Загружено медицинское изображение/документ {filename}. Запрос: {user_request}",
-            })
+            history.append({"role": "user", "content": f"Загружено медицинское изображение/документ {filename}. Запрос: {user_request}"})
             history.append({"role": "assistant", "content": answer})
             history[:] = history[-12:]
 
-            await asyncio.to_thread(
-                bot.save_consultation,
-                update.effective_user.id,
-                f"Файл: {filename}. {user_request}",
-                answer,
-                "file_analysis",
-            )
+            await asyncio.to_thread(bot.save_consultation, update.effective_user.id, f"Файл: {filename}. {user_request}", answer, "file_analysis")
         except Exception as exc:
             print(f"media analysis error: {exc!r}", flush=True)
-            answer = (
-                "Не получилось обработать изображение. Пришлите его ещё раз как фото или файл. "
-                "PDF специально делать не нужно."
-            )
+            answer = "Не получилось обработать изображение. Попробуйте прислать его ещё раз."
 
         await update.message.reply_text(answer, reply_markup=bot.MENU)
 
