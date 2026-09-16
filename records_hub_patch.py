@@ -13,9 +13,8 @@ RECORDS_MENU = ReplyKeyboardMarkup(
 def install(bot):
     bot.MENU = ReplyKeyboardMarkup(
         [
-            ["🐾 Мои питомцы", "💬 Задать вопрос"],
-            ["🧪 Анализы и документы", "🛡 Профилактика"],
-            ["👨‍⚕️ Записаться на консультацию", "ℹ️ Возможности"],
+            ["🐾 Мои питомцы", "🧪 Анализы и документы"],
+            ["🛡 Профилактика", "👨‍⚕️ Записаться на консультацию"],
         ],
         resize_keyboard=True,
     )
@@ -47,9 +46,14 @@ def install(bot):
             return
 
         if text == "⬅️ Главное меню":
-            await update.message.reply_text("Главное меню", reply_markup=bot.MENU)
+            await update.message.reply_text(
+                "Главное меню\n\nЧтобы задать вопрос, просто напишите его сообщением — отдельная кнопка не нужна.",
+                reply_markup=bot.MENU,
+            )
             return
 
+        # Любой обычный текст, который не является кнопкой раздела,
+        # передаём дальше как ветеринарный вопрос.
         return await original_message(update, context)
 
     bot.message = records_hub_message
