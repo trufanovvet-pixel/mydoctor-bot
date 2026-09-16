@@ -1,5 +1,4 @@
 import os
-from urllib.parse import quote_plus
 
 from openai import OpenAI
 
@@ -71,9 +70,10 @@ def _needs_local_search(response_input) -> bool:
     value = _plain_text(response_input).lower().replace("ё", "е")
     if not value:
         return False
-    has_local = any(term in value for term in LOCAL_TERMS)
-    has_search = any(term in value for term in SEARCH_TERMS)
-    return has_local and has_search
+    return (
+        any(term in value for term in LOCAL_TERMS)
+        and any(term in value for term in SEARCH_TERMS)
+    )
 
 
 def _trim_input(response_input):
@@ -83,8 +83,7 @@ def _trim_input(response_input):
     for item in response_input[-10:]:
         if not isinstance(item, dict):
             continue
-        content = item.get("content")
-        if content in {"[GENERAL_SCOPE]", "[PET_SCOPE]"}:
+        if item.get("content") in {"[GENERAL_SCOPE]", "[PET_SCOPE]"}:
             continue
         cleaned.append(item)
     return cleaned
@@ -121,9 +120,6 @@ def _collect_urls(response, limit: int = 6):
 
 def _append_sources(answer: str, response) -> str:
     urls = _collect_urls(response)
-    if not urls:
-        return answer
-    # Do not duplicate a URL already printed by the model.
     extras = [(title, url) for title, url in urls if url not in answer]
     if not extras:
         return answer
@@ -131,6 +127,15 @@ def _append_sources(answer: str, response) -> str:
     for title, url in extras[:5]:
         lines.append(f"• {title}: {url}")
     return "\n".join(lines)
+
+
+class _ResponseProxy:
+    def __init__(self, response, output_text: str):
+        self._response = response
+        self.output_text = output_text
+
+    def __getattr__(self, name):
+        return getattr(self._response, name)
 
 
 class _WebAwareResponses:
@@ -143,31 +148,14 @@ class _WebAwareResponses:
         if not _needs_local_search(kwargs.get("input")) or self._web_client is None:
             return self._base_client.responses.create(*args, **kwargs)
 
-        instructions = LOCAL_SEARCH_RULES
         response = self._web_client.responses.create(
             model=kwargs.get("model", "gpt-5.6-sol"),
-            instructions=instructions,
+            instructions=LOCAL_SEARCH_RULES,
             input=_trim_input(kwargs.get("input")),
             tools=[{"type": "web_search", "search_context_size": "medium"}],
         )
-
-        # Preserve the normal Responses object while making source URLs visible in Telegram.
-        try:
-            answer = (response.output_text or "").strip()
-            enriched = _append_sources(answer, response)
-            if enriched != answer:
-                # output_text is a derived/read-only property in some SDK versions, so instead
-                # patch the first assistant text object when possible.
-                for item in getattr(response, "output", []) or []:
-                    if getattr(item, "type", None) != "message":
-                        continue
-                    for content in getattr(item, "content", []) or []:
-                        if getattr(content, "type", None) == "output_text":
-                            content.text = enriched
-                            return response
-        except Exception:
-            pass
-        return response
+        answer = (response.output_text or "").strip()
+        return _ResponseProxy(response, _append_sources(answer, response))
 
     def __getattr__(self, name):
         return getattr(self._base_client.responses, name)
