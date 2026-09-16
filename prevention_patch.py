@@ -222,17 +222,29 @@ def install(bot):
     bot.MENU = ReplyKeyboardMarkup(
         [
             ["🐾 Мои питомцы", "💬 Задать вопрос"],
-            ["🧪 Анализы и документы", "📋 История обращений"],
-            ["🛡 Профилактика", "👨‍⚕️ Записаться на консультацию"],
-            ["ℹ️ Возможности"],
+            ["🧪 Анализы и документы", "🛡 Профилактика"],
+            ["👨‍⚕️ Записаться на консультацию", "ℹ️ Возможности"],
         ],
         resize_keyboard=True,
     )
 
     original_message = bot.message
 
+    async def start_calendar_event(update, context, kind: str, label: str):
+        telegram_id = update.effective_user.id
+        pet = await asyncio.to_thread(_active_pet, telegram_id)
+        if not pet:
+            await update.message.reply_text("Сначала выберите питомца.", reply_markup=bot.MENU)
+            return
+        context.user_data["prevention_flow"] = {"step": "date", "kind": kind, "label": label}
+        await update.message.reply_text(
+            f"Введите дату для {pet['name']} в формате ДД.ММ.ГГГГ, например 25.10.2026.",
+            reply_markup=CALENDAR_MENU,
+        )
+
     async def prevention_message(update, context):
         text = (update.message.text or "").strip() if update.message else ""
+        normalized = text.lower().replace("ё", "е")
         telegram_id = update.effective_user.id
 
         flow = context.user_data.get("prevention_flow")
@@ -259,6 +271,7 @@ def install(bot):
             return
 
         if text == "🛡 Профилактика" or text == "⬅️ Профилактика":
+            context.user_data["prevention_section"] = "main"
             await update.message.reply_text(
                 "🛡 Профилактика\n\nЗдесь можно посмотреть памятки и вести календарь вакцинаций и обработок конкретного питомца.",
                 reply_markup=PREVENTION_MENU,
@@ -278,22 +291,31 @@ def install(bot):
             if not pet:
                 await update.message.reply_text("Сначала выберите питомца в разделе «🐾 Мои питомцы», затем откройте календарь.", reply_markup=bot.MENU)
                 return
+            context.user_data["prevention_section"] = "calendar"
             await update.message.reply_text(f"📅 Календарь профилактики: {pet['name']}\n\nЧто добавить?", reply_markup=CALENDAR_MENU)
             return
-        if text in ("➕ Вакцинация", "➕ Обработка от глистов", "➕ Блохи/клещи"):
-            pet = await asyncio.to_thread(_active_pet, telegram_id)
-            if not pet:
-                await update.message.reply_text("Сначала выберите питомца.", reply_markup=bot.MENU)
-                return
-            mapping = {
-                "➕ Вакцинация": ("vaccination", "вакцинация"),
-                "➕ Обработка от глистов": ("deworming", "обработка от глистов"),
-                "➕ Блохи/клещи": ("ectoparasites", "обработка от блох/клещей"),
-            }
-            kind, label = mapping[text]
-            context.user_data["prevention_flow"] = {"step": "date", "kind": kind, "label": label}
-            await update.message.reply_text(f"Введите дату для {pet['name']} в формате ДД.ММ.ГГГГ, например 25.10.2026.", reply_markup=CALENDAR_MENU)
+
+        calendar_aliases = {
+            "➕ Вакцинация": ("vaccination", "вакцинация"),
+            "➕ Обработка от глистов": ("deworming", "обработка от глистов"),
+            "➕ Блохи/клещи": ("ectoparasites", "обработка от блох/клещей"),
+        }
+        if text in calendar_aliases:
+            kind, label = calendar_aliases[text]
+            await start_calendar_event(update, context, kind, label)
             return
+
+        if context.user_data.get("prevention_section") == "calendar":
+            if ("обработ" in normalized or "защит" in normalized) and any(x in normalized for x in ("блох", "клещ")):
+                await start_calendar_event(update, context, "ectoparasites", "обработка от блох/клещей")
+                return
+            if ("глист" in normalized or "гельминт" in normalized or "дегельмин" in normalized):
+                await start_calendar_event(update, context, "deworming", "обработка от глистов")
+                return
+            if "вакцин" in normalized or "привив" in normalized:
+                await start_calendar_event(update, context, "vaccination", "вакцинация")
+                return
+
         if text == "📅 Мои события":
             items = await asyncio.to_thread(_list_events, telegram_id)
             if not items:
@@ -307,6 +329,7 @@ def install(bot):
             return
         if text == "⬅️ Главное меню":
             context.user_data.pop("prevention_flow", None)
+            context.user_data.pop("prevention_section", None)
             await update.message.reply_text("Главное меню", reply_markup=bot.MENU)
             return
         return await original_message(update, context)
