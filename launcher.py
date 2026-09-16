@@ -7,6 +7,7 @@ import onboarding_patch
 import web_search_patch
 import clinic_ranking_patch
 import activity_patch
+import long_message_patch
 
 
 _original_install = enhanced_app2.enhanced.install_features
@@ -23,6 +24,7 @@ def _install_with_patches(bot):
 
 def _install_clean_menu_with_onboarding(bot):
     _original_clean_menu(bot)
+    long_message_patch.install()
     onboarding_patch.install(bot)
     clinic_ranking_patch.install()
     web_search_patch.install(bot)
