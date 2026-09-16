@@ -5,6 +5,7 @@ import media_patch
 import notification_patch
 import onboarding_patch
 import web_search_patch
+import clinic_ranking_patch
 import activity_patch
 
 
@@ -23,6 +24,7 @@ def _install_with_patches(bot):
 def _install_clean_menu_with_onboarding(bot):
     _original_clean_menu(bot)
     onboarding_patch.install(bot)
+    clinic_ranking_patch.install()
     web_search_patch.install(bot)
     activity_patch.install(bot)
 
