@@ -4,6 +4,7 @@ import history_patch
 import media_patch
 import notification_patch
 import onboarding_patch
+import web_search_patch
 
 
 _original_install = enhanced_app2.enhanced.install_features
@@ -21,6 +22,7 @@ def _install_with_patches(bot):
 def _install_clean_menu_with_onboarding(bot):
     _original_clean_menu(bot)
     onboarding_patch.install(bot)
+    web_search_patch.install(bot)
 
 
 enhanced_app2.enhanced.install_features = _install_with_patches
