@@ -15,6 +15,8 @@ import records_hub_patch
 import terminology_patch
 import voice_transcription_patch
 import prevention_smart_patch
+import prevention_time_patch
+import voice_router_patch
 
 
 _original_install = enhanced_app2.enhanced.install_features
@@ -40,9 +42,11 @@ def _install_clean_menu_with_onboarding(bot):
     records_hub_patch.install(bot)
     terminology_patch.install(bot)
     prevention_smart_patch.install(bot)
+    prevention_time_patch.install()
     clinic_ranking_patch.install()
     web_search_patch.install(bot)
     activity_patch.install(bot)
+    voice_router_patch.install(bot)
 
 
 enhanced_app2.enhanced.install_features = _install_with_patches
