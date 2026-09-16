@@ -10,6 +10,7 @@ import activity_patch
 import long_message_patch
 import user_guide_patch
 import pet_records_patch
+import prevention_patch
 
 
 _original_install = enhanced_app2.enhanced.install_features
@@ -30,6 +31,7 @@ def _install_clean_menu_with_onboarding(bot):
     onboarding_patch.install(bot)
     user_guide_patch.install(bot)
     pet_records_patch.install(bot)
+    prevention_patch.install(bot)
     clinic_ranking_patch.install()
     web_search_patch.install(bot)
     activity_patch.install(bot)
