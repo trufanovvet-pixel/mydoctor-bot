@@ -17,6 +17,7 @@ import voice_transcription_patch
 import prevention_smart_patch
 import prevention_time_patch
 import voice_router_patch
+import media_direct_client_patch
 
 
 _original_install = enhanced_app2.enhanced.install_features
@@ -45,6 +46,7 @@ def _install_clean_menu_with_onboarding(bot):
     prevention_time_patch.install()
     clinic_ranking_patch.install()
     web_search_patch.install(bot)
+    media_direct_client_patch.install(bot)
     activity_patch.install(bot)
     voice_router_patch.install(bot)
 
