@@ -1,0 +1,47 @@
+{
+  "title": "Дерматология: хирургические, крио-, лазерные и диагностические процедуры",
+  "triggers": [
+    "лазер",
+    "лазер удалить",
+    "криодеструкция",
+    "жидкий азот",
+    "азот удалить",
+    "криотерапия",
+    "дерматологическая процедура",
+    "биопсия кожи",
+    "дерматоскопия",
+    "удаление папилломы",
+    "удаление бородавки"
+  ],
+  "procedures": [
+    "Punch biopsy кожи",
+    "Incisional/excisional skin biopsy",
+    "Skin scraping superficial/deep",
+    "Trichogram",
+    "Tape/impression cytology",
+    "Fungal sampling/culture/PCR by indication",
+    "Wood lamp as screening tool only",
+    "Dermatoscopy where useful",
+    "Cryosurgery with liquid nitrogen for selected superficial lesions",
+    "CO2 laser ablation/excision for selected lesions",
+    "Diode laser applications where appropriate",
+    "Electrosurgery/radiosurgery for selected lesions",
+    "Conventional scalpel excision",
+    "Reconstructive closure/flaps/grafts for larger defects"
+  ],
+  "laser_principles": [
+    "Выбор длины волны/системы и режима зависит от ткани и задачи",
+    "Лазер обеспечивает резание/абляцию/коагуляцию, но не делает любую массу доброкачественной и не отменяет гистологию",
+    "Защита глаз персонала/пациента и контроль plume обязательны по локальным правилам"
+  ],
+  "cryotherapy_principles": [
+    "Жидкий азот вызывает контролируемое замораживание ткани",
+    "Подходит не для всех опухолей и локализаций",
+    "Глубина/циклы замораживания определяются патологией и техникой",
+    "После процедуры возможны отёк, экссудация, корка и депигментация"
+  ],
+  "do_not_do": [
+    "Не удалять неизвестное новообразование лазером/азотом без решения вопроса о морфологической диагностике",
+    "Не обещать отсутствие рецидива"
+  ]
+}
