@@ -1,0 +1,33 @@
+{
+  "title": "Интервенционные и специальные процедуры",
+  "triggers": [
+    "стент",
+    "интервенционная радиология",
+    "баллонная дилатация",
+    "sub устройство",
+    "уретральный стент",
+    "трахеальный стент",
+    "портосистемный шунт операция",
+    "pda операция",
+    "лигирование грудного протока"
+  ],
+  "procedures": [
+    "Tracheal stenting concept",
+    "Urethral/ureteral stenting",
+    "SUB device concept",
+    "Balloon dilation for selected strictures",
+    "PDA ligation/interventional occlusion concepts",
+    "Portosystemic shunt attenuation: ameroid/cellophane/other selected techniques",
+    "Thoracic duct ligation ± cisterna chyli ablation concepts",
+    "Vascular access ports",
+    "Feeding tubes: esophagostomy/gastrostomy/jejunostomy concepts"
+  ],
+  "professional_depth": [
+    "Case selection",
+    "Imaging guidance",
+    "Device sizing principles without inventing measurements",
+    "Complications and follow-up",
+    "When referral equipment/expertise is required"
+  ],
+  "owner_mode": "Объясняй назначение устройства/процедуры, общий принцип, необходимость анестезии, контроль и возможные осложнения."
+}
