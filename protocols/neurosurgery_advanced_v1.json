@@ -1,0 +1,49 @@
+{
+  "title": "Нейрохирургия: декомпрессия, стабилизация и внутричерепные вмешательства",
+  "triggers": [
+    "нейрохирургия",
+    "гемиламинэктомия",
+    "ламинэктомия",
+    "вентральный слот",
+    "операция на позвоночнике",
+    "дископатия операция",
+    "ivdd операция",
+    "стабилизация позвоночника",
+    "операция на мозге"
+  ],
+  "procedures": [
+    "Thoracolumbar hemilaminectomy",
+    "Mini-hemilaminectomy",
+    "Dorsal laminectomy",
+    "Ventral slot при подходящей cervical IVDE",
+    "Cervical dorsal laminectomy по показаниям",
+    "Fenestration как adjunct в выбранных случаях",
+    "Spinal stabilization for fracture/luxation",
+    "Atlantoaxial stabilization",
+    "Lumbosacral decompression",
+    "Dorsal laminectomy for cauda equina syndrome",
+    "Vertebral distraction/stabilization concepts",
+    "Spinal arachnoid diverticulum surgery",
+    "Intracranial craniotomy/craniectomy for selected masses",
+    "Ventricular shunting concepts for hydrocephalus",
+    "Biopsy of CNS lesions at referral level"
+  ],
+  "decision_points": [
+    "Неврологическая локализация до визуализации",
+    "MRI/CT selection",
+    "Амбулаторный пациент vs nonambulatory paresis/paralysis",
+    "Deep pain status where relevant",
+    "Compression vs instability vs mass lesion"
+  ],
+  "professional_depth": [
+    "Surgical indication and timing",
+    "Approach selection",
+    "Decompression vs stabilization",
+    "Perioperative analgesia and bladder care",
+    "Postoperative neurologic monitoring and rehabilitation"
+  ],
+  "do_not_do": [
+    "Не прогнозировать только по одному снимку без неврологического статуса",
+    "Не подменять MRI/CT клинической догадкой при планировании нейрохирургии"
+  ]
+}
