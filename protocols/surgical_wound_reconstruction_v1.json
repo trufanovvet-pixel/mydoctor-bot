@@ -1,0 +1,32 @@
+{
+  "title": "Реконструктивная хирургия, раны и пластика кожи",
+  "triggers": [
+    "пластика кожи",
+    "кожный лоскут",
+    "трансплантат кожи",
+    "skin flap",
+    "skin graft",
+    "реконструкция раны",
+    "вакуумная терапия",
+    "negative pressure wound therapy",
+    "npwt"
+  ],
+  "procedures": [
+    "Delayed primary closure",
+    "Second-intention healing",
+    "Local advancement/rotation/transposition flaps",
+    "Axial pattern flaps",
+    "Full-thickness mesh/free skin graft concepts",
+    "Open wound management",
+    "Drains",
+    "Negative-pressure wound therapy",
+    "Reconstruction after oncologic excision"
+  ],
+  "principles": [
+    "Сначала жизнеспособное чистое ложе и контроль инфекции",
+    "Выбор закрытия зависит от кровоснабжения, натяжения, локализации и контаминации",
+    "Axial pattern flap имеет определённую сосудистую основу",
+    "Free graft требует подходящего реципиентного ложа"
+  ],
+  "owner_mode": "Объясняй, почему рану иногда нельзя зашить сразу, откуда берётся кожа и как проходит приживление/уход."
+}
