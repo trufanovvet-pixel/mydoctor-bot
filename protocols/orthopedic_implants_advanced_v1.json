@@ -1,0 +1,93 @@
+{
+  "title": "Ортопедия: остеосинтез, импланты и реконструктивные методы",
+  "triggers": [
+    "остеосинтез",
+    "пластина",
+    "lcp",
+    "dcp",
+    "lc-dcp",
+    "locking plate",
+    "t plate",
+    "реконструкционная пластина",
+    "винт",
+    "lag screw",
+    "спица киршнера",
+    "серкляж",
+    "интрамедуллярный штифт",
+    "plate rod",
+    "внешний фиксатор",
+    "аппарат внешней фиксации",
+    "аппарат наружной фиксации",
+    "esf",
+    "ilizarov",
+    "кольцевой фиксатор"
+  ],
+  "methods": {
+    "plates": [
+      "DCP",
+      "LC-DCP",
+      "LCP/locking plate",
+      "Reconstruction plate",
+      "T/L-shaped plates",
+      "Mini/micro plates",
+      "Bridging plate",
+      "Neutralization plate",
+      "Compression plate",
+      "Buttress/support function"
+    ],
+    "screws": [
+      "Cortical",
+      "Cancellous",
+      "Locking",
+      "Lag screw principle",
+      "Position screw"
+    ],
+    "intramedullary": [
+      "Steinmann pin",
+      "K-wire",
+      "Rush-type principles where applicable",
+      "Interlocking nail where available"
+    ],
+    "external_fixation": [
+      "Linear ESF type I",
+      "Type II",
+      "Type III",
+      "Tie-in configuration",
+      "Circular/ring fixator",
+      "Hybrid fixator"
+    ],
+    "adjuncts": [
+      "Cerclage wire",
+      "Tension-band wiring",
+      "Plate-rod construct",
+      "Bone graft/autograft/allograft/biologic adjunct principles"
+    ]
+  },
+  "fracture_strategy": [
+    "Anatomic reconstruction for selected articular/simple fractures",
+    "Biological/bridge fixation for comminuted fractures",
+    "Load-sharing vs load-bearing constructs",
+    "Open vs minimally invasive plate osteosynthesis principles",
+    "Open fracture soft-tissue management"
+  ],
+  "joint_operations": [
+    "TPLO",
+    "TTA",
+    "Extracapsular stabilization",
+    "Patellar luxation correction: trochleoplasty/tibial tuberosity transposition/soft-tissue balancing",
+    "Femoral head and neck ostectomy",
+    "Total hip replacement concept",
+    "Arthrodesis",
+    "Corrective osteotomy",
+    "OCD fragment treatment",
+    "Arthroscopy"
+  ],
+  "professional_depth": [
+    "AO-style fracture description",
+    "Mechanical axis/alignment/rotation/length",
+    "Implant function and working length",
+    "Bone healing biology",
+    "Postoperative radiographic follow-up and rehabilitation"
+  ],
+  "owner_mode": "Сравнивай варианты простым языком: почему нужна фиксация, что остаётся внутри/снаружи, ограничения и сроки контроля; не перегружай названиями имплантов без запроса."
+}
