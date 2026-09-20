@@ -85,7 +85,7 @@ def install(bot):
 
     def due_notifications_clean():
         rows = original_due_notifications()
-        return [(chat_id, _clean_user_text(text)) for chat_id, text in rows]
+        return [(event_id, field, chat_id, _clean_user_text(text)) for event_id, field, chat_id, text in rows]
 
     prevention_patch._due_notifications = due_notifications_clean
 
@@ -96,6 +96,8 @@ def install(bot):
         telegram_id = update.effective_user.id
 
         if text in {"🛡 Профилактика", "⬅️ Профилактика"}:
+            context.user_data.pop("prevention_flow", None)
+            context.user_data["prevention_section"] = "main"
             await update.message.reply_text(
                 "🛡 Профилактика\n\nВыберите раздел:",
                 reply_markup=PREVENTION_MENU,
@@ -107,6 +109,7 @@ def install(bot):
             return
 
         if text == "📅 Календарь":
+            context.user_data["prevention_section"] = "calendar"
             pet = await asyncio.to_thread(prevention_patch._active_pet, telegram_id)
             if not pet:
                 await update.message.reply_text(

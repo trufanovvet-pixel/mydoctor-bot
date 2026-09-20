@@ -46,6 +46,8 @@ def install(bot):
             return
 
         if text == "⬅️ Главное меню":
+            for key in ("prevention_flow", "prevention_section", "choice_flow", "after_pet_action", "adding_pet", "consult_flow"):
+                context.user_data.pop(key, None)
             await update.message.reply_text(
                 "Главное меню\n\nЧтобы задать вопрос, просто напишите его сообщением — отдельная кнопка не нужна.",
                 reply_markup=bot.MENU,

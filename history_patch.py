@@ -30,6 +30,11 @@ def install(bot):
     original_media = bot.media
 
     async def _hydrate(update, context):
+        if "dialog_scope" not in context.user_data:
+            from storage import get_bot_setting
+            scope = await asyncio.to_thread(get_bot_setting, f"dialog_scope:{update.effective_user.id}")
+            if scope in {"pet", "general"}:
+                context.user_data["dialog_scope"] = scope
         history = context.user_data.setdefault("history", [])
         if history:
             return history
@@ -40,6 +45,9 @@ def install(bot):
         )
         if restored:
             history.extend(restored)
+        if context.user_data.get("dialog_scope") == "general":
+            from onboarding_patch import GENERAL_MARKER
+            history.insert(0, {"role": "user", "content": GENERAL_MARKER})
         return history
 
     async def persistent_start(update, context):
@@ -62,11 +70,13 @@ def install(bot):
                 "text",
             )
 
-        before = len(context.user_data.get("history", []))
+        before = list(context.user_data.get("history", []))
         await original_ask_ai(update, context)
         history = context.user_data.get("history", [])
-        if len(history) > before:
-            for item in reversed(history[before:]):
+        if history:
+            for item in reversed(history):
+                if any(item is old for old in before):
+                    break
                 if item.get("role") == "assistant" and item.get("content"):
                     await asyncio.to_thread(
                         save_conversation_message,
@@ -197,11 +207,13 @@ def install(bot):
             "media",
         )
 
-        before = len(context.user_data.get("history", []))
-        await original_media(update, context)
+        before = list(context.user_data.get("history", []))
+        result = await original_media(update, context)
         history = context.user_data.get("history", [])
-        if len(history) > before:
-            for item in reversed(history[before:]):
+        if history:
+            for item in reversed(history):
+                if any(item is old for old in before):
+                    break
                 if item.get("role") == "assistant" and item.get("content"):
                     await asyncio.to_thread(
                         save_conversation_message,
@@ -211,6 +223,7 @@ def install(bot):
                         "media",
                     )
                     break
+        return result
 
     bot.start = persistent_start
     bot.ask_ai = persistent_ask_ai

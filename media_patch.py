@@ -175,6 +175,8 @@ def install(bot):
         try:
             tg_file = await context.bot.get_file(file_id)
             file_bytes = bytes(await tg_file.download_as_bytearray())
+            if len(file_bytes) > 10 * 1024 * 1024:
+                raise ValueError("downloaded file exceeds 10 MiB")
             print(f"media received type={input_type} mime={mime_type} bytes={len(file_bytes)} filename={filename}", flush=True)
 
             if input_type == "input_file":
@@ -201,17 +203,22 @@ def install(bot):
             answer = (response.output_text or "").strip()
             print(f"media model response chars={len(answer)}", flush=True)
             if not answer:
-                answer = "Не удалось уверенно прочитать изображение. Попробуйте прислать его крупнее или отдельными фрагментами — PDF не обязателен."
+                raise ValueError("empty document analysis")
 
             history.append({"role": "user", "content": f"Загружено медицинское изображение/документ {filename}. Запрос: {user_request}"})
             history.append({"role": "assistant", "content": answer})
             history[:] = history[-12:]
 
-            await asyncio.to_thread(bot.save_consultation, update.effective_user.id, f"Файл: {filename}. {user_request}", answer, "file_analysis")
+            pet = await asyncio.to_thread(bot.get_active_pet, update.effective_user.id) if context.user_data.get("dialog_scope") == "pet" else None
+            pet_id = context.user_data.get("records_target_pet_id") if context.user_data.get("records_target_explicit") else (pet['id'] if pet else None)
+            await asyncio.to_thread(bot.save_consultation, update.effective_user.id, f"Файл: {filename}. {user_request}", answer, "file_analysis", pet_id=pet_id)
         except Exception as exc:
             print(f"media analysis error: {exc!r}", flush=True)
             answer = "Не получилось обработать изображение. Попробуйте прислать его ещё раз."
+            await update.message.reply_text(answer, reply_markup=bot.MENU)
+            return None
 
         await update.message.reply_text(answer, reply_markup=bot.MENU)
+        return {"analysis_text": answer, "filename": filename}
 
     bot.media = media

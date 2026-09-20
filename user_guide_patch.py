@@ -65,6 +65,8 @@ def install(bot):
 
     async def guide_start(update, context):
         context.user_data.clear()
+        from storage import set_bot_setting
+        await asyncio.to_thread(set_bot_setting, f"dialog_scope:{update.effective_user.id}", "general")
         await bot.ensure_current_user(update)
         try:
             from conversation_store import clear_conversation_history

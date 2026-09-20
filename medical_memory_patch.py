@@ -30,13 +30,7 @@ def _is_compare_request(text: str) -> bool:
 
 
 def _pet_from_text(pets, text: str):
-    value = _norm(text)
-    matches = []
-    for pet in pets:
-        name = _norm(pet.get("name") or "").strip()
-        if name and re.search(rf"(?<!\w){re.escape(name)}(?!\w)", value):
-            matches.append(pet)
-    return matches[0] if len(matches) == 1 else None
+    return pet_records_patch._pet_from_text(pets, text)
 
 
 def _latest_document_id(telegram_id: int, pet_id: int | None):
@@ -105,33 +99,10 @@ def install(bot):
     original_media = bot.media
 
     async def memory_media(update, context):
-        before = list(context.user_data.get("history", []))
         result = await original_media(update, context)
-
-        message = getattr(update, "message", None)
-        if message is None or not (message.photo or message.document):
+        if not isinstance(result, dict) or not result.get("document_id") or not result.get("analysis_text"):
             return result
-
-        if context.user_data.get("records_target_explicit"):
-            pet_id = context.user_data.get("records_target_pet_id")
-        elif context.user_data.get("dialog_scope") == "pet":
-            pet = await asyncio.to_thread(bot.get_active_pet, update.effective_user.id)
-            pet_id = pet["id"] if pet else None
-        else:
-            pet_id = None
-
-        history = context.user_data.get("history", [])
-        assistant_text = ""
-        if len(history) >= len(before):
-            for item in reversed(history):
-                if isinstance(item, dict) and item.get("role") == "assistant" and item.get("content"):
-                    assistant_text = str(item["content"])
-                    break
-
-        document_id = await asyncio.to_thread(
-            _latest_document_id, update.effective_user.id, pet_id
-        )
-        await asyncio.to_thread(_save_insight, document_id, assistant_text)
+        await asyncio.to_thread(_save_insight, result["document_id"], result["analysis_text"])
         return result
 
     async def memory_message(update, context):

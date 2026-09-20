@@ -1,10 +1,12 @@
 import re
+import logging
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, MessageHandler, filters
 
 import app as base_app
 import enhanced_app as enhanced
+from knowledge import protocol_context, diagnostics_context, is_diagnostics_query
 
 
 REFERENCE_MODE = """
@@ -94,10 +96,13 @@ class _ReferenceAwareResponses:
 
     def create(self, *args, **kwargs):
         latest_text = _latest_user_text(kwargs.get("input"))
-        if not _is_reference_question(latest_text):
+        if base_app._has_media(kwargs.get("input")) or not _is_reference_question(latest_text):
             return self._base_client.responses.create(*args, **kwargs)
 
         instructions = _strip_pet_context(kwargs.get("instructions") or "") + REFERENCE_MODE
+        instructions += protocol_context(latest_text)
+        if is_diagnostics_query(latest_text):
+            instructions += diagnostics_context()
         kwargs["instructions"] = instructions
         kwargs["input"] = [{"role": "user", "content": latest_text}]
 
@@ -166,7 +171,7 @@ def install_clean_menu(bot):
         query = update.callback_query
         await query.answer()
         await bot.ensure_current_user(update)
-        context.user_data["pet_flow"] = {"step": "name", "data": {}}
+        context.user_data["adding_pet"] = {"step": "name"}
         try:
             await query.edit_message_text("Добавление нового питомца")
         except Exception:
@@ -184,7 +189,7 @@ def install_clean_menu(bot):
     bot.add_pet_callback = add_pet_callback
 
 
-def main():
+def build_bot():
     bot = base_app._load_bot_module()
     base_app._install_diagnostics_ui(bot)
     if bot.client is not None:
@@ -193,12 +198,27 @@ def main():
     install_clean_menu(bot)
     if bot.client is not None:
         bot.client = _ReferenceAwareClient(bot.client)
+    return bot
+
+
+async def handle_error(update, context):
+    logging.getLogger(__name__).error("Telegram handler failure: %s", type(context.error).__name__)
+    if update is not None and getattr(update, "effective_message", None):
+        try:
+            await update.effective_message.reply_text("Не удалось завершить запрос. Попробуйте ещё раз.")
+        except Exception:
+            logging.getLogger(__name__).warning("Unable to deliver error notice")
+
+
+def main():
+    bot = build_bot()
 
     if not bot.TOKEN:
         raise RuntimeError("TELEGRAM_BOT_TOKEN is not set")
 
     bot.init_db()
     application = Application.builder().token(bot.TOKEN).build()
+    application.add_error_handler(handle_error)
     application.add_handler(CommandHandler("start", bot.start))
     application.add_handler(CommandHandler("menu", bot.menu_command))
     application.add_handler(CommandHandler("myid", bot.myid_command))
@@ -212,6 +232,8 @@ def main():
     application.add_handler(MessageHandler(filters.VOICE, bot.voice_message))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, bot.message))
     application.add_handler(MessageHandler(filters.PHOTO | filters.Document.ALL, bot.media))
+    from knowledge import PROTOCOLS
+    print(f"mydoctor startup: protocols={len(PROTOCOLS)} patch_chain=ready", flush=True)
     application.run_polling()
 
 

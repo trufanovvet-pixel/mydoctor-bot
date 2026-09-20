@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import os
+import math
 
 from openai import OpenAI
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, Update
@@ -124,6 +125,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await ensure_current_user(update)
+    for key in ("adding_pet", "pet_flow", "consult_flow", "prevention_flow", "prevention_section", "choice_flow", "after_pet_action"):
+        context.user_data.pop(key, None)
     await update.message.reply_text("Главное меню", reply_markup=MENU)
 
 
@@ -133,7 +136,7 @@ async def ask_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     text = (update.message.text or "").strip()
-    active = await asyncio.to_thread(get_active_pet, telegram_id(update))
+    active = await asyncio.to_thread(get_active_pet, telegram_id(update)) if context.user_data.get("dialog_scope") == "pet" else None
     history = context.user_data.setdefault("history", [])
     history.append({"role": "user", "content": text})
     history[:] = history[-10:]
@@ -145,10 +148,12 @@ async def ask_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
         instructions=instructions,
         input=history,
     )
-    answer = response.output_text.strip()
+    answer = (response.output_text or "").strip()
+    if not answer:
+        raise ValueError("empty AI response")
     history.append({"role": "assistant", "content": answer})
     history[:] = history[-10:]
-    await asyncio.to_thread(save_consultation, telegram_id(update), text, answer, "text")
+    await asyncio.to_thread(save_consultation, telegram_id(update), text, answer, "text", pet_id=active['id'] if active else None)
     await update.message.reply_text(answer, reply_markup=MENU)
 
 
@@ -226,7 +231,10 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except ValueError:
                 await update.message.reply_text("Напишите вес числом, например 8.8")
                 return
-            pet_id = await asyncio.to_thread(
+            if not math.isfinite(weight) or not 0 < weight <= 200:
+                await update.message.reply_text("Укажите реальный вес питомца в кг: число больше 0 и не больше 200.")
+                return
+            pet = await asyncio.to_thread(
                 add_pet,
                 telegram_id(update),
                 adding["name"],
@@ -236,7 +244,12 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 adding.get("sex"),
                 weight,
             )
-            await asyncio.to_thread(set_active_pet, telegram_id(update), pet_id)
+            context.user_data["dialog_scope"] = "pet"
+            context.user_data["history"] = []
+            from conversation_store import clear_conversation_history
+            await asyncio.to_thread(clear_conversation_history, telegram_id(update))
+            from storage import set_bot_setting
+            await asyncio.to_thread(set_bot_setting, f"dialog_scope:{telegram_id(update)}", "pet")
             name = adding["name"]
             context.user_data.pop("adding_pet", None)
             await update.message.reply_text(f"Готово. {name} добавлен и выбран активным питомцем.", reply_markup=MENU)
@@ -249,10 +262,14 @@ async def pet_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     pet_id = int(query.data.split(":", 1)[1])
-    await asyncio.to_thread(set_active_pet, telegram_id(update), pet_id)
+    selected = await asyncio.to_thread(set_active_pet, telegram_id(update), pet_id)
+    if selected is None:
+        await query.edit_message_text("Питомец не найден. Откройте «Мои питомцы» ещё раз.")
+        return False
     pets = await asyncio.to_thread(list_pets, telegram_id(update))
     pet = next((p for p in pets if p["id"] == pet_id), None)
     await query.edit_message_text(f"Выбран питомец: {pet['name']}" if pet else "Питомец выбран.")
+    return True
 
 
 async def media(update: Update, context: ContextTypes.DEFAULT_TYPE):

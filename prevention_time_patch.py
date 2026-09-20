@@ -52,14 +52,13 @@ def _due_notifications_at_ten():
             when = "через 7 дней" if days == 7 else "завтра" if days == 1 else "сегодня"
             notifications.append(
                 (
+                    event.id,
+                    field,
                     user.telegram_id,
                     f"🔔 Напоминание: у {pet.name} {when} запланирована "
                     f"{labels.get(event.kind, event.kind)} — {event.due_date.strftime('%d.%m.%Y')}."
                 )
             )
-            setattr(event, field, True)
-
-        session.commit()
     return notifications
 
 

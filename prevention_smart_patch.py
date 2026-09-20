@@ -27,6 +27,13 @@ def _add_months(day: date, months: int) -> date:
 
 
 def _parse_relative_date(text: str):
+    try:
+        return _parse_relative_date_unchecked(text)
+    except (ValueError, OverflowError):
+        return None
+
+
+def _parse_relative_date_unchecked(text: str):
     value = _norm(text)
     today = _today()
 
@@ -54,7 +61,8 @@ def _parse_relative_date(text: str):
     if match:
         return _add_months(today, int(match.group(1)) * 12)
 
-    explicit = prevention_patch._parse_date(text)
+    date_match = re.search(r"\b(?:\d{1,2}[./-]\d{1,2}[./-]\d{4}|\d{4}-\d{2}-\d{2})\b", text)
+    explicit = prevention_patch._parse_date(date_match.group() if date_match else text)
     if explicit and explicit >= today:
         return explicit
     return None

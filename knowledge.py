@@ -1,6 +1,10 @@
 import json
+import logging
 import re
+from functools import lru_cache
 from pathlib import Path
+
+import pymorphy3
 
 BASE_DIR = Path(__file__).parent
 PROTOCOL_DIR = BASE_DIR / "protocols"
@@ -14,9 +18,13 @@ def _load_protocols() -> list[dict]:
         return protocols
     for path in sorted(PROTOCOL_DIR.glob("*.json")):
         try:
-            protocols.append(json.loads(path.read_text(encoding="utf-8")))
-        except (OSError, json.JSONDecodeError):
-            continue
+            data = json.loads(path.read_text(encoding="utf-8"))
+            if not isinstance(data, dict) or not data.get("title") or not isinstance(data.get("triggers"), list):
+                raise ValueError("expected a title and a trigger list")
+            protocols.append(data)
+        except (OSError, ValueError) as exc:
+            raise RuntimeError(f"Invalid protocol: {path.name}") from exc
+    logging.getLogger(__name__).info("Loaded %d medical protocols", len(protocols))
     return protocols
 
 
@@ -30,6 +38,8 @@ def _load_json(path: Path) -> dict:
 PROTOCOLS = _load_protocols()
 DIAGNOSTICS = _load_json(DIAGNOSTICS_FILE)
 LAB_INTERPRETATION = _load_json(LAB_INTERPRETATION_FILE)
+ALIASES = _load_json(BASE_DIR / "protocol_aliases.json")
+_MORPH = pymorphy3.MorphAnalyzer()
 
 DIAGNOSTIC_TERMS = (
     "[diagnostics_mode]", "анализ", "анализы", "обследован", "пцр", "ифа",
@@ -46,7 +56,23 @@ def _normalize(text: str) -> str:
 
 def is_diagnostics_query(text: str) -> bool:
     normalized = _normalize(text)
-    return any(term in normalized for term in DIAGNOSTIC_TERMS)
+    # Symptoms (моча, кал) and price words alone must not bypass clinical triage.
+    return bool(re.search(
+        r"\b(?:анализ\w*|обследован\w*|пцр|ифа|серолог\w*|оак|оам|биохим\w*|"
+        r"посев\w*|upc|узи|ультразвук\w*|рентген\w*|референс\w*)\b", normalized
+    ))
+
+
+@lru_cache(maxsize=8192)
+def _lemma(word: str) -> str:
+    if word.startswith("катаракт"):
+        return "катаракта"
+    return _MORPH.parse(word)[0].normal_form if re.fullmatch(r"[а-я]+", word) else word
+
+
+@lru_cache(maxsize=4096)
+def _tokens(text: str) -> tuple[str, ...]:
+    return tuple(_lemma(w) for w in re.findall(r"[a-zа-я0-9]+", _normalize(text)))
 
 
 def diagnostics_context() -> str:
@@ -67,23 +93,24 @@ def diagnostics_context() -> str:
 
 def _protocol_score(protocol: dict, normalized: str) -> int:
     score = 0
-    words = set(normalized.split())
-    for trigger in protocol.get("triggers", []):
-        t = _normalize(str(trigger))
-        if not t:
+    tokens = _tokens(normalized)
+    words = set(tokens)
+    triggers = protocol.get("triggers", []) + ALIASES.get(protocol.get("title", ""), [])
+    seen = set()
+    for trigger in triggers:
+        t = _tokens(str(trigger))
+        if not t or t in seen:
             continue
-        if t == normalized:
+        seen.add(t)
+        if t == tokens:
             score += 12
-        elif t in normalized:
-            score += 6 if " " in t else 3
-        else:
-            tw = set(t.split())
-            overlap = len(tw & words)
-            if overlap and overlap == len(tw):
-                score += 2
-    title = _normalize(str(protocol.get("title", "")))
-    if title and title in normalized:
-        score += 8
+        elif any(tokens[i:i + len(t)] == t for i in range(len(tokens) - len(t) + 1)):
+            score += 6 if len(t) > 1 else 3
+        elif len(t) > 1 and set(t) <= words:
+            score += 4
+    title = _tokens(str(protocol.get("title", "")))
+    if title and title == tokens:
+        score += 100
     return score
 
 
@@ -126,6 +153,13 @@ def _structured_protocol(protocol: dict) -> str:
     guidance = str(protocol.get("llm_guidance", "")).strip()
     if guidance:
         fields.append(f"Экспертные ограничения: {guidance}")
+    # Specialist catalogs and newer treatment fields have different schemas.
+    # Preserve every additional clinical field, including nested data and sources.
+    rendered = {key for key, _ in mapping} | {"title", "llm_guidance"}
+    metadata = {"id", "status", "version", "reviewed_at", "species", "triggers", "audiences"}
+    for key, value in protocol.items():
+        if key not in rendered | metadata and value:
+            fields.append(f"{key}: {json.dumps(value, ensure_ascii=False)}")
     return "\n".join(fields)
 
 
@@ -135,7 +169,7 @@ def protocol_context(text: str) -> str:
         return ""
     chunks = [_structured_protocol(p) for p in matches]
     return (
-        "\n\nПРОВЕРЕННАЯ МЕДИЦИНСКАЯ БАЗА ДЛЯ ЭТОГО ОБРАЩЕНИЯ:\n"
+        "\n\nМЕДИЦИНСКАЯ БАЗА ПРОЕКТА ДЛЯ ЭТОГО ОБРАЩЕНИЯ:\n"
         + "\n\n".join(chunks)
         + "\n\nРЕЖИМ ЭКСПЕРТНОГО КЛИНИЧЕСКОГО МЫШЛЕНИЯ:\n"
           "Работай не как справочник, а как сильный клиницист. Сначала сформируй problem representation: вид, возраст, длительность, "

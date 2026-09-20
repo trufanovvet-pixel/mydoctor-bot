@@ -54,7 +54,7 @@ def install(bot):
             text = (transcription.text or "").strip()
             if not text:
                 raise ValueError("empty transcription")
-            print(f"voice transcript: {text}", flush=True)
+            print(f"voice transcribed chars={len(text)}", flush=True)
         except Exception as exc:
             print(f"voice router transcription error: {exc!r}", flush=True)
             await update.message.reply_text(

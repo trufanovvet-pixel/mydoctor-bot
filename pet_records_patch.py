@@ -6,6 +6,7 @@ from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, select
 from sqlalchemy.orm import Mapped, mapped_column
 
 import storage
+from knowledge import _tokens
 
 
 MONTHS = {
@@ -128,7 +129,8 @@ def _looks_like_archive_request(text: str) -> bool:
     value = _norm(text)
     objects = ("анализ", "документ", "результат", "заключен", "выписк")
     actions = ("покаж", "скинь", "пришл", "отправ", "найд", "достань", "дай", "загрузи")
-    return any(item in value for item in objects) and any(item in value for item in actions)
+    return (bool(re.search(r"(?:^|\s)(?:покажи(?:те)?|скинь(?:те)?|пришли(?:те)?|отправь(?:те)?|найди(?:те)?|достань(?:те)?|дай(?:те)?|загрузи(?:те)?)(?:\s|,|$)", value))
+            and any(item in value for item in objects))
 
 
 def _category(text: str) -> str:
@@ -175,10 +177,9 @@ def _save_document(
                 )
             )
             if existing is not None:
-                return False
+                return existing.id
 
-        session.add(
-            PetDocument(
+        document = PetDocument(
                 user_id=user.id,
                 pet_id=pet_id,
                 telegram_file_id=file_id,
@@ -190,9 +191,9 @@ def _save_document(
                 category=category,
                 document_date=document_date,
             )
-        )
+        session.add(document)
         session.commit()
-        return True
+        return document.id
 
 
 def _documents_for_pet(telegram_id: int, pet_id: int | None):
@@ -226,7 +227,7 @@ def _pet_from_text(pets, text: str):
     matches = []
     for pet in pets:
         name = _norm(pet.get("name") or "").strip()
-        if name and re.search(rf"(?<!\w){re.escape(name)}(?!\w)", value):
+        if name and set(_tokens(name)) <= set(_tokens(value)):
             matches.append(pet)
     return matches[0] if len(matches) == 1 else None
 
@@ -255,6 +256,8 @@ def install(bot):
     async def records_pet_callback(update, context):
         action = context.user_data.get("after_pet_action")
         result = await original_pet_callback(update, context)
+        if result is False:
+            return False
         if action == "media":
             pet = await asyncio.to_thread(bot.get_active_pet, update.effective_user.id)
             context.user_data["records_target_explicit"] = True
@@ -278,6 +281,8 @@ def install(bot):
         await bot.ensure_current_user(update)
         pets = await asyncio.to_thread(bot.list_pets, update.effective_user.id)
         pet = _pet_from_text(pets, text)
+        if "без привязки" in _norm(text):
+            pet = {"id": None, "name": "архив без привязки"}
 
         if pet is None and context.user_data.get("dialog_scope") == "pet":
             pet = await asyncio.to_thread(bot.get_active_pet, update.effective_user.id)
@@ -376,6 +381,8 @@ def install(bot):
 
         before_history = list(context.user_data.get("history", []))
         result = await original_media(update, context)
+        if not isinstance(result, dict) or not result.get("analysis_text"):
+            return result
 
         if context.user_data.get("records_target_explicit"):
             pet_id = context.user_data.get("records_target_pet_id")
@@ -385,13 +392,7 @@ def install(bot):
         else:
             pet_id = None
 
-        history = context.user_data.get("history", [])
-        assistant_text = ""
-        if len(history) >= len(before_history):
-            for item in reversed(history):
-                if isinstance(item, dict) and item.get("role") == "assistant" and item.get("content"):
-                    assistant_text = str(item.get("content"))
-                    break
+        assistant_text = result["analysis_text"]
 
         caption = (message.caption or "").strip()
         combined = "\n".join(x for x in (filename or "", caption, assistant_text) if x)
@@ -411,6 +412,7 @@ def install(bot):
             category,
             document_date,
         )
+        result["document_id"] = saved
 
         if saved and pet_id is not None:
             pets = await asyncio.to_thread(bot.list_pets, update.effective_user.id)

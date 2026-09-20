@@ -1,6 +1,8 @@
 import os
 
 from openai import OpenAI
+from knowledge import protocol_context, diagnostics_context
+from app import _extract_text
 
 
 def _has_media(response_input) -> bool:
@@ -26,6 +28,8 @@ class _MediaSafeResponses:
     def create(self, *args, **kwargs):
         if _has_media(kwargs.get("input")):
             print("media direct client: bypassing text/web response wrappers", flush=True)
+            owner_input = [m for m in kwargs.get("input", []) if isinstance(m, dict) and m.get("role") == "user"]
+            kwargs["instructions"] = (kwargs.get("instructions") or "") + protocol_context(_extract_text(owner_input)) + diagnostics_context()
             return self._direct_client.responses.create(*args, **kwargs)
         return self._base_client.responses.create(*args, **kwargs)
 

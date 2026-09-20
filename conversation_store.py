@@ -71,7 +71,7 @@ def _legacy_history(session, telegram_id: int, limit: int) -> list[dict]:
         select(Consultation)
         .where(
             Consultation.user_id == user.id,
-            Consultation.kind.in_(["chat", "voice_chat", "file_analysis"]),
+            Consultation.kind.in_(["text", "chat", "voice_chat", "file_analysis"]),
         )
         .order_by(Consultation.id.desc())
         .limit(max(1, (limit + 1) // 2))

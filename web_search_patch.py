@@ -128,9 +128,18 @@ def _plain_text(response_input) -> str:
 
 
 def _needs_local_search(response_input) -> bool:
-    value = _plain_text(response_input).lower().replace("ё", "е")
+    messages = response_input if isinstance(response_input, list) else []
+    latest = next((m for m in reversed(messages) if isinstance(m, dict) and m.get("role") == "user"), None)
+    value = _plain_text([latest] if latest else response_input).lower().replace("ё", "е")
     if not value:
         return False
+    if not any(term in value for term in LOCAL_TERMS) and messages:
+        previous = [m for m in messages[:-1] if isinstance(m, dict) and m.get("role") == "user"]
+        previous_text = _plain_text(previous[-1:]).lower().replace("ё", "е")
+        was_search = any(term in previous_text for term in LOCAL_TERMS) and any(term in previous_text for term in SEARCH_TERMS)
+        location_followup = bool(re.match(r"^(?:я (?:в|на)|город\b|а в\b|только круглосуточ|покажи на карте)", value))
+        if was_search and location_followup:
+            return True
     return (
         any(term in value for term in LOCAL_TERMS)
         and any(term in value for term in SEARCH_TERMS)
@@ -171,7 +180,7 @@ def _trim_input(response_input):
     for item in response_input[-12:]:
         if not isinstance(item, dict):
             continue
-        if item.get("content") in {"[GENERAL_SCOPE]", "[PET_SCOPE]"}:
+        if isinstance(item.get("content"), str) and item.get("content") in {"[GENERAL_SCOPE]", "[PET_SCOPE]"}:
             continue
         cleaned.append(item)
     return cleaned

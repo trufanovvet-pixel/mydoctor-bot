@@ -88,6 +88,13 @@ def _set_dialog_scope(context, scope: str):
     ]
 
 
+async def _remember_scope(user_id, scope):
+    from storage import set_bot_setting
+    from conversation_store import clear_conversation_history
+    await asyncio.to_thread(set_bot_setting, f"dialog_scope:{user_id}", scope)
+    await asyncio.to_thread(clear_conversation_history, user_id)
+
+
 def _prepare_scope_history(context):
     scope = context.user_data.get("dialog_scope")
     if scope not in {"general", "pet"}:
@@ -99,6 +106,7 @@ def _prepare_scope_history(context):
         for item in history
         if not (
             isinstance(item, dict)
+            and isinstance(item.get("content"), str)
             and item.get("content") in {GENERAL_MARKER, PET_MARKER}
         )
     ]
@@ -216,7 +224,7 @@ def install(bot):
         await bot.ensure_current_user(update)
         pets = await asyncio.to_thread(bot.list_pets, update.effective_user.id)
         if not pets:
-            context.user_data["pet_flow"] = {"step": "name", "data": {}}
+            context.user_data["adding_pet"] = {"step": "name"}
             _reset_choice_state(context)
             await update.message.reply_text(
                 "Сначала добавим питомца. Как его зовут?",
@@ -240,10 +248,18 @@ def install(bot):
 
     async def scoped_pet_callback(update, context):
         action = context.user_data.pop("after_pet_action", None)
-        await original_pet_callback(update, context)
+        if await original_pet_callback(update, context) is False:
+            return False
+        from conversation_store import clear_conversation_history
+        await asyncio.to_thread(clear_conversation_history, update.effective_user.id)
+        context.user_data.pop("records_target_explicit", None)
+        context.user_data.pop("records_target_pet_id", None)
         pet = await asyncio.to_thread(bot.get_active_pet, update.effective_user.id)
         if not pet:
             return
+
+        if action != "history":
+            await _remember_scope(update.effective_user.id, "pet")
 
         if action == "question":
             _set_dialog_scope(context, "pet")
@@ -268,7 +284,7 @@ def install(bot):
             _set_dialog_scope(context, "pet")
 
     async def guided_message(update, context):
-        if context.user_data.get("pet_flow") or context.user_data.get("consult_flow"):
+        if context.user_data.get("adding_pet") or context.user_data.get("consult_flow"):
             return await original_message(update, context)
 
         text = (update.message.text or "").strip()
@@ -286,6 +302,7 @@ def install(bot):
         if text == "🌐 Общий вопрос" and context.user_data.get("choice_flow") == "question":
             _reset_choice_state(context)
             _set_dialog_scope(context, "general")
+            await _remember_scope(update.effective_user.id, "general")
             await update.message.reply_text(
                 "Хорошо. Напишите общий вопрос или отправьте голосовое. "
                 "Данные сохранённых питомцев использоваться не будут.",
@@ -316,6 +333,7 @@ def install(bot):
         if text == "🌐 Без привязки" and context.user_data.get("choice_flow") == "media":
             _reset_choice_state(context)
             _set_dialog_scope(context, "general")
+            await _remember_scope(update.effective_user.id, "general")
             await update.message.reply_text(
                 "Пришлите фото или PDF. Документ разберу без использования данных сохранённого питомца.",
                 reply_markup=bot.MENU,

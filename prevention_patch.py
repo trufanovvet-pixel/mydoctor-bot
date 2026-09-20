@@ -178,21 +178,34 @@ def _due_notifications():
                 when = "завтра"
             else:
                 when = "сегодня"
-            notifications.append((user.telegram_id, f"🔔 Напоминание: у {pet.name} {when} запланирована {labels.get(event.kind, event.kind)} — {event.due_date.strftime('%d.%m.%Y')}."))
-            setattr(event, field, True)
-        session.commit()
+            notifications.append((event.id, field, user.telegram_id, f"🔔 Напоминание: у {pet.name} {when} запланирована {labels.get(event.kind, event.kind)} — {event.due_date.strftime('%d.%m.%Y')}."))
     return notifications
+
+
+def _mark_reminded(event_id, field):
+    if field not in {"reminded_7", "reminded_1", "reminded_0"}:
+        raise ValueError("invalid reminder field")
+    with SessionLocal() as session:
+        event = session.get(PreventiveEvent, event_id)
+        if event:
+            setattr(event, field, True)
+            session.commit()
+
+
+async def _send_due_notifications(application):
+    for event_id, field, chat_id, text in await asyncio.to_thread(_due_notifications):
+        try:
+            await application.bot.send_message(chat_id=chat_id, text=text)
+        except Exception as exc:
+            print(f"reminder send failed event={event_id} error={type(exc).__name__}", flush=True)
+            continue
+        await asyncio.to_thread(_mark_reminded, event_id, field)
 
 
 async def _reminder_loop(application):
     while True:
         try:
-            notifications = await asyncio.to_thread(_due_notifications)
-            for chat_id, text in notifications:
-                try:
-                    await application.bot.send_message(chat_id=chat_id, text=text)
-                except Exception:
-                    pass
+            await _send_due_notifications(application)
         except Exception:
             pass
         await asyncio.sleep(3600)
@@ -209,9 +222,24 @@ def _install_run_polling_hook():
         async def post_init(app):
             if previous_post_init:
                 await previous_post_init(app)
-            app.create_task(_reminder_loop(app), name="preventive-reminders")
+            # Do not register an infinite task with Application.stop(), which waits
+            # for registered tasks and would hang during a rolling deployment.
+            app.bot_data["reminder_task"] = asyncio.create_task(_reminder_loop(app), name="preventive-reminders")
+
+        previous_post_stop = self.post_stop
+        async def post_stop(app):
+            task = app.bot_data.pop("reminder_task", None)
+            if task:
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+            if previous_post_stop:
+                await previous_post_stop(app)
 
         self.post_init = post_init
+        self.post_stop = post_stop
         return original(self, *args, **kwargs)
 
     Application.run_polling = run_polling_with_reminders
@@ -246,6 +274,13 @@ def install(bot):
         text = (update.message.text or "").strip() if update.message else ""
         normalized = text.lower().replace("ё", "е")
         telegram_id = update.effective_user.id
+
+        if text in {"❌ Отмена", "⬅️ Главное меню", "⬅️ Профилактика"}:
+            context.user_data.pop("prevention_flow", None)
+            context.user_data.pop("prevention_section", None)
+            if text == "❌ Отмена":
+                await update.message.reply_text("Отменено.", reply_markup=bot.MENU)
+                return
 
         flow = context.user_data.get("prevention_flow")
         if flow and flow.get("step") == "date":

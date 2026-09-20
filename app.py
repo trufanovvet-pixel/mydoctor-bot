@@ -196,6 +196,9 @@ def _parse_controller_output(raw: str) -> dict:
     except (json.JSONDecodeError, TypeError):
         return {"stage": "INTERVIEW", "questions": [], "note": "Продолжи сбор анамнеза."}
 
+    if not isinstance(data, dict):
+        return {"stage": "INTERVIEW", "questions": [], "note": "Продолжи сбор анамнеза."}
+
     stage = str(data.get("stage", "INTERVIEW")).upper()
     if stage not in {"INTERVIEW", "ASSESSMENT", "EMERGENCY"}:
         stage = "INTERVIEW"
@@ -263,16 +266,23 @@ class _ResponsesWithKnowledge:
     def create(self, *args, **kwargs):
         text = _extract_text(kwargs.get("input"))
         latest_text = _latest_user_text(kwargs.get("input"))
-        protocol = protocol_context(text)
+        # Owner statements, not earlier model hypotheses, determine retrieval.
+        owner_text = _extract_text([m for m in (kwargs.get("input") or [])
+                                   if isinstance(m, dict) and m.get("role") == "user"])
+        protocol = protocol_context(latest_text) or protocol_context(owner_text)
         diagnostics = diagnostics_context()
-        direct_diagnostics = is_diagnostics_query(latest_text) or "[DIAGNOSTICS_MODE]" in text
+        messages = kwargs.get("input") or []
+        recent_marker = (len(messages) >= 2 and isinstance(messages[-2], dict)
+                         and isinstance(messages[-2].get("content"), str)
+                         and messages[-2]["content"].startswith("[DIAGNOSTICS_MODE]"))
+        direct_diagnostics = is_diagnostics_query(latest_text) or recent_marker
         instructions = kwargs.get("instructions") or ""
         budget_requested = _budget_requested(latest_text)
 
         if direct_diagnostics:
             if not _explicit_patient_reference(latest_text, instructions):
                 instructions = _strip_active_pet_context(instructions)
-            instructions += DIAGNOSTICS_MODE + diagnostics
+            instructions += DIAGNOSTICS_MODE + diagnostics + protocol
             if budget_requested:
                 instructions += (
                     "\nПользователь сам обозначил ограничение бюджета/стоимости. "

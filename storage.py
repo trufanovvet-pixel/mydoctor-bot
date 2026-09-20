@@ -170,6 +170,7 @@ def save_consultation(
     user_text: str,
     assistant_text: str,
     kind: str = "chat",
+    pet_id: int | None | str = "active",
 ) -> None:
     with SessionLocal() as session:
         user = _get_user(session, telegram_id)
@@ -177,9 +178,12 @@ def save_consultation(
             user = User(telegram_id=telegram_id)
             session.add(user)
             session.flush()
+        selected_pet_id = user.active_pet_id if pet_id == "active" else pet_id
+        if selected_pet_id is not None and session.scalar(select(Pet.id).where(Pet.id == selected_pet_id, Pet.user_id == user.id)) is None:
+            selected_pet_id = None
         item = Consultation(
             user_id=user.id,
-            pet_id=user.active_pet_id,
+            pet_id=selected_pet_id,
             kind=kind,
             user_text=user_text,
             assistant_text=assistant_text,
