@@ -48,5 +48,15 @@
     "Не вызывать рвоту при нарушенном сознании, судорогах, риске аспирации, едких веществах/углеводородах",
     "Не считать любой крысиный яд антикоагулянтом",
     "Не придумывать антидот или дозу, отсутствующие в проверенной базе"
+  ],
+  "sources": [
+    {
+      "title": "Tauer/Brutlag — Anticoagulant Rodenticide Poisoning in Animals, MSD Veterinary Manual",
+      "url": "https://www.msdvetmanual.com/toxicology/rodenticide-poisoning/anticoagulant-rodenticide-poisoning-in-animals",
+      "supports": [
+        "/management_principles/2"
+      ],
+      "verified_at": "2026-09-20"
+    }
   ]
 }

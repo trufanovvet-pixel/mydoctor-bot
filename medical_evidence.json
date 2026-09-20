@@ -122,6 +122,46 @@
       "doi": null,
       "access": "full_text_read",
       "accessed_at": "2026-09-20"
+    },
+    "msd_dystocia": {
+      "title": "Scully/Abuelo — Dystocia in Small Animals, MSD Veterinary Manual",
+      "url": "https://www.msdvetmanual.com/reproductive-system/reproductive-diseases-of-the-female-small-animal/dystocia-in-small-animals",
+      "year": 2026,
+      "doi": null,
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    },
+    "msd_rodenticide": {
+      "title": "Tauer/Brutlag — Anticoagulant Rodenticide Poisoning in Animals, MSD Veterinary Manual",
+      "url": "https://www.msdvetmanual.com/toxicology/rodenticide-poisoning/anticoagulant-rodenticide-poisoning-in-animals",
+      "year": 2025,
+      "doi": null,
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    },
+    "acvim_ivde": {
+      "title": "Olby et al. — ACVIM consensus statement on diagnosis and management of acute canine thoracolumbar intervertebral disc extrusion",
+      "url": "https://onlinelibrary.wiley.com/doi/10.1111/jvim.16480",
+      "year": 2022,
+      "doi": "10.1111/jvim.16480",
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    },
+    "bexacat_safety": {
+      "title": "Elanco — Bexacat: Important Safety Information",
+      "url": "https://my.elanco.com/us/bexacat",
+      "year": 2026,
+      "doi": null,
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    },
+    "msd_diabetes": {
+      "title": "Buishand F. Diabetes Mellitus in Dogs and Cats. MSD Veterinary Manual, updated May 2026",
+      "url": "https://www.msdvetmanual.com/endocrine-system/the-pancreas/diabetes-mellitus-in-dogs-and-cats",
+      "year": 2026,
+      "doi": null,
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
     }
   },
   "protocols": {
@@ -392,9 +432,30 @@
     },
     "canine_thoracolumbar_ivde.json": {
       "filename": "canine_thoracolumbar_ivde.json",
-      "status": "source_review_pending",
+      "status": "partially_verified",
       "source_list_present_at_baseline": true,
-      "claims": {},
+      "claims": {
+        "/do_not_do/0": {
+          "status": "supported",
+          "sha256": "de2871373b35a34c99805ed1bf26337baeb7bca92f17ae21a4301b2c70cbfff5",
+          "source_ids": [
+            "acvim_ivde"
+          ],
+          "locator": "4.4 Use of anti-inflammatory medications",
+          "issue": "Не было точечного проверяемого подтверждения.",
+          "action": "Утверждение сопоставлено с указанным разделом полного источника."
+        },
+        "/management_principles/1": {
+          "status": "supported",
+          "sha256": "d369da01866d0d6db501651a5ed29dd184b3ea6569ba11a480de923787cb7825",
+          "source_ids": [
+            "acvim_ivde"
+          ],
+          "locator": "4.3 Duration of exercise restriction; 4.5 Recommendations regarding analgesia",
+          "issue": "Не было точечного проверяемого подтверждения.",
+          "action": "Утверждение сопоставлено с указанным разделом полного источника."
+        }
+      },
       "limitations": [
         "Проверка каждого клинического утверждения по полному источнику не завершена.",
         "Название книги без издания/главы не является подтверждением."
@@ -663,9 +724,20 @@
     },
     "diabetes_mellitus.json": {
       "filename": "diabetes_mellitus.json",
-      "status": "source_review_pending",
+      "status": "partially_verified",
       "source_list_present_at_baseline": true,
-      "claims": {},
+      "claims": {
+        "/emergency_red_flags/3": {
+          "status": "supported",
+          "sha256": "8907f115f57b6d6940a7c3885246bd501e068d5db70196e34a8ae8373fae8a00",
+          "source_ids": [
+            "bexacat_safety"
+          ],
+          "locator": "Important Safety Information: hyporexia/anorexia, lethargy, dehydration; immediate discontinuation and assessment regardless of glucose.",
+          "issue": "В красных флагах не было исключения для эугликемического ДКА.",
+          "action": "Добавлен явный красный флаг для больной кошки на Bexacat."
+        }
+      },
       "limitations": [
         "Проверка каждого клинического утверждения по полному источнику не завершена.",
         "Название книги без издания/главы не является подтверждением."
@@ -675,15 +747,27 @@
     },
     "diabetic_ketoacidosis.json": {
       "filename": "diabetic_ketoacidosis.json",
-      "status": "source_review_pending",
+      "status": "partially_verified",
       "source_list_present_at_baseline": true,
-      "claims": {},
+      "claims": {
+        "/diagnostics/0": {
+          "status": "supported",
+          "sha256": "9c205f49254e07cdf541bc558a30e32fa283f56cd651a32915120222b6caff59",
+          "source_ids": [
+            "msd_diabetes",
+            "bexacat_safety"
+          ],
+          "locator": "MSD: Clinical Findings; Elanco: Important Safety Information, assessment regardless of glucose.",
+          "issue": "Прежнее требование гипергликемии не учитывало эугликемический ДКА на SGLT2.",
+          "action": "Убрана обязательность гипергликемии; добавлено исключение для Bexacat."
+        }
+      },
       "limitations": [
         "Проверка каждого клинического утверждения по полному источнику не завершена.",
         "Название книги без издания/главы не является подтверждением."
       ],
       "title": "Диабетический кетоацидоз у собак и кошек",
-      "trigger_hash": "5dbff7f7f26c7c7e47aa83d3e8f343629963982db01eab59eab583d5c1b731c1"
+      "trigger_hash": "def60f6391439bcf4eed182e73c64c4a6553eb0ac9619bc29bb5fa5f8dae56fe"
     },
     "diagnostic_procedures_v1.json": {
       "filename": "diagnostic_procedures_v1.json",
@@ -711,9 +795,70 @@
     },
     "dystocia_reproduction.json": {
       "filename": "dystocia_reproduction.json",
-      "status": "source_review_pending",
+      "status": "partially_verified",
       "source_list_present_at_baseline": false,
-      "claims": {},
+      "claims": {
+        "/do_not_do/0": {
+          "status": "supported",
+          "sha256": "c32d0cacf202c7d8ea9664c1503d351f3491150d6f17ef164604324e0c5c10ba",
+          "source_ids": [
+            "msd_dystocia"
+          ],
+          "locator": "Treatment: oxytocin and obstructive dystocia",
+          "issue": "Не было точечного проверяемого подтверждения.",
+          "action": "Утверждение сопоставлено с указанным разделом полного источника."
+        },
+        "/diagnostics/0": {
+          "status": "supported",
+          "sha256": "742b23b214ca15b8e2f1a9ffde2bad8e51f1e559a712359e2d48c1c9390654ad",
+          "source_ids": [
+            "msd_dystocia"
+          ],
+          "locator": "Diagnosis: vaginal examination, radiography, ultrasonography",
+          "issue": "Не было точечного проверяемого подтверждения.",
+          "action": "Утверждение сопоставлено с указанным разделом полного источника."
+        },
+        "/diagnostics/1": {
+          "status": "supported",
+          "sha256": "e546218a12fb026352826d9ede02feffede2b4eae57019119a274caf1f416dca",
+          "source_ids": [
+            "msd_dystocia"
+          ],
+          "locator": "Diagnosis: vaginal examination, radiography, ultrasonography",
+          "issue": "Не было точечного проверяемого подтверждения.",
+          "action": "Утверждение сопоставлено с указанным разделом полного источника."
+        },
+        "/diagnostics/2": {
+          "status": "supported",
+          "sha256": "b7204b904d84a1653e6efeca9884a6cffc02c9f77a82ee38590c669a572816c3",
+          "source_ids": [
+            "msd_dystocia"
+          ],
+          "locator": "Diagnosis: vaginal examination, radiography, ultrasonography",
+          "issue": "Не было точечного проверяемого подтверждения.",
+          "action": "Утверждение сопоставлено с указанным разделом полного источника."
+        },
+        "/management_principles/0": {
+          "status": "supported",
+          "sha256": "727c28b688fe2d2f65b6a7e31b4188beea09fc98ed54231aa3dd5ba7b7590cc9",
+          "source_ids": [
+            "msd_dystocia"
+          ],
+          "locator": "Treatment: medical management and indications for caesarean section",
+          "issue": "Не было точечного проверяемого подтверждения.",
+          "action": "Утверждение сопоставлено с указанным разделом полного источника."
+        },
+        "/management_principles/1": {
+          "status": "supported",
+          "sha256": "01e11e1a31742247aa140277204707b7c0df742f4d82e7d2865c22871a7316a5",
+          "source_ids": [
+            "msd_dystocia"
+          ],
+          "locator": "Treatment: medical management and indications for caesarean section",
+          "issue": "Не было точечного проверяемого подтверждения.",
+          "action": "Утверждение сопоставлено с указанным разделом полного источника."
+        }
+      },
       "limitations": [
         "Проверка каждого клинического утверждения по полному источнику не завершена.",
         "Название книги без издания/главы не является подтверждением."
@@ -1735,9 +1880,20 @@
     },
     "reproduction_core_v1.json": {
       "filename": "reproduction_core_v1.json",
-      "status": "source_review_pending",
+      "status": "partially_verified",
       "source_list_present_at_baseline": false,
-      "claims": {},
+      "claims": {
+        "/do_not_do/0": {
+          "status": "supported",
+          "sha256": "c32d0cacf202c7d8ea9664c1503d351f3491150d6f17ef164604324e0c5c10ba",
+          "source_ids": [
+            "msd_dystocia"
+          ],
+          "locator": "Treatment: obstructive dystocia",
+          "issue": "Не было точечного проверяемого подтверждения.",
+          "action": "Утверждение сопоставлено с указанным разделом полного источника."
+        }
+      },
       "limitations": [
         "Проверка каждого клинического утверждения по полному источнику не завершена.",
         "Название книги без издания/главы не является подтверждением."
@@ -1759,9 +1915,20 @@
     },
     "rodenticide_poisoning.json": {
       "filename": "rodenticide_poisoning.json",
-      "status": "source_review_pending",
+      "status": "partially_verified",
       "source_list_present_at_baseline": false,
-      "claims": {},
+      "claims": {
+        "/management_principles/1": {
+          "status": "supported",
+          "sha256": "076f5f20bea49182f171350309c0ec82b68e3afae9087749a7edb96e440aaee5",
+          "source_ids": [
+            "msd_rodenticide"
+          ],
+          "locator": "Treatment: vitamin K1 and post-treatment PT",
+          "issue": "Не было точечного проверяемого подтверждения.",
+          "action": "Утверждение сопоставлено с указанным разделом полного источника."
+        }
+      },
       "limitations": [
         "Проверка каждого клинического утверждения по полному источнику не завершена.",
         "Название книги без издания/главы не является подтверждением."
@@ -1971,9 +2138,20 @@
     },
     "toxicology_core_v1.json": {
       "filename": "toxicology_core_v1.json",
-      "status": "source_review_pending",
+      "status": "partially_verified",
       "source_list_present_at_baseline": false,
-      "claims": {},
+      "claims": {
+        "/management_principles/2": {
+          "status": "supported",
+          "sha256": "e1ad07fec7156dd1d221acc30cec70f18d7a55b1695cbd33f9174095cbdb2910",
+          "source_ids": [
+            "msd_rodenticide"
+          ],
+          "locator": "Treatment: vitamin K1 and post-treatment PT",
+          "issue": "Не было точечного проверяемого подтверждения.",
+          "action": "Утверждение сопоставлено с указанным разделом полного источника."
+        }
+      },
       "limitations": [
         "Проверка каждого клинического утверждения по полному источнику не завершена.",
         "Название книги без издания/главы не является подтверждением."

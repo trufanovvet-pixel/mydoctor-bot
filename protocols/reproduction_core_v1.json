@@ -45,5 +45,15 @@
   ],
   "do_not_do": [
     "Не использовать окситоцин при вероятной механической обструкции"
+  ],
+  "sources": [
+    {
+      "title": "Scully/Abuelo — Dystocia in Small Animals, MSD Veterinary Manual",
+      "url": "https://www.msdvetmanual.com/reproductive-system/reproductive-diseases-of-the-female-small-animal/dystocia-in-small-animals",
+      "supports": [
+        "/do_not_do/0"
+      ],
+      "verified_at": "2026-09-20"
+    }
   ]
 }

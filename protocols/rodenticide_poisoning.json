@@ -41,5 +41,15 @@
   "do_not_do": [
     "Не считать любой крысиный яд антикоагулянтом",
     "Не использовать витамин K3 как замену K1"
+  ],
+  "sources": [
+    {
+      "title": "Tauer/Brutlag — Anticoagulant Rodenticide Poisoning in Animals, MSD Veterinary Manual",
+      "url": "https://www.msdvetmanual.com/toxicology/rodenticide-poisoning/anticoagulant-rodenticide-poisoning-in-animals",
+      "supports": [
+        "/management_principles/1"
+      ],
+      "verified_at": "2026-09-20"
+    }
   ]
 }

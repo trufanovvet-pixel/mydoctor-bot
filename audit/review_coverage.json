@@ -1,0 +1,157 @@
+{
+  "acute_paraparesis_paralysis.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "canine_thoracolumbar_ivde.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "traumatic_brain_injury.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "poisoning_general.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "rodenticide_poisoning.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "toxicology_core_v1.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "sepsis_sirs.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "hypoglycemia.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "diabetic_ketoacidosis.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "pericardial_effusion_tamponade.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "thrombosis_antithrombotic.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "thrombocytopenia_coagulopathy.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "hemostasis_thrombosis_core_v1.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "dystocia_reproduction.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "reproduction_core_v1.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "surgical_wound_reconstruction_v1.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "dermatologic_procedures_advanced_v1.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "ophthalmology_core_v1.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "ophthalmic_surgery_advanced_v1.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "corneal_ulcer_eye_pain.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "glaucoma_uveitis_red_eye.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "cataract_lens_luxation.json": {
+    "content_reviewed": true,
+    "note": "Текст прочитан; точечные подтверждения в medical_evidence.json. Остальные утверждения не объявляются валидированными.",
+    "date": "2026-09-20"
+  },
+  "canine_hypoadrenocorticism.json": {
+    "content_reviewed": true,
+    "note": "Прочитан клинический текст; проверка по источникам только для явно зарегистрированных полей. Это не полная медицинская валидация.",
+    "date": "2026-09-20"
+  },
+  "hypoadrenocorticism.json": {
+    "content_reviewed": true,
+    "note": "Прочитан клинический текст; проверка по источникам только для явно зарегистрированных полей. Это не полная медицинская валидация.",
+    "date": "2026-09-20"
+  },
+  "canine_hyperadrenocorticism.json": {
+    "content_reviewed": true,
+    "note": "Прочитан клинический текст; проверка по источникам только для явно зарегистрированных полей. Это не полная медицинская валидация.",
+    "date": "2026-09-20"
+  },
+  "hyperadrenocorticism.json": {
+    "content_reviewed": true,
+    "note": "Прочитан клинический текст; проверка по источникам только для явно зарегистрированных полей. Это не полная медицинская валидация.",
+    "date": "2026-09-20"
+  },
+  "canine_hypothyroidism.json": {
+    "content_reviewed": true,
+    "note": "Прочитан клинический текст; проверка по источникам только для явно зарегистрированных полей. Это не полная медицинская валидация.",
+    "date": "2026-09-20"
+  },
+  "feline_hyperthyroidism.json": {
+    "content_reviewed": true,
+    "note": "Прочитан клинический текст; проверка по источникам только для явно зарегистрированных полей. Это не полная медицинская валидация.",
+    "date": "2026-09-20"
+  },
+  "diabetes_mellitus.json": {
+    "content_reviewed": true,
+    "note": "Прочитан клинический текст; проверка по источникам только для явно зарегистрированных полей. Это не полная медицинская валидация.",
+    "date": "2026-09-20"
+  },
+  "hypercalcemia.json": {
+    "content_reviewed": true,
+    "note": "Прочитан клинический текст; проверка по источникам только для явно зарегистрированных полей. Это не полная медицинская валидация.",
+    "date": "2026-09-20"
+  },
+  "polyuria_polydipsia.json": {
+    "content_reviewed": true,
+    "note": "Прочитан клинический текст; проверка по источникам только для явно зарегистрированных полей. Это не полная медицинская валидация.",
+    "date": "2026-09-20"
+  }
+}
