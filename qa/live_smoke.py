@@ -54,6 +54,7 @@ def media_case(pdf=False):
 
 def main():
     start=time.monotonic(); failures=[]
+    selected = sys.argv[1] if len(sys.argv)>1 else None
     bot=enhanced_app2.build_bot()
     if bot.client is None or not bot.TOKEN:
         raise RuntimeError('Required runtime credentials are absent')
@@ -81,12 +82,16 @@ def main():
         ('clinic_search','Найди ветеринарную клинику в Туле: дай официальный сайт и адрес, проверь веб-поиском.',('http',)),
     ]
     for name, question, expected in cases:
+        if selected and selected != name:
+            continue
         try:
             response=bot.client.responses.create(model='gpt-5.6-sol', instructions=bot.SYSTEM_PROMPT,
                 input=question if isinstance(question,list) else [{'role':'user','content':question}],
                 max_output_tokens=1400,timeout=75)
             answer=(response.output_text or '').strip()
             assert answer and any(word in answer.lower() for word in expected), 'Expected content absent'
+            if name=='cryosurgery':
+                assert any(word in answer.lower() for word in ('не стоит','не следует','нельзя','не рекоменд','нет,','нет.')), 'Direct safety answer missing'
             if name=='clinic_search':
                 assert any(item.get('type')=='web_search_call' for item in response.model_dump().get('output',[])), 'No actual web search call'
             print('QA_LIVE PASS '+name+' '+json.dumps(answer[:2600],ensure_ascii=False),flush=True)
@@ -94,6 +99,9 @@ def main():
             failures.append(name)
             print('QA_LIVE FAIL '+name+' '+type(exc).__name__,flush=True)
 
+    if selected:
+        print('QA_LIVE SUMMARY '+json.dumps({'failed':failures,'case':selected,'elapsed_seconds':round(time.monotonic()-start,1)},ensure_ascii=False),flush=True)
+        return 1 if failures else 0
     try:
         # Round-trip a synthetic utterance; no user audio or customer data is read.
         direct=OpenAI(timeout=60,max_retries=1)

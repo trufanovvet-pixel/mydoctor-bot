@@ -252,6 +252,14 @@ def test_clinic_location_followup():
         {'role':'assistant','content':'Какой город?'},{'role':'user','content':'Я в Туле'}])
 
 
+@pytest.mark.parametrize('question', ['Можно удалить неизвестную шишку жидким азотом без исследования?',
+    'Как проходит стерилизация собаки?', 'Как готовиться к колоноскопии кошки?'])
+async def test_general_procedure_gets_direct_answer(bot,ctx,update,raw,question):
+    await bot.message(update(question),ctx)
+    assert len(raw.responses.calls)==1
+    assert 'СПРАВОЧНЫЙ РЕЖИМ' in raw.responses.calls[0]['instructions']
+
+
 async def test_unbound_archive_retrieval(bot,ctx,update):
     storage.ensure_user(100)
     records._save_document(100,None,'file','unique','document','application/pdf','lab.pdf','анализ','analysis',None)
