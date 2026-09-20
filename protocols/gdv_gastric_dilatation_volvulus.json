@@ -39,5 +39,15 @@
   ],
   "do_not_do": [
     "Не задерживать декомпрессию/операцию ради полного диагностического набора"
+  ],
+  "sources": [
+    {
+      "title": "ACVS — Gastric Dilatation-Volvulus",
+      "url": "https://www.acvs.org/small-animal/gastric-dilatation-volvulus/",
+      "supports": [
+        "/management_principles/1"
+      ],
+      "verified_at": "2026-09-20"
+    }
   ]
 }

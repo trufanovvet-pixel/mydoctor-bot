@@ -1,3 +1,4 @@
+from patient_context import PATIENT_FACT_RULES, controller_input
 import json
 import re
 from importlib.machinery import SourceFileLoader
@@ -249,7 +250,7 @@ class _ResponsesWithKnowledge:
         self._responses = responses
 
     def _controller_decision(self, kwargs, protocol: str) -> dict:
-        instructions = CLINICAL_CONTROLLER + protocol
+        instructions = CLINICAL_CONTROLLER + protocol + PATIENT_FACT_RULES
         base = kwargs.get("instructions") or ""
         if base:
             instructions += "\n\nДанные пациента/системные правила:\n" + base
@@ -257,7 +258,7 @@ class _ResponsesWithKnowledge:
             response = self._responses.create(
                 model=kwargs.get("model", "gpt-5.6-sol"),
                 instructions=instructions,
-                input=kwargs.get("input"),
+                input=controller_input(kwargs.get("input")),
             )
             return _parse_controller_output(response.output_text)
         except Exception:

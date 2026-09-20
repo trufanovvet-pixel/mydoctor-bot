@@ -1,3 +1,4 @@
+from patient_context import MAX_MESSAGES, PATIENT_FACT_RULES
 import asyncio
 import base64
 import os
@@ -139,7 +140,7 @@ async def ask_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
     active = await asyncio.to_thread(get_active_pet, telegram_id(update)) if context.user_data.get("dialog_scope") == "pet" else None
     history = context.user_data.setdefault("history", [])
     history.append({"role": "user", "content": text})
-    history[:] = history[-10:]
+    history[:] = history[-MAX_MESSAGES:]
 
     instructions = SYSTEM_PROMPT + "\n\nДанные активного питомца:\n" + pet_summary(active)
     response = await asyncio.to_thread(
@@ -152,7 +153,7 @@ async def ask_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not answer:
         raise ValueError("empty AI response")
     history.append({"role": "assistant", "content": answer})
-    history[:] = history[-10:]
+    history[:] = history[-MAX_MESSAGES:]
     await asyncio.to_thread(save_consultation, telegram_id(update), text, answer, "text", pet_id=active['id'] if active else None)
     await update.message.reply_text(answer, reply_markup=MENU)
 

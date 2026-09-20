@@ -1,3 +1,4 @@
+from patient_context import MAX_MESSAGES, PATIENT_FACT_RULES
 import asyncio
 import io
 
@@ -22,7 +23,7 @@ PERSISTENT_CONTEXT_RULES = """
 def install(bot):
     init_conversation_store()
     if PERSISTENT_CONTEXT_RULES not in bot.SYSTEM_PROMPT:
-        bot.SYSTEM_PROMPT += PERSISTENT_CONTEXT_RULES
+        bot.SYSTEM_PROMPT += PERSISTENT_CONTEXT_RULES + PATIENT_FACT_RULES
 
     original_start = bot.start
     original_ask_ai = bot.ask_ai
@@ -41,7 +42,7 @@ def install(bot):
         restored = await asyncio.to_thread(
             load_conversation_history,
             update.effective_user.id,
-            12,
+            MAX_MESSAGES,
         )
         if restored:
             history.extend(restored)
@@ -151,7 +152,7 @@ def install(bot):
                 }
             )
         history.append({"role": "user", "content": user_text})
-        history[:] = history[-12:]
+        history[:] = history[-MAX_MESSAGES:]
 
         pet = await asyncio.to_thread(bot.get_active_pet, update.effective_user.id)
         instructions = bot.SYSTEM_PROMPT + "\n\nДанные активного питомца:\n" + bot.pet_summary(pet)
@@ -167,7 +168,7 @@ def install(bot):
             if not answer:
                 answer = "Не удалось сформировать ответ. Пожалуйста, повторите сообщение."
             history.append({"role": "assistant", "content": answer})
-            history[:] = history[-12:]
+            history[:] = history[-MAX_MESSAGES:]
             await asyncio.to_thread(
                 save_conversation_message,
                 update.effective_user.id,

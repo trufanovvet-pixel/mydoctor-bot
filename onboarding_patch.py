@@ -1,3 +1,4 @@
+from patient_context import MAX_MESSAGES, PATIENT_FACT_RULES
 import asyncio
 import re
 
@@ -110,7 +111,7 @@ def _prepare_scope_history(context):
             and item.get("content") in {GENERAL_MARKER, PET_MARKER}
         )
     ]
-    cleaned = cleaned[-9:]
+    cleaned = cleaned[-(MAX_MESSAGES - 2):]
     history[:] = [
         {"role": "user", "content": _scope_marker(scope)},
         *cleaned,

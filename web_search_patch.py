@@ -1,3 +1,4 @@
+from patient_context import MAX_MESSAGES, PATIENT_FACT_RULES
 import os
 import re
 
@@ -177,7 +178,7 @@ def _trim_input(response_input):
     if not isinstance(response_input, list):
         return response_input
     cleaned = []
-    for item in response_input[-12:]:
+    for item in response_input[-MAX_MESSAGES:]:
         if not isinstance(item, dict):
             continue
         if isinstance(item.get("content"), str) and item.get("content") in {"[GENERAL_SCOPE]", "[PET_SCOPE]"}:
@@ -246,7 +247,7 @@ class _WebAwareResponses:
         if not _needs_local_search(response_input) or self._web_client is None:
             return self._base_client.responses.create(*args, **kwargs)
 
-        instructions = LOCAL_SEARCH_RULES
+        instructions = LOCAL_SEARCH_RULES + PATIENT_FACT_RULES
         if _dialog_scope(response_input) == "pet":
             pet_context = _active_pet_context(kwargs.get("instructions") or "")
             if pet_context:
@@ -261,6 +262,7 @@ class _WebAwareResponses:
             instructions=instructions,
             input=_trim_input(response_input),
             tools=[{"type": "web_search", "search_context_size": "medium"}],
+            tool_choice="required",
         )
         answer = (response.output_text or "").strip()
         return _ResponseProxy(response, _append_sources(answer, response))

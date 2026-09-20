@@ -54,5 +54,15 @@
     "Не исключать перелом по одной проекции",
     "Не выполнять многократное силовое вправление без исключения перелома"
   ],
-  "llm_guidance": "При фото/рентгене не придумывай невидимые проекции и отмечай ограничения качества/позиционирования."
+  "llm_guidance": "При фото/рентгене не придумывай невидимые проекции и отмечай ограничения качества/позиционирования.",
+  "sources": [
+    {
+      "title": "ACVS — Cranial Cruciate Ligament Disease",
+      "url": "https://www.acvs.org/small-animal/cranial-cruciate-ligament-disease/",
+      "supports": [
+        "/management_principles/2"
+      ],
+      "verified_at": "2026-09-20"
+    }
+  ]
 }

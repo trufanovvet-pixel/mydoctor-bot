@@ -41,5 +41,15 @@
   ],
   "do_not_do": [
     "Не исключать CCL только из-за отрицательного drawer у напряжённого пациента"
+  ],
+  "sources": [
+    {
+      "title": "ACVS — Cranial Cruciate Ligament Disease",
+      "url": "https://www.acvs.org/small-animal/cranial-cruciate-ligament-disease/",
+      "supports": [
+        "/management_principles/0"
+      ],
+      "verified_at": "2026-09-20"
+    }
   ]
 }

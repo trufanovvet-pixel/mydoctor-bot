@@ -1,3 +1,4 @@
+from medical_evidence import safe_protocol, evidence_context
 import json
 import logging
 import re
@@ -78,14 +79,14 @@ def _tokens(text: str) -> tuple[str, ...]:
 def diagnostics_context() -> str:
     chunks = []
     if DIAGNOSTICS:
-        chunks.append("ПРОВЕРЕННАЯ БАЗА СРАВНЕНИЯ АНАЛИЗОВ И ОБСЛЕДОВАНИЙ:\n" + json.dumps(DIAGNOSTICS, ensure_ascii=False))
+        chunks.append("БАЗА ПРОЕКТА (ПОЛНАЯ ПРОВЕРКА ИСТОЧНИКОВ НЕ ЗАВЕРШЕНА): СРАВНЕНИЕ АНАЛИЗОВ И ОБСЛЕДОВАНИЙ:\n" + json.dumps(DIAGNOSTICS, ensure_ascii=False))
     if LAB_INTERPRETATION:
-        chunks.append("ПРОВЕРЕННАЯ БАЗА ИНТЕРПРЕТАЦИИ ГОТОВЫХ АНАЛИЗОВ:\n" + json.dumps(LAB_INTERPRETATION, ensure_ascii=False))
+        chunks.append("БАЗА ПРОЕКТА (ПОЛНАЯ ПРОВЕРКА ИСТОЧНИКОВ НЕ ЗАВЕРШЕНА): ИНТЕРПРЕТАЦИЯ ГОТОВЫХ АНАЛИЗОВ:\n" + json.dumps(LAB_INTERPRETATION, ensure_ascii=False))
     if not chunks:
         return ""
     return (
         "\n\n" + "\n\n".join(chunks)
-        + "\n\nИспользуй базу как клинические правила. Не перечисляй показатели механически: связывай изменения в паттерны, "
+        + "\n\nИспользуй базу как вспомогательные клинические сведения, а не подтверждение каждого утверждения. Не перечисляй показатели механически: связывай изменения в паттерны, "
           "учитывай артефакты, клинику и динамику. Не называй один тест универсально лучшим. "
           "Не упоминай бюджет, цену или экономию, если пользователь сам этого не спрашивал."
     )
@@ -95,6 +96,11 @@ def _protocol_score(protocol: dict, normalized: str) -> int:
     score = 0
     tokens = _tokens(normalized)
     words = set(tokens)
+    # Curated combinations with a verified interaction must survive top-k retrieval.
+    for combination in protocol.get('priority_triggers', []):
+        required = set(_tokens(combination))
+        if len(required) >= 2 and required <= words:
+            score += 20
     triggers = protocol.get("triggers", []) + ALIASES.get(protocol.get("title", ""), [])
     seen = set()
     for trigger in triggers:
@@ -131,7 +137,10 @@ def match_protocols(text: str, limit: int = 4) -> list[dict]:
 
 
 def _structured_protocol(protocol: dict) -> str:
-    fields = []
+    evidence = evidence_context(protocol)
+    protocol = safe_protocol(protocol)
+    fields = [evidence, "Статус исходного файла: " + str(protocol.get("status", "не указан")),
+              "Виды: " + json.dumps(protocol.get("species", []), ensure_ascii=False)]
     title = protocol.get("title")
     if title:
         fields.append(f"ПРОТОКОЛ: {title}")

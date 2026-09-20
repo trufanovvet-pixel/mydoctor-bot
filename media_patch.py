@@ -1,3 +1,4 @@
+from patient_context import MAX_MESSAGES, PATIENT_FACT_RULES
 import asyncio
 import base64
 import io
@@ -109,7 +110,7 @@ def _preprocess_image(file_bytes: bytes) -> list[bytes]:
 def _safe_history(history):
     """Keep only text turns for multimodal calls; older rich/list payloads can break routing logic."""
     safe = []
-    for item in history[-8:]:
+    for item in history[-MAX_MESSAGES:]:
         if not isinstance(item, dict):
             continue
         role = item.get("role")
@@ -207,7 +208,7 @@ def install(bot):
 
             history.append({"role": "user", "content": f"Загружено медицинское изображение/документ {filename}. Запрос: {user_request}"})
             history.append({"role": "assistant", "content": answer})
-            history[:] = history[-12:]
+            history[:] = history[-MAX_MESSAGES:]
 
             pet = await asyncio.to_thread(bot.get_active_pet, update.effective_user.id) if context.user_data.get("dialog_scope") == "pet" else None
             pet_id = context.user_data.get("records_target_pet_id") if context.user_data.get("records_target_explicit") else (pet['id'] if pet else None)

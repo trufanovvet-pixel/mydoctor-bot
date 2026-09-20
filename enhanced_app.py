@@ -1,3 +1,4 @@
+from patient_context import MAX_MESSAGES, PATIENT_FACT_RULES
 import asyncio
 import io
 import os
@@ -282,7 +283,7 @@ def install_features(bot):
                 }
             )
         history.append({"role": "user", "content": user_text})
-        history[:] = history[-12:]
+        history[:] = history[-MAX_MESSAGES:]
         await update.message.chat.send_action("typing")
 
         pet = await asyncio.to_thread(bot.get_active_pet, update.effective_user.id)
@@ -299,7 +300,7 @@ def install_features(bot):
             if not answer:
                 answer = "Не удалось сформировать ответ. Пожалуйста, повторите сообщение."
             history.append({"role": "assistant", "content": answer})
-            history[:] = history[-12:]
+            history[:] = history[-MAX_MESSAGES:]
             await asyncio.to_thread(
                 bot.save_consultation,
                 update.effective_user.id,

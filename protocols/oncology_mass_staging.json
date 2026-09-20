@@ -50,6 +50,14 @@
   ],
   "llm_guidance": "Следуй принципам AAHA 2026: морфологическая верификация и релевантное стадирование предшествуют прогнозу и выбору терапии.",
   "sources": [
-    "https://www.aaha.org/resources/2026-aaha-oncology-guidelines-for-dogs-and-cats/"
+    "https://www.aaha.org/resources/2026-aaha-oncology-guidelines-for-dogs-and-cats/",
+    {
+      "title": "AAHA 2026 Oncology Guidelines — Guidelines at a Glance",
+      "url": "https://www.aaha.org/resources/2026-aaha-oncology-guidelines-for-dogs-and-cats/",
+      "supports": [
+        "/management_principles/0"
+      ],
+      "verified_at": "2026-09-20"
+    }
   ]
 }

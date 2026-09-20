@@ -50,5 +50,23 @@
     "Не задерживать жизнеспасающий source control ради полного набора исследований",
     "Не считать массу селезёнки автоматически гемангиосаркомой без гистологии",
     "Не закрывать наглухо сильно загрязнённую/инфицированную рану без обработки"
+  ],
+  "sources": [
+    {
+      "title": "ACVS — Gastric Dilatation-Volvulus",
+      "url": "https://www.acvs.org/small-animal/gastric-dilatation-volvulus/",
+      "supports": [
+        "/management_principles/0"
+      ],
+      "verified_at": "2026-09-20"
+    },
+    {
+      "title": "ACVS — Splenic Masses",
+      "url": "https://www.acvs.org/small-animal/splenic-masses/",
+      "supports": [
+        "/do_not_do/1"
+      ],
+      "verified_at": "2026-09-20"
+    }
   ]
 }

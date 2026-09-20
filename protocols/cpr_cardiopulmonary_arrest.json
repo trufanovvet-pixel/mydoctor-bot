@@ -40,6 +40,15 @@
     "Не задерживать компрессии ради интубации, венозного доступа или визуализации"
   ],
   "sources": [
-    "https://recoverinitiative.org/2024-guidelines/"
+    "https://recoverinitiative.org/2024-guidelines/",
+    {
+      "title": "Burkitt-Creedon et al. 2024 RECOVER Guidelines: Updated treatment recommendations for CPR in dogs and cats",
+      "url": "https://onlinelibrary.wiley.com/doi/10.1111/vec.13391",
+      "supports": [
+        "/management_principles/1",
+        "/do_not_do/0"
+      ],
+      "verified_at": "2026-09-20"
+    }
   ]
 }

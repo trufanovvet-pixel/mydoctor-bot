@@ -90,7 +90,7 @@ def _legacy_history(session, telegram_id: int, limit: int) -> list[dict]:
 
 
 def load_conversation_history(telegram_id: int, limit: int = 12) -> list[dict]:
-    safe_limit = max(1, min(int(limit), 30))
+    safe_limit = max(1, min(int(limit), 60))
     with SessionLocal() as session:
         rows = session.scalars(
             select(ConversationMessage)

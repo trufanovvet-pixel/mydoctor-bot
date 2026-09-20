@@ -1,0 +1,2115 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-09-20",
+  "scope": "Field-level source review. No protocol is certified in full.",
+  "sources": {
+    "capc_babesia": {
+      "title": "CAPC — Babesia spp.",
+      "url": "https://capcvet.org/guidelines/babesia/",
+      "year": null,
+      "doi": null,
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    },
+    "abcd_fip": {
+      "title": "ABCD — Feline Infectious Peritonitis, update 24 March 2026",
+      "url": "https://www.abcdcatsvets.org/guideline-for-feline-infectious-peritonitis/",
+      "year": 2026,
+      "doi": null,
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    },
+    "recover": {
+      "title": "Burkitt-Creedon et al. 2024 RECOVER Guidelines: Updated treatment recommendations for CPR in dogs and cats",
+      "url": "https://onlinelibrary.wiley.com/doi/10.1111/vec.13391",
+      "year": 2024,
+      "doi": "10.1111/vec.13391",
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    },
+    "aaha_fluids": {
+      "title": "AAHA 2024 Fluid Therapy — Section 5: Fluid Therapy in Ill Patients",
+      "url": "https://www.aaha.org/resources/2024-aaha-fluid-therapy-guidelines-for-dogs-and-cats/section-5-fluid-therapy-in-ill-patients/",
+      "year": 2024,
+      "doi": null,
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    },
+    "aaha_overload": {
+      "title": "AAHA 2024 Fluid Therapy — Section 6: Fluid Overload",
+      "url": "https://www.aaha.org/resources/2024-aaha-fluid-therapy-guidelines-for-dogs-and-cats/section-6-fluid-overload/",
+      "year": 2024,
+      "doi": null,
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    },
+    "noah_dog": {
+      "title": "Boehringer Ingelheim — Metacam 1.5 mg/ml dogs: contraindications and interactions",
+      "url": "https://www.noahcompendium.co.uk/?id=-447613",
+      "year": null,
+      "doi": null,
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    },
+    "noah_cat": {
+      "title": "Boehringer Ingelheim — Metacam 0.5 mg/ml cats: contraindications and interactions",
+      "url": "https://www.noahcompendium.co.uk/?id=-447600",
+      "year": null,
+      "doi": null,
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    },
+    "acvs_gdv": {
+      "title": "ACVS — Gastric Dilatation-Volvulus",
+      "url": "https://www.acvs.org/small-animal/gastric-dilatation-volvulus/",
+      "year": null,
+      "doi": null,
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    },
+    "acvs_pyometra": {
+      "title": "ACVS — Pyometra",
+      "url": "https://www.acvs.org/small-animal/pyometra/",
+      "year": null,
+      "doi": null,
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    },
+    "acvs_urethra": {
+      "title": "ACVS — Urinary Obstruction in Male Cats",
+      "url": "https://www.acvs.org/small-animal/urinary-obstruction-in-male-cats/",
+      "year": null,
+      "doi": null,
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    },
+    "acvs_spleen": {
+      "title": "ACVS — Splenic Masses",
+      "url": "https://www.acvs.org/small-animal/splenic-masses/",
+      "year": null,
+      "doi": null,
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    },
+    "acvs_ccl": {
+      "title": "ACVS — Cranial Cruciate Ligament Disease",
+      "url": "https://www.acvs.org/small-animal/cranial-cruciate-ligament-disease/",
+      "year": null,
+      "doi": null,
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    },
+    "aaha_oncology": {
+      "title": "AAHA 2026 Oncology Guidelines — Guidelines at a Glance",
+      "url": "https://www.aaha.org/resources/2026-aaha-oncology-guidelines-for-dogs-and-cats/",
+      "year": 2026,
+      "doi": null,
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    },
+    "seizures": {
+      "title": "Charalambous et al. ACVIM consensus: status epilepticus and cluster seizures, JVIM 38:19–40",
+      "url": "https://onlinelibrary.wiley.com/doi/10.1111/jvim.16928",
+      "year": 2024,
+      "doi": "10.1111/jvim.16928",
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    },
+    "capc_giardia": {
+      "title": "CAPC — Giardia",
+      "url": "https://capcvet.org/guidelines/giardia/",
+      "year": null,
+      "doi": null,
+      "access": "full_text_read",
+      "accessed_at": "2026-09-20"
+    }
+  },
+  "protocols": {
+    "abdominal_distension_ascites.json": {
+      "filename": "abdominal_distension_ascites.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": false,
+      "claims": {
+        "/emergency_red_flags/0": {
+          "status": "supported",
+          "sha256": "b82a5c4b95cce43e24cb5abe9613c19697e78318754ff67abfd91882e8b75b17",
+          "source_ids": [
+            "acvs_gdv"
+          ],
+          "locator": "Signs and symptoms",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Увеличение живота и асцит у собак и кошек",
+      "trigger_hash": "5d3fa6303f6e0d9ca3fe0e62912fbb93c15cf49d548b209d0750d79d45e93ba6"
+    },
+    "acute_abdomen.json": {
+      "filename": "acute_abdomen.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": true,
+      "claims": {
+        "/emergency_red_flags/1": {
+          "status": "supported",
+          "sha256": "ef9dd67d23d644b273f2b4f6099e6f02bc014b9c9738aea87f2da754f5b61933",
+          "source_ids": [
+            "acvs_gdv"
+          ],
+          "locator": "Signs and symptoms",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Острый живот у собак и кошек",
+      "trigger_hash": "da6db4625846d379e8348ce078760a7d620c33b869d7ca08882a1fec0c620e76"
+    },
+    "acute_diarrhea.json": {
+      "filename": "acute_diarrhea.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Острая диарея у собак и кошек",
+      "trigger_hash": "47eede4078cb0320f9358ea8c537742b189b7e35baca8b4ae4b31d351ad4e965"
+    },
+    "acute_kidney_injury.json": {
+      "filename": "acute_kidney_injury.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": true,
+      "claims": {
+        "/management_principles/0": {
+          "status": "supported",
+          "sha256": "3c0be54310c4e0c042b49823efed33da22b2870205e55b7fcd2088954ad571d0",
+          "source_ids": [
+            "aaha_fluids"
+          ],
+          "locator": "Azotemia",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        },
+        "/management_principles/1": {
+          "status": "supported",
+          "sha256": "6671417433db4c635722b878d6582077bb2610ac8cc8a946aa9a9c9c7be43d81",
+          "source_ids": [
+            "aaha_fluids"
+          ],
+          "locator": "Azotemia",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Острое повреждение почек у собак и кошек",
+      "trigger_hash": "55b17c198a3fedd18544ae63c592a1028193ef7cdbc5cac35bcf68d8cc4fe005"
+    },
+    "acute_paraparesis_paralysis.json": {
+      "filename": "acute_paraparesis_paralysis.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Острый парез и паралич у собак и кошек",
+      "trigger_hash": "7d468b0aa5a331f46bb2de76baf8fdf26878c99465fa36be9062aa5291bfed39"
+    },
+    "anemia.json": {
+      "filename": "anemia.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": false,
+      "claims": {
+        "/management_principles/0": {
+          "status": "supported",
+          "sha256": "b8c2201521ab930de5717199df67d72bd373cffc535d9559e68a17580a0777c9",
+          "source_ids": [
+            "aaha_fluids"
+          ],
+          "locator": "Anemia",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Анемия у собак и кошек",
+      "trigger_hash": "5b40800b65254964035eed93cc0be007c537ff4b96c00101d1b84735216a0afd"
+    },
+    "babesiosis.json": {
+      "filename": "babesiosis.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": true,
+      "claims": {
+        "/etiotropic_treatment/large_babesia/regimen": {
+          "status": "supported",
+          "sha256": "079e15b521ad554d9160b6f6ca0bd62b2f9f9dd058519df9b62db2e0fc5dfcd4",
+          "source_ids": [
+            "capc_babesia"
+          ],
+          "locator": "Treatment — large vs small Babesia",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        },
+        "/etiotropic_treatment/small_babesia/regimen": {
+          "status": "supported",
+          "sha256": "ee56b80a792ab1627e98f668024b568be0de111d36105f050206ad095643bb14",
+          "source_ids": [
+            "capc_babesia"
+          ],
+          "locator": "Treatment — large vs small Babesia",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        },
+        "/sources/0/key_points": {
+          "status": "supported",
+          "sha256": "14719f0d026a8bc209ebeb8d960dad3d4436fae3c7d76df24f0582b5a6184423",
+          "source_ids": [
+            "capc_babesia"
+          ],
+          "locator": "Treatment — large vs small Babesia",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Бабезиоз (пироплазмоз) собак",
+      "trigger_hash": "eb7e71dff7f2f8ea18c09eb5b2b057b9b80ae8ff1a8a4e9011c0673405fcf36d"
+    },
+    "bartonellosis.json": {
+      "filename": "bartonellosis.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Бартонеллёз у кошек и собак",
+      "trigger_hash": "00306e1a6a36236c9b3dde51ea32c86c9b30d71e504a34f2178352cfa130bebe"
+    },
+    "canine_dilated_cardiomyopathy.json": {
+      "filename": "canine_dilated_cardiomyopathy.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Дилатационная кардиомиопатия собак (DCM)",
+      "trigger_hash": "65fd808c26475a7fc35b39b478be0f2146770ad39dd42c7c9fd85b2c2e062c66"
+    },
+    "canine_distemper.json": {
+      "filename": "canine_distemper.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Чума плотоядных у собак",
+      "trigger_hash": "8daf42b46b80fbffbf43e5836f328011b6eb2c19720539a6c6c97846f5476efc"
+    },
+    "canine_hyperadrenocorticism.json": {
+      "filename": "canine_hyperadrenocorticism.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Гиперадренокортицизм (синдром Кушинга) у собак",
+      "trigger_hash": "1e539c8efc236e2bee8b69834fd9c308352fa4d196da720e157933fd65784d1f"
+    },
+    "canine_hypoadrenocorticism.json": {
+      "filename": "canine_hypoadrenocorticism.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Гипоадренокортицизм (болезнь Аддисона) у собак",
+      "trigger_hash": "048ca80828508e6c9d5a93840e013f86866837a2f31fb8b8c7f4a18fd7ef4fee"
+    },
+    "canine_hypothyroidism.json": {
+      "filename": "canine_hypothyroidism.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Гипотиреоз у собак",
+      "trigger_hash": "3fe89f40b818ca455627a4a3440a89961bd7c43d578a5a37f2ae95ec6b28df7a"
+    },
+    "canine_mmvd.json": {
+      "filename": "canine_mmvd.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Миксоматозная болезнь митрального клапана у собак (MMVD)",
+      "trigger_hash": "07637acb948808714c299de6fc3b50ec9c6dce0f5f325a2cd74764cb29be8f45"
+    },
+    "canine_parvovirus.json": {
+      "filename": "canine_parvovirus.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Парвовирусный энтерит собак",
+      "trigger_hash": "cbb6e43dd1847577530eb47c710b258ebd19e6b209f35ec8ba0b9ff94d5ae1fe"
+    },
+    "canine_thoracolumbar_ivde.json": {
+      "filename": "canine_thoracolumbar_ivde.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Острая тораколюмбальная экструзия межпозвонкового диска у собак (TL-IVDE)",
+      "trigger_hash": "6acdb22e43895ee5c3b3df796ea7bbd3a7936a6f2128050f695380129407e838"
+    },
+    "cardiac_arrhythmias.json": {
+      "filename": "cardiac_arrhythmias.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Аритмии у собак и кошек",
+      "trigger_hash": "cd0778f05271d28991b3eac68f0d4cfbdada4e942c95a8add94feafd4e386ed1"
+    },
+    "cataract_lens_luxation.json": {
+      "filename": "cataract_lens_luxation.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Катаракта и вывих хрусталика",
+      "trigger_hash": "a4b8876c3aaff98d4eb62877ae6f0c2421986efab91ba4356e2b001e73d04bd6"
+    },
+    "cholangitis_cholecystitis.json": {
+      "filename": "cholangitis_cholecystitis.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Холангит и холецистит у собак и кошек",
+      "trigger_hash": "c84135acdb4715d16d4d075e28debd18a6f11e3d4232cdbd92ccd8f37494decf"
+    },
+    "chronic_enteropathy.json": {
+      "filename": "chronic_enteropathy.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Хроническая энтеропатия у собак и кошек",
+      "trigger_hash": "e4be758af79b42dd4e551aab9dac625957d730e577602505da5e4f9bc1b29af0"
+    },
+    "chronic_kidney_disease.json": {
+      "filename": "chronic_kidney_disease.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Хроническая болезнь почек у собак и кошек (IRIS)",
+      "trigger_hash": "ff61ecaad648d39fe108cc549f75ab543bcb13b55c6a0e5f3a16000aaa8b70e6"
+    },
+    "cirdc_bordetella.json": {
+      "filename": "cirdc_bordetella.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Инфекционный респираторный комплекс собак (CIRDC), включая Bordetella",
+      "trigger_hash": "0fa0fbfd749f295fbcbca2290ed4730dfcad85ca514eb41f50090d589b9c42d3"
+    },
+    "coccidiosis.json": {
+      "filename": "coccidiosis.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Кокцидиоз у собак и кошек",
+      "trigger_hash": "f2e3546e2bc3c3f59b7403eb6e28b84636b594e96db28e957363b4fb6559e3d9"
+    },
+    "collapse_syncope.json": {
+      "filename": "collapse_syncope.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Коллапс, слабость и обморок у собак и кошек",
+      "trigger_hash": "23b90c58c61e8ea73db60ca29dcc09a7f024e1d75035ad0dcff7f2f0ed511ff2"
+    },
+    "congestive_heart_failure.json": {
+      "filename": "congestive_heart_failure.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Застойная сердечная недостаточность у собак и кошек",
+      "trigger_hash": "9b8e72a3c57ae39af272e9b4e45611a5db18bc82b086e2f166cb1d0d9cf43c4d"
+    },
+    "constipation_tenesmus.json": {
+      "filename": "constipation_tenesmus.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Запор, дисхезия и тенезмы у собак и кошек",
+      "trigger_hash": "fe44293553d389ec9df321a7e3f871078ae9d8e3c0d72278ff74ef7371fde0b1"
+    },
+    "corneal_ulcer_eye_pain.json": {
+      "filename": "corneal_ulcer_eye_pain.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Боль в глазу и язва роговицы",
+      "trigger_hash": "c2e018a1c1d0ad266b12da7f5d032c1e52f8d8dbc29344e74a4bd5ead010d9de"
+    },
+    "cough_dyspnea.json": {
+      "filename": "cough_dyspnea.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Кашель и одышка у собак и кошек",
+      "trigger_hash": "ebdda1a69979e42c044031c02e69b229c1ecbbe87455de32a9e87f7134c93583"
+    },
+    "cpr_cardiopulmonary_arrest.json": {
+      "filename": "cpr_cardiopulmonary_arrest.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": true,
+      "claims": {
+        "/management_principles/1": {
+          "status": "supported",
+          "sha256": "1f1b98759f572b5d06b5f4175febc91586747c2dac968eddedd590dd4c8460d1",
+          "source_ids": [
+            "recover"
+          ],
+          "locator": "BLS recommendations",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        },
+        "/do_not_do/0": {
+          "status": "supported",
+          "sha256": "c4215739b58e7428f07a340b6e4046b9a8be00558d83aec4204d15aa00edd38f",
+          "source_ids": [
+            "recover"
+          ],
+          "locator": "Initiating BLS",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Сердечно-лёгочная реанимация",
+      "trigger_hash": "8999b7857f44768aa4aeb0b0f13966016774a37d33054f61247f4a60dcee7aa9"
+    },
+    "critical_care_shock_sepsis_cpr_v1.json": {
+      "filename": "critical_care_shock_sepsis_cpr_v1.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": true,
+      "claims": {
+        "/management_principles/2": {
+          "status": "supported",
+          "sha256": "ba84e442e556067051b607b50649af5e0beae63490253910401a5d31ef5a610f",
+          "source_ids": [
+            "recover"
+          ],
+          "locator": "BLS recommendations",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Интенсивная терапия: шок, сепсис и CPR",
+      "trigger_hash": "d6e0f98dcb9d6df0c865c600e7dfb9167b8060f2e6b76f8998957535cc17d291"
+    },
+    "cruciate_ligament_disease.json": {
+      "filename": "cruciate_ligament_disease.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": false,
+      "claims": {
+        "/management_principles/0": {
+          "status": "supported",
+          "sha256": "202e0acf3f50608a2f8303efcf32c1bcbd4e692c70e9f8def13e6cf86d50336f",
+          "source_ids": [
+            "acvs_ccl"
+          ],
+          "locator": "Treatment",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Разрыв краниальной крестообразной связки",
+      "trigger_hash": "2b909c861d0e0e4767c51a5fd2848fc5bb54de0973a34404577ed415c3b84126"
+    },
+    "demodicosis.json": {
+      "filename": "demodicosis.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Демодекоз у собак и кошек",
+      "trigger_hash": "b3970dd3746bb98c1f49be0ce93ded98bb283d529800d99162738896b774b647"
+    },
+    "dentistry_core_v1.json": {
+      "filename": "dentistry_core_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Стоматология: пародонтит, резорбция, перелом зуба, оральные образования",
+      "trigger_hash": "16eccb3de1750bf62825870c044ac7a4a4a855544207b291bda73a7ddc9f6d4d"
+    },
+    "dermatologic_procedures_advanced_v1.json": {
+      "filename": "dermatologic_procedures_advanced_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Дерматология: хирургические, крио-, лазерные и диагностические процедуры",
+      "trigger_hash": "2f91aab1742fe4cde9bd9e55dde3e4e25cc3d1ddfabe775fd105a238e46029e8"
+    },
+    "diabetes_mellitus.json": {
+      "filename": "diabetes_mellitus.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Сахарный диабет у собак и кошек",
+      "trigger_hash": "69634e0d2a7725046beb8074ba154ab7dd2f2675f139576afaabf9e91d1b546d"
+    },
+    "diabetic_ketoacidosis.json": {
+      "filename": "diabetic_ketoacidosis.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Диабетический кетоацидоз у собак и кошек",
+      "trigger_hash": "5dbff7f7f26c7c7e47aa83d3e8f343629963982db01eab59eab583d5c1b731c1"
+    },
+    "diagnostic_procedures_v1.json": {
+      "filename": "diagnostic_procedures_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Диагностические процедуры: биопсия, пункции и визуальная диагностика",
+      "trigger_hash": "5a981444abc0cebb73a6c3918fb9f6e48c9c968df63395ef3b7659b94d367d89"
+    },
+    "diarrhea.json": {
+      "filename": "diarrhea.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Диарея у собак и кошек",
+      "trigger_hash": "6a3500d8886f645249fcbece9704f7cbbf9051cddc3bb7efab1762ab9e5d22db"
+    },
+    "dystocia_reproduction.json": {
+      "filename": "dystocia_reproduction.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Дистоция и осложнённые роды",
+      "trigger_hash": "2bb827a977b24d72fc7bca8d88c065ef73d28ef758c6638ebb1b1d8537d05173"
+    },
+    "ehrlichiosis_anaplasmosis.json": {
+      "filename": "ehrlichiosis_anaplasmosis.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Эрлихиоз и анаплазмоз собак",
+      "trigger_hash": "1a211ad4e2fef1a0756a7afb5dd10e110978a532a11703f735653058e9071378"
+    },
+    "endoscopy_advanced_catalog_v1.json": {
+      "filename": "endoscopy_advanced_catalog_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Эндоскопия: полный каталог диагностических и лечебных процедур",
+      "trigger_hash": "648f8d078e0ee3f2923750e45c0c72e22b08a19f8ccc7e91d1092ff4a5734a2a"
+    },
+    "endoscopy_gi_respiratory_v1.json": {
+      "filename": "endoscopy_gi_respiratory_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Эндоскопия ЖКТ и дыхательных путей",
+      "trigger_hash": "17cdf0209ea273b8cf47573ab8670e43931115a3fb536cb701a2c7d92d2b9ce9"
+    },
+    "exocrine_pancreatic_insufficiency.json": {
+      "filename": "exocrine_pancreatic_insufficiency.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Экзокринная недостаточность поджелудочной железы у собак и кошек",
+      "trigger_hash": "7ad34bf8b7aef126a771c2142167f0f50121face24b6afcfd68aa9cd35192289"
+    },
+    "feline_calicivirus.json": {
+      "filename": "feline_calicivirus.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Калицивирусная инфекция кошек (FCV)",
+      "trigger_hash": "155d1c01a8b55a6f10892fd1aaae3e35e3b09a9be6a81cbc801a6e6d1c87f249"
+    },
+    "feline_cardiomyopathy.json": {
+      "filename": "feline_cardiomyopathy.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Кардиомиопатии кошек",
+      "trigger_hash": "ba1853f7f9fa879863600485f9742156096490f617d74f7c325a440d6ce84e90"
+    },
+    "feline_felv.json": {
+      "filename": "feline_felv.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Вирусный лейкоз кошек (FeLV)",
+      "trigger_hash": "005e13aaa1f830c00078165453da867ffaf37130cca76c114f88c649a4697036"
+    },
+    "feline_fiv.json": {
+      "filename": "feline_fiv.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Вирус иммунодефицита кошек (FIV)",
+      "trigger_hash": "26e9bd719cbe292df85c8e84189978804e13d71711965bfe01fa5ceb0cf3d21a"
+    },
+    "feline_hemoplasmosis.json": {
+      "filename": "feline_hemoplasmosis.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Гемоплазмоз кошек",
+      "trigger_hash": "3cc64e0618ee584821c4f18cd55b2dd35e0a3d7ad177af8d73659b142319c544"
+    },
+    "feline_herpesvirus.json": {
+      "filename": "feline_herpesvirus.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Герпесвирусная инфекция кошек (FHV-1)",
+      "trigger_hash": "4879e0dbf30a1c8e6028aff22d22b9eec873d6c313211f3d9b9f38db0d52168e"
+    },
+    "feline_hyperthyroidism.json": {
+      "filename": "feline_hyperthyroidism.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Гипертиреоз у кошек",
+      "trigger_hash": "9fb328eaf23bff2bff2dae7c152a2e5e642ebe6c68853f0820d8007ccc001158"
+    },
+    "feline_lower_urinary_tract.json": {
+      "filename": "feline_lower_urinary_tract.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Заболевания нижних мочевых путей у кошек (FLUTD)",
+      "trigger_hash": "71ed0c19345c75ae7c0f5cea41e6c4d8ff954c93edf37e87cb6c39d1fee6869d"
+    },
+    "feline_panleukopenia.json": {
+      "filename": "feline_panleukopenia.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Панлейкопения кошек",
+      "trigger_hash": "8bbca8c42b44607f3176b1ba5b95870f0068f89b7189dc13ffac89f967a82aab"
+    },
+    "fibrocartilaginous_embolism.json": {
+      "filename": "fibrocartilaginous_embolism.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Фиброхрящевая эмболия (FCE)",
+      "trigger_hash": "da9074b17ac13aeffa4a5d6612df8fabf5c97d72873dd04654669fe7980b9164"
+    },
+    "fip.json": {
+      "filename": "fip.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": true,
+      "claims": {
+        "/antiviral_treatment/gs_441524/standard_regimen": {
+          "status": "supported",
+          "sha256": "d81f79804bd3bfb2745e3fba4945bd07d0b5621327cee67e595bc559bb987536",
+          "source_ids": [
+            "abcd_fip"
+          ],
+          "locator": "Treatment of FIP / Table 1 — gs_441524",
+          "issue": "Нет проверяемой ссылки; для ремдесивира смешаны режимы, для EIDD-1931 не обозначена малая выборка.",
+          "action": "Проверены только опубликованные доза/путь/интервал. Ремдесивир и EIDD-1931 уточнены; индивидуальный выбор остаётся врачебным."
+        },
+        "/antiviral_treatment/gs_441524/ocular_or_neurologic": {
+          "status": "supported",
+          "sha256": "f781b40cef85a7378eb120f94cac2de209e895d935b6f8392025498fac7c9c96",
+          "source_ids": [
+            "abcd_fip"
+          ],
+          "locator": "Treatment of FIP / Table 1 — gs_441524",
+          "issue": "Нет проверяемой ссылки; для ремдесивира смешаны режимы, для EIDD-1931 не обозначена малая выборка.",
+          "action": "Проверены только опубликованные доза/путь/интервал. Ремдесивир и EIDD-1931 уточнены; индивидуальный выбор остаётся врачебным."
+        },
+        "/antiviral_treatment/remdesivir/published_range": {
+          "status": "supported",
+          "sha256": "9d13198c12008b0f61bd6f0a38ad6e4eb27a6fb183e30f2aecc1ca4069ead3b6",
+          "source_ids": [
+            "abcd_fip"
+          ],
+          "locator": "Treatment of FIP / Table 1 — remdesivir",
+          "issue": "Нет проверяемой ссылки; для ремдесивира смешаны режимы, для EIDD-1931 не обозначена малая выборка.",
+          "action": "Проверены только опубликованные доза/путь/интервал. Ремдесивир и EIDD-1931 уточнены; индивидуальный выбор остаётся врачебным."
+        },
+        "/antiviral_treatment/molnupiravir/published_regimen": {
+          "status": "supported",
+          "sha256": "4bc4ce88ee1e5f52e5fb50d897b4db44ed037353179fff1142d012272243e5f8",
+          "source_ids": [
+            "abcd_fip"
+          ],
+          "locator": "Treatment of FIP / Table 1 — molnupiravir",
+          "issue": "Нет проверяемой ссылки; для ремдесивира смешаны режимы, для EIDD-1931 не обозначена малая выборка.",
+          "action": "Проверены только опубликованные доза/путь/интервал. Ремдесивир и EIDD-1931 уточнены; индивидуальный выбор остаётся врачебным."
+        },
+        "/antiviral_treatment/eidd_1931/published_regimen": {
+          "status": "supported",
+          "sha256": "df53dc1fe2557465440ecf9532f50175fdcfff50c6758176546c1aadd06e5034",
+          "source_ids": [
+            "abcd_fip"
+          ],
+          "locator": "Treatment of FIP / Table 1 — eidd_1931",
+          "issue": "Нет проверяемой ссылки; для ремдесивира смешаны режимы, для EIDD-1931 не обозначена малая выборка.",
+          "action": "Проверены только опубликованные доза/путь/интервал. Ремдесивир и EIDD-1931 уточнены; индивидуальный выбор остаётся врачебным."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением.",
+        "Проверка доз не подтверждает регистрацию в стране пациента, качество препарата или схему коррекции при почечной/печёночной недостаточности. Полная валидация всех назначений отсутствует."
+      ],
+      "title": "Инфекционный перитонит кошек (FIP)",
+      "trigger_hash": "1753fb1bd9266705abbaef3341a02e621983dfc021e459f20355808a5191df97"
+    },
+    "fracture_trauma.json": {
+      "filename": "fracture_trauma.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Переломы костей",
+      "trigger_hash": "15e6ee1b792f032a3eae27807ad512434cec643cf0f911858473acbbc9dbf109"
+    },
+    "gastrointestinal_bleeding.json": {
+      "filename": "gastrointestinal_bleeding.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": true,
+      "claims": {
+        "/management_principles/4": {
+          "status": "supported",
+          "sha256": "6925c59c0e5511b435ef7a5bf6898e464d72aecb997b5eca9b8ae3f7ca037889",
+          "source_ids": [
+            "noah_dog",
+            "noah_cat"
+          ],
+          "locator": "Adverse events; Interaction with other medicinal products",
+          "issue": "В протоколе взаимодействие было только вопросом анамнеза.",
+          "action": "Добавлено явное ограничение следующей дозы и сочетания."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Желудочно-кишечное кровотечение у собак и кошек",
+      "trigger_hash": "f4e61b642a078089db0c2f5677464d4c701f93af61c62bb21678e9a8815b4f06"
+    },
+    "gastrointestinal_obstruction.json": {
+      "filename": "gastrointestinal_obstruction.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Инородное тело и желудочно-кишечная непроходимость у собак и кошек",
+      "trigger_hash": "856197b0cba63bcb0dc15492938e6d0ae97170d69c004f971fcc6b8466ecda78"
+    },
+    "gdv_gastric_dilatation_volvulus.json": {
+      "filename": "gdv_gastric_dilatation_volvulus.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": false,
+      "claims": {
+        "/management_principles/1": {
+          "status": "supported",
+          "sha256": "0ccfd4822243080b7ba1281b7ffd96bf8a4a38dad42eed891b3f6a7bc302a058",
+          "source_ids": [
+            "acvs_gdv"
+          ],
+          "locator": "Treatment",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Острое расширение и заворот желудка (GDV)",
+      "trigger_hash": "949b2648fdbbea21f1a38186e5e1ab782dc2ea97fd13684b2f5ec363d72d89fd"
+    },
+    "giardiasis.json": {
+      "filename": "giardiasis.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": false,
+      "claims": {
+        "/management_principles/3": {
+          "status": "supported",
+          "sha256": "fc86c6640ba49f33e8982fbb03c344203981d7f1e5cb341928b47ccf125799b9",
+          "source_ids": [
+            "capc_giardia"
+          ],
+          "locator": "Follow-up Testing",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Лямблиоз собак и кошек",
+      "trigger_hash": "cc8d86b0db418efe4b4120e5d091dcc530516c42f70c9ef3a2f51b8571e11db3"
+    },
+    "glaucoma_uveitis_red_eye.json": {
+      "filename": "glaucoma_uveitis_red_eye.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Красный глаз: глаукома и увеит",
+      "trigger_hash": "604711a54dbceff0d3b42eb02a2a844cb508f24bce6eb1694a4849b1f36b2079"
+    },
+    "heart_failure.json": {
+      "filename": "heart_failure.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Подозрение на застойную сердечную недостаточность у собак и кошек",
+      "trigger_hash": "00d924efb4c26e9fff068177b7f6a4f8154dcae1701b4da7c090b8f20f683e27"
+    },
+    "heartworm_disease.json": {
+      "filename": "heartworm_disease.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Дирофиляриоз (Dirofilaria immitis) у собак и кошек",
+      "trigger_hash": "ea590edc64f5c1a28d92f3e6d23f582959567dd29144f1705a479a6d3083149d"
+    },
+    "hemoabdomen_splenic_mass.json": {
+      "filename": "hemoabdomen_splenic_mass.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": false,
+      "claims": {
+        "/management_principles/0": {
+          "status": "supported",
+          "sha256": "754747ec62beba5ed66e4a2cb5a3f85376f86cae50fcc2d4a071210a1a9211d7",
+          "source_ids": [
+            "acvs_spleen"
+          ],
+          "locator": "Treatment",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        },
+        "/management_principles/1": {
+          "status": "supported",
+          "sha256": "e0e6280740737288eb69af318c6b5cc263ab457f6ecff1ebd83a8dc90db81812",
+          "source_ids": [
+            "acvs_spleen"
+          ],
+          "locator": "Diagnostics",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Гемоперитонеум и образование селезёнки",
+      "trigger_hash": "cf1e7e878e874c360d24a16d11b1fe8096e46ef5c250ba1406f6896a1786259f"
+    },
+    "hemostasis_thrombosis_core_v1.json": {
+      "filename": "hemostasis_thrombosis_core_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Гематология, коагулопатии и тромбоз",
+      "trigger_hash": "5ed285da271cbb0f6758d328e7684db4ba681774ccd6641df3eceae29ff54305"
+    },
+    "hepatobiliary_disease.json": {
+      "filename": "hepatobiliary_disease.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Гепатобилиарные заболевания у собак и кошек",
+      "trigger_hash": "6a7f9eeaf12e11c7ef2ffdc792b3f8edf329ab3f7ecc0f6350e2073490c81c78"
+    },
+    "hip_elbow_dysplasia.json": {
+      "filename": "hip_elbow_dysplasia.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Дисплазия тазобедренных и локтевых суставов",
+      "trigger_hash": "dde95a306a6169353e4d5d221b8e7203b6584c5b5bac273f78833ca6fc0bb2c3"
+    },
+    "hyperadrenocorticism.json": {
+      "filename": "hyperadrenocorticism.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Гиперадренокортицизм у собак",
+      "trigger_hash": "a61fb8f930b0124276afae6ba172498dd2629e2514f1532cdee367f41c21b14e"
+    },
+    "hypercalcemia.json": {
+      "filename": "hypercalcemia.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Гиперкальциемия у собак и кошек",
+      "trigger_hash": "b915a46911e2861ba0e0a8bfb43cb49ae01f9e05582945d2b11b16731ee22c2c"
+    },
+    "hypoadrenocorticism.json": {
+      "filename": "hypoadrenocorticism.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Гипоадренокортицизм у собак",
+      "trigger_hash": "958e433c7864de68dd9da762d165c73aabe40fbb1d26d48873e4547cd23f21fc"
+    },
+    "hypoglycemia.json": {
+      "filename": "hypoglycemia.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Гипогликемия у собак и кошек",
+      "trigger_hash": "fe71c964469d630918c927a801cfbe20d1414f236b9a23c9a6b277cbe272df2c"
+    },
+    "hyporexia_anorexia.json": {
+      "filename": "hyporexia_anorexia.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Снижение аппетита и отказ от еды у собак и кошек",
+      "trigger_hash": "ee1ee654976a23807bc94d2423bb5b942b2f4ffea541725610d51ff92fce31a1"
+    },
+    "idiopathic_epilepsy.json": {
+      "filename": "idiopathic_epilepsy.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Идиопатическая эпилепсия у собак",
+      "trigger_hash": "0cfbaebcf28c929902ba6dddd3efcbfa1c01cf42ebf5970be992e785f99e205c"
+    },
+    "interventional_surgery_advanced_v1.json": {
+      "filename": "interventional_surgery_advanced_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Интервенционные и специальные процедуры",
+      "trigger_hash": "db4b93880afcfac2207d87f0f0f76a272d6019a647a60a6981ff9fb03ba6d37a"
+    },
+    "intestinal_helminths.json": {
+      "filename": "intestinal_helminths.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Кишечные гельминты собак и кошек",
+      "trigger_hash": "21984acbf7345c673c0f34631bb670fd183cb30edc8816ed307f5778a6c89e59"
+    },
+    "ischemic_stroke.json": {
+      "filename": "ischemic_stroke.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Острое цереброваскулярное событие / ишемический инсульт",
+      "trigger_hash": "ef18de1755dad92ea7caff8d660a6aa51c7c7a2af5ddd3ebaa2071ce437eb5a7"
+    },
+    "jaundice.json": {
+      "filename": "jaundice.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Желтуха у собак и кошек",
+      "trigger_hash": "12f7d9c4f6ed57e799f14cd6dcdc8be283993fc5981af739c765eafb1aef101e"
+    },
+    "joint_luxation.json": {
+      "filename": "joint_luxation.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Вывих и подвывих сустава",
+      "trigger_hash": "616cf67fdb70086f22c91617495714ba4cf8cdc49524f0d749cd10b52799506b"
+    },
+    "kidney_disease.json": {
+      "filename": "kidney_disease.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": true,
+      "claims": {
+        "/management_principles/1": {
+          "status": "supported",
+          "sha256": "8bcb55c818dc7aa7f51f7f34face71d222ee2cf21a92773999ea1bb5adfd3aed",
+          "source_ids": [
+            "aaha_overload"
+          ],
+          "locator": "Fluid overload prevention",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Острое и хроническое поражение почек у собак и кошек",
+      "trigger_hash": "69d54d8762086c85a26f4a7e254d508f5a357d387f51f0f0caed2e02f7b760c1"
+    },
+    "leptospirosis.json": {
+      "filename": "leptospirosis.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Лептоспироз собак",
+      "trigger_hash": "283e51698392ea4ed3b98aecd33a6e800d01e27d804bdb69da83718c70e77d33"
+    },
+    "lethargy_fever.json": {
+      "filename": "lethargy_fever.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Вялость и лихорадка у собак и кошек",
+      "trigger_hash": "1833da6da2d9a6cd5e4e30c722425b8506f25f5ce1b1205d8f8f3f51d2b163e9"
+    },
+    "liver_disease.json": {
+      "filename": "liver_disease.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Заболевания печени и хронический гепатит у собак и кошек",
+      "trigger_hash": "6265dcafb3e1684e17030abe97dbbc3b73e57f0d75cbecd71906cfc56ce36931"
+    },
+    "lungworms.json": {
+      "filename": "lungworms.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Лёгочные гельминты у собак и кошек",
+      "trigger_hash": "3f2cd0f65b0195076798126c0b27365ecb72c996d9e14f70a32a98f204629ba1"
+    },
+    "lyme_borreliosis.json": {
+      "filename": "lyme_borreliosis.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Боррелиоз (болезнь Лайма) у собак",
+      "trigger_hash": "e78ffe8e308729148d086966e97b23f997dbda8f8adb1816dae425aac4c5ae3b"
+    },
+    "mammary_reproductive_disease.json": {
+      "filename": "mammary_reproductive_disease.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Заболевания молочной железы",
+      "trigger_hash": "c76611666041b3e7e08e283cadf60277b624633f05734e650ccfd46303a4a98f"
+    },
+    "minimally_invasive_surgery_v1.json": {
+      "filename": "minimally_invasive_surgery_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Лапароскопия и торакоскопия",
+      "trigger_hash": "6292cc5c0ea4dc2d9ac68bfd9e8d161b5334fed1145b02cdf8a81841bd2f1779"
+    },
+    "muo_meningoencephalitis.json": {
+      "filename": "muo_meningoencephalitis.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Менингоэнцефалит неизвестного происхождения (MUO)",
+      "trigger_hash": "00baf71a3aff41a33fa4acb94a541c6bfc889a74d20487c1aa25342534780bf4"
+    },
+    "myasthenia_gravis.json": {
+      "filename": "myasthenia_gravis.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Миастения gravis у собак и кошек",
+      "trigger_hash": "42cbbd41beb40cf64a87c07520184d5f4bf89f3c51c71cbf27b8478f9d5ee473"
+    },
+    "nasal_discharge_sneezing.json": {
+      "filename": "nasal_discharge_sneezing.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Чихание и выделения из носа у собак и кошек",
+      "trigger_hash": "96c85db6c12b102b4262405e682f77d9e944e86ba4667e4e49c3a82d12e5a550"
+    },
+    "neurosurgery_advanced_v1.json": {
+      "filename": "neurosurgery_advanced_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Нейрохирургия: декомпрессия, стабилизация и внутричерепные вмешательства",
+      "trigger_hash": "b32ce472037f28516c77e0ba9d2d54af00b6bfc689a507e08d34997605c452b0"
+    },
+    "oncology_core_v1.json": {
+      "filename": "oncology_core_v1.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": true,
+      "claims": {
+        "/do_not_do/1": {
+          "status": "supported",
+          "sha256": "e4f9f17ce6fe5ab19d716ff0cbf5fb1e10b536bc8819b1755cb3f84878d6db34",
+          "source_ids": [
+            "aaha_oncology"
+          ],
+          "locator": "Three takeaways",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Онкология: масса, морфологическая диагностика, стадирование и план лечения",
+      "trigger_hash": "e771f43ae175fcf9dde21664b86f2f310e08ec75a20e7770e44dca55dc6fb59c"
+    },
+    "oncology_mass_staging.json": {
+      "filename": "oncology_mass_staging.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": true,
+      "claims": {
+        "/management_principles/0": {
+          "status": "supported",
+          "sha256": "3c801ec75bf1d303d2f27bd056612523d435d4b2a29971e99d67a175f45d73e7",
+          "source_ids": [
+            "aaha_oncology"
+          ],
+          "locator": "Three takeaways",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Объёмное образование: онкологическая диагностика и стадирование",
+      "trigger_hash": "97c1b2056ce8cd2db806266c3e433302cd06900287fe21851e08354cb6ae55d8"
+    },
+    "ophthalmic_surgery_advanced_v1.json": {
+      "filename": "ophthalmic_surgery_advanced_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Офтальмология: хирургические процедуры и операции",
+      "trigger_hash": "49506815525c0449414e159d869cf27fedbf46ee4b26c2c808c1107045691c29"
+    },
+    "ophthalmology_core_v1.json": {
+      "filename": "ophthalmology_core_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Офтальмология: красный/болезненный глаз, роговица, глаукома, увеит, хрусталик",
+      "trigger_hash": "583713753c365a1c36375c4bee00bf4598836ecc463f723a7e9ea6de7ac40ffc"
+    },
+    "orthopedic_implants_advanced_v1.json": {
+      "filename": "orthopedic_implants_advanced_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Ортопедия: остеосинтез, импланты и реконструктивные методы",
+      "trigger_hash": "360d18b60ffe455c84dd7c0412076113d0f910c79c45697837e867909e13b0bb"
+    },
+    "orthopedic_surgery_methods_v1.json": {
+      "filename": "orthopedic_surgery_methods_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Методы лечения переломов и ортопедические операции",
+      "trigger_hash": "f3dbe62e41ef93e74f1a2d0d6587a876ab436421d9c8943ecf3268808cebc130"
+    },
+    "orthopedic_trauma_core_v1.json": {
+      "filename": "orthopedic_trauma_core_v1.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": false,
+      "claims": {
+        "/management_principles/2": {
+          "status": "supported",
+          "sha256": "d58184b8154b244b433b08152e542575c7e2a6ee2a7a6066f12d73533d32a224",
+          "source_ids": [
+            "acvs_ccl"
+          ],
+          "locator": "Treatment",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Ортопедия и травматология: переломы, вывихи, CCL, дисплазии",
+      "trigger_hash": "fe0aa0004f4c7c3852aeaeb2b7aae9791412f0be520e3c07bf9b3f2c108a1c85"
+    },
+    "otodectosis.json": {
+      "filename": "otodectosis.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Отодектоз (ушной клещ) у кошек и собак",
+      "trigger_hash": "2eabf43875ec7f1af38525da88eed8d958a8d806b66108e2c2becbf334cf0cfc"
+    },
+    "pancreatitis.json": {
+      "filename": "pancreatitis.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Панкреатит у собак и кошек",
+      "trigger_hash": "2fc7eb6bd93e1618840de48affd1e6850db1301ff02fec289df63444b9cad706"
+    },
+    "pericardial_effusion_tamponade.json": {
+      "filename": "pericardial_effusion_tamponade.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Перикардиальный выпот и тампонада сердца",
+      "trigger_hash": "19c823615b13c70d903d6cd6cfffd675e14545c13c1d6847417da5480bd2c11f"
+    },
+    "periodontal_disease_dental.json": {
+      "filename": "periodontal_disease_dental.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Пародонтальная и стоматологическая болезнь",
+      "trigger_hash": "e62d808ea9d2bf943feed9b0162411f78c974d987144c10332ac6d0b7b92693d"
+    },
+    "poisoning_general.json": {
+      "filename": "poisoning_general.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Подозрение на отравление",
+      "trigger_hash": "0bc3de2b007bf28cc5e69558669d49db57183763b7c8024875555ca15e6a0b94"
+    },
+    "polyuria_polydipsia.json": {
+      "filename": "polyuria_polydipsia.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Полиурия и полидипсия у собак и кошек",
+      "trigger_hash": "c65b9912209b666131364ffdcbd54b1ec82b16a69260d9b1774e4750e81e498e"
+    },
+    "protein_losing_enteropathy.json": {
+      "filename": "protein_losing_enteropathy.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Протеинтеряющая энтеропатия у собак и кошек",
+      "trigger_hash": "b8fa71c0f61a2e1328e906b40c7bb37ec11f61d5015458a808288a6a435ee15b"
+    },
+    "pruritus_dermatology.json": {
+      "filename": "pruritus_dermatology.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Зуд и дерматологические жалобы у собак и кошек",
+      "trigger_hash": "1128958aec14b019be2f4b4c1b491cec6a43362d6386a2a1ed0a612ffa0e5687"
+    },
+    "pulmonary_hypertension_dog.json": {
+      "filename": "pulmonary_hypertension_dog.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Легочная гипертензия у собак",
+      "trigger_hash": "708a5a9d6f1c2c1764edaf617a933d491181a0b2f4c69086f7fe9776a5a4ef83"
+    },
+    "pupd.json": {
+      "filename": "pupd.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Полиурия и полидипсия у собак и кошек",
+      "trigger_hash": "149c73bc0fef067577d90ab73ec63ad3840d1860ec816466cc99230dbd709b1c"
+    },
+    "pyelonephritis.json": {
+      "filename": "pyelonephritis.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Пиелонефрит у собак и кошек",
+      "trigger_hash": "235cd59b8184e74aee8d3b07ee301fba8809f6c0bc8828beb8d783f08f4f7981"
+    },
+    "pyometra_discharge.json": {
+      "filename": "pyometra_discharge.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": false,
+      "claims": {
+        "/management_principles/1": {
+          "status": "supported",
+          "sha256": "a08883bd7980221b2c8e5cfb9856f410a0244b4caad684b2af099e7544f4b76b",
+          "source_ids": [
+            "acvs_pyometra"
+          ],
+          "locator": "Treatment",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        },
+        "/management_principles/3": {
+          "status": "supported",
+          "sha256": "0503007e7aa084c2771d78ca96d6c73b22ec820183da437b35637d0db208e292",
+          "source_ids": [
+            "acvs_pyometra"
+          ],
+          "locator": "Signs and symptoms",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Выделения из половых путей и подозрение на пиометру",
+      "trigger_hash": "e17f80559499cd587aca33ac5dd53956756b3a6dadca09064eb3b9dc042ed4c6"
+    },
+    "renal_proteinuria.json": {
+      "filename": "renal_proteinuria.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Протеинурия у собак и кошек",
+      "trigger_hash": "e3080ecb35900722a1a00e0e86f7753514a9a6a3e7471c193d027ea87ade0d4d"
+    },
+    "reproduction_core_v1.json": {
+      "filename": "reproduction_core_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Репродуктология: дистоция, матка и молочная железа",
+      "trigger_hash": "e592e0a0b91d29c7933d337b3a2bdb863a4e9c84727e388a8925f9928a1a0cb8"
+    },
+    "rhinoscopy_otoscopy_v1.json": {
+      "filename": "rhinoscopy_otoscopy_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Риноскопия, отоскопия и видеоотоскопия",
+      "trigger_hash": "46f2b3f7858ce5a9dff4873d9233f78dd5d97f97aa4324b2580bf6e753459d31"
+    },
+    "rodenticide_poisoning.json": {
+      "filename": "rodenticide_poisoning.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Родентициды: антикоагулянтные и другие",
+      "trigger_hash": "a9447f0f59a9546a206fcd07393699ab5f4b404968f5aa278b0a79d02756eb9b"
+    },
+    "sarcoptic_mange.json": {
+      "filename": "sarcoptic_mange.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Саркоптоз у собак",
+      "trigger_hash": "fcbe464798cd7058fb703b0aa3ce3adea0b3bfd671683dc41b7c11452883aaf3"
+    },
+    "seizures_first_episode.json": {
+      "filename": "seizures_first_episode.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Судороги и первый эпилептический приступ у собак и кошек",
+      "trigger_hash": "436c3595ad2f52c5615d1606abb5cc879cd95282b8758161602623e57922e742"
+    },
+    "sepsis_sirs.json": {
+      "filename": "sepsis_sirs.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Сепсис и септический шок",
+      "trigger_hash": "f462f86557c9fdbdce56a7a4b751eaa7629a8d2db7434fd5aad30b5b70de5b55"
+    },
+    "shock_resuscitation.json": {
+      "filename": "shock_resuscitation.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": false,
+      "claims": {
+        "/management_principles/1": {
+          "status": "supported",
+          "sha256": "156429f1466859b19985d8c2dc445e6058e1728cf0a6d0101ba220d4733b2f66",
+          "source_ids": [
+            "aaha_fluids",
+            "aaha_overload"
+          ],
+          "locator": "Heart Disease; Thermoregulation Disturbances; Recognizing and Managing Fluid Overload",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Шок и первичная стабилизация",
+      "trigger_hash": "90935e3f7ccbfe1541425e839a542e07bf318bdffe416686f5eafa0e12ef98ea"
+    },
+    "soft_tissue_surgery_procedures_v1.json": {
+      "filename": "soft_tissue_surgery_procedures_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Операции на мягких тканях и брюшной полости",
+      "trigger_hash": "dfd62853cd4a1f2d935ec4b25eb105ad87ea52252ca5aabff5941a6dff890721"
+    },
+    "status_epilepticus_cluster_seizures.json": {
+      "filename": "status_epilepticus_cluster_seizures.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": true,
+      "claims": {
+        "/do_not_do/0": {
+          "status": "supported",
+          "sha256": "f55e7f8b9d5a34d32049d83f908608450cba532cfb7855fda105e47a0ff2559e",
+          "source_ids": [
+            "seizures"
+          ],
+          "locator": "Definition of status epilepticus",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Status epilepticus и кластерные судороги у собак и кошек",
+      "trigger_hash": "4d1a770bc79fd9bb45e84550bce05801ebbf462853bea6dd861101bc1b1b0a92"
+    },
+    "surgery_advanced_catalog_v1.json": {
+      "filename": "surgery_advanced_catalog_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Хирургия: расширенный каталог операций и техник",
+      "trigger_hash": "26d30850dffeb747046018ed4ac69bfb303efdea685f7bceede3af81fb17251c"
+    },
+    "surgery_procedures_owner_guide_v1.json": {
+      "filename": "surgery_procedures_owner_guide_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Хирургические операции: стерилизация, кастрация и общие принципы",
+      "trigger_hash": "723eb87226195fd801f2261387f568db21cde37f0e2b724feac7b153bc4be8ee"
+    },
+    "surgical_emergencies_core_v1.json": {
+      "filename": "surgical_emergencies_core_v1.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": false,
+      "claims": {
+        "/management_principles/0": {
+          "status": "supported",
+          "sha256": "a0151b4135207bea05e3e281a3310ba0832e1cc6f3fc385d61b0fa0cb1037156",
+          "source_ids": [
+            "acvs_gdv"
+          ],
+          "locator": "Treatment",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        },
+        "/do_not_do/1": {
+          "status": "supported",
+          "sha256": "e0e6280740737288eb69af318c6b5cc263ab457f6ecff1ebd83a8dc90db81812",
+          "source_ids": [
+            "acvs_spleen"
+          ],
+          "locator": "Diagnostics",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Хирургические неотложные состояния: GDV, гемоперитонеум, септический перитонит, раны",
+      "trigger_hash": "ca5118ad7ab9c50ff8108b7c36a114e2c70da2cc96656647df98be1721aad182"
+    },
+    "surgical_wound_reconstruction_v1.json": {
+      "filename": "surgical_wound_reconstruction_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Реконструктивная хирургия, раны и пластика кожи",
+      "trigger_hash": "eb0e36b9bedc7de9d1717b7b687724566f25f9b51e4536d2ad8b74bde5bc6bfc"
+    },
+    "systemic_hypertension.json": {
+      "filename": "systemic_hypertension.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Системная артериальная гипертензия у собак и кошек",
+      "trigger_hash": "e9725ee01e2188aaddcf8c54dfb23b01f78b221c5ad0d55a02a64086ecb1cc3a"
+    },
+    "thrombocytopenia_coagulopathy.json": {
+      "filename": "thrombocytopenia_coagulopathy.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Тромбоцитопения и коагулопатия",
+      "trigger_hash": "38b2a2a3b1f599c989609fddc1b521947547ec49318c3a6d8095a753830ba9b1"
+    },
+    "thrombosis_antithrombotic.json": {
+      "filename": "thrombosis_antithrombotic.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Тромбоз и тромбоэмболия",
+      "trigger_hash": "25de1f5da6986158aeea33fd9d0eb6a74f3cca7c976dd5db573854250de6fbe9"
+    },
+    "toxicology_core_v1.json": {
+      "filename": "toxicology_core_v1.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Токсикология: неизвестный токсин и родентициды",
+      "trigger_hash": "b4912ff3894b0abd0adcd92db6687a2956131d64cb1eb5ab89fba872d8efe416"
+    },
+    "toxoplasmosis.json": {
+      "filename": "toxoplasmosis.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Токсоплазмоз у собак и кошек",
+      "trigger_hash": "b975cec843642764576d930290897721878d0a6d22714ab5fd4c594fea96679e"
+    },
+    "traumatic_brain_injury.json": {
+      "filename": "traumatic_brain_injury.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Черепно-мозговая травма у собак и кошек",
+      "trigger_hash": "062e46ce495baec602cd9552f8537854c1d0d3ba4de6263e52718f0ba9dfe8d0"
+    },
+    "urinary_obstruction.json": {
+      "filename": "urinary_obstruction.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": true,
+      "claims": {
+        "/management_principles/0": {
+          "status": "supported",
+          "sha256": "ce13635d5b6af9bf0f28f2d474915748b468d1e48d12594f2e08fa8664aeffb2",
+          "source_ids": [
+            "acvs_urethra"
+          ],
+          "locator": "Treatment",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Уточнена область подтверждения: экстренное устранение обструкции у кошек; метаболическая коррекция требует отдельной проверки."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Уретральная обструкция у собак и кошек",
+      "trigger_hash": "4b9528873905a5ae8b20e353bbccf36215c3d79045a45ac7515b4845080991d6"
+    },
+    "urinary_signs.json": {
+      "filename": "urinary_signs.json",
+      "status": "partially_verified",
+      "source_list_present_at_baseline": false,
+      "claims": {
+        "/management_principles/0": {
+          "status": "supported",
+          "sha256": "4f1f9c7c2adf7973544cef5be39ef41a693fa5d74985c0b59a8dbef33a774b0a",
+          "source_ids": [
+            "acvs_urethra"
+          ],
+          "locator": "Treatment",
+          "issue": "Не было привязки источника к конкретному утверждению.",
+          "action": "Добавлены раздел источника и контроль изменения текста."
+        }
+      },
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Дизурия, поллакиурия, странгурия и гематурия у собак и кошек",
+      "trigger_hash": "a8e1a18637245ccf3b0e1dee065ed9034f41328325d946079c787c46db0955e1"
+    },
+    "urinary_tract_infection.json": {
+      "filename": "urinary_tract_infection.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Инфекции мочевых путей у собак и кошек",
+      "trigger_hash": "701f6801d3e50ba6e55e2fd6a62b5588cb2e693f54549310c78344ca35fc527f"
+    },
+    "urolithiasis.json": {
+      "filename": "urolithiasis.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Уролитиаз у собак и кошек",
+      "trigger_hash": "dcd3c0871c340bd0b7b15ab3d1cf0d776e2d00cb9808727d91bf4abb5d42eed6"
+    },
+    "vestibular_syndrome.json": {
+      "filename": "vestibular_syndrome.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Вестибулярный синдром у собак и кошек",
+      "trigger_hash": "4151b15e4a4efbbc959b52b978af181cbf79117f28f77abef7a1afe8e5e7fab4"
+    },
+    "vomiting.json": {
+      "filename": "vomiting.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": true,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Острая рвота у собак и кошек",
+      "trigger_hash": "200ef478ce55506d7e387b11b6433e8d347f6fb44bca3e3fa26e413821a2c354"
+    },
+    "weight_loss.json": {
+      "filename": "weight_loss.json",
+      "status": "source_review_pending",
+      "source_list_present_at_baseline": false,
+      "claims": {},
+      "limitations": [
+        "Проверка каждого клинического утверждения по полному источнику не завершена.",
+        "Название книги без издания/главы не является подтверждением."
+      ],
+      "title": "Потеря веса у собак и кошек",
+      "trigger_hash": "206dc695f2dd1c8d2e1715489b8f132596bf97c5f0e0b1a1fd35b59d9c7a7aa6"
+    }
+  }
+}

@@ -46,5 +46,15 @@
   "do_not_do": [
     "Не давать одинаковый большой объём жидкости всем пациентам с гипотензией",
     "Не задерживать контроль источника кровотечения ради бесконечных инфузий"
+  ],
+  "sources": [
+    {
+      "title": "AAHA 2024 Fluid Therapy — Section 5: Fluid Therapy in Ill Patients",
+      "url": "https://www.aaha.org/resources/2024-aaha-fluid-therapy-guidelines-for-dogs-and-cats/section-5-fluid-therapy-in-ill-patients/",
+      "supports": [
+        "/management_principles/1"
+      ],
+      "verified_at": "2026-09-20"
+    }
   ]
 }
