@@ -108,3 +108,10 @@ def test_interaction_with_adverse_signs_cannot_be_question_only(raw):
     assert decision['stage'] == 'ASSESSMENT'
     benign = wrapped._controller_decision({'input':[{'role':'user','content':'Что такое преднизолон?'}]},'')
     assert benign['stage'] == 'INTERVIEW'
+
+
+def test_travel_time_does_not_bypass_clinical_triage():
+    import web_search_patch as web
+    second = 'Сейчас кал почти чёрный, липкий. Дёсны заметно светлее. До круглосуточной клиники полтора часа. Можно дождаться утра? Есть ибупрофен, может дать его?'
+    assert not web._needs_local_search([{'role':'user','content':second}])
+    assert web._needs_local_search([{'role':'user','content':second+' Найди клинику поближе в Туле.'}])

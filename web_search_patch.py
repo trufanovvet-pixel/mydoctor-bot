@@ -134,6 +134,14 @@ def _needs_local_search(response_input) -> bool:
     value = _plain_text([latest] if latest else response_input).lower().replace("ё", "е")
     if not value:
         return False
+    # Travel time and a question about waiting are clinical context, not a
+    # request to find a clinic. Do not bypass triage/protocols on "24-hour".
+    travel_context = bool(re.search(r"до\s+[^.!?\n]*клиник[^.!?\n]*(?:час|минут)", value))
+    explicit_search = any(term in value for term in (
+        "найди", "найти", "найдите", "где", "куда ехать", "куда обратиться",
+        "адрес", "телефон", "контакт", "сайт", "сравни", "рейтинг", "посоветуй"))
+    if travel_context and not explicit_search:
+        return False
     if not any(term in value for term in LOCAL_TERMS) and messages:
         previous = [m for m in messages[:-1] if isinstance(m, dict) and m.get("role") == "user"]
         previous_text = _plain_text(previous[-1:]).lower().replace("ё", "е")
