@@ -100,3 +100,11 @@ async def test_medical_memory_marks_model_interpretation(bot, ctx, update, pet, 
     sent = json.dumps(raw.responses.calls[-1]['input'],ensure_ascii=False)
     assert 'не оригиналы бланков' in sent
     assert 'Сохранённая интерпретация ИИ' in sent
+
+
+def test_interaction_with_adverse_signs_cannot_be_question_only(raw):
+    wrapped = app._ResponsesWithKnowledge(raw.responses)
+    decision = wrapped._controller_decision({'input':[{'role':'user','content':FIRST}]},'')
+    assert decision['stage'] == 'ASSESSMENT'
+    benign = wrapped._controller_decision({'input':[{'role':'user','content':'Что такое преднизолон?'}]},'')
+    assert benign['stage'] == 'INTERVIEW'

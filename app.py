@@ -260,9 +260,19 @@ class _ResponsesWithKnowledge:
                 instructions=instructions,
                 input=controller_input(kwargs.get("input")),
             )
-            return _parse_controller_output(response.output_text)
+            decision = _parse_controller_output(response.output_text)
         except Exception:
-            return {"stage": "INTERVIEW", "questions": [], "note": "Продолжи сбор анамнеза."}
+            decision = {"stage": "INTERVIEW", "questions": [], "note": "Продолжи сбор анамнеза."}
+        # A reported adverse event with this contraindicated combination needs
+        # immediate safety advice even before dose/timing clarifications arrive.
+        current = _latest_user_text(kwargs.get("input")).lower().replace("ё", "е")
+        interaction = "мелоксикам" in current and "преднизолон" in current
+        adverse = any(x in current for x in ("вырвало", "рвот", "меньше обычного", "меньше мочи", "не ест"))
+        if interaction and adverse and decision.get("stage") == "INTERVIEW":
+            decision = {"stage": "ASSESSMENT", "questions": [], "note":
+                "Уже описаны нежелательные симптомы при мелоксикаме и преднизолоне. "
+                "Сначала ответь о следующей дозе и срочности очной оценки; уточнения не должны задерживать эти действия."}
+        return decision
 
     def create(self, *args, **kwargs):
         text = _extract_text(kwargs.get("input"))

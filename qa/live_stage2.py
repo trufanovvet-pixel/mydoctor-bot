@@ -76,6 +76,8 @@ async def main():
                         'medications_retained': 'мелоксикам' in lower and 'преднизолон' in lower,
                         'no_unrelated_budget': '1000' not in lower and 'гормон' not in lower,
                         'no_old_location':'щекино' not in lower}
+                    if stage == 1:
+                        checks['action_before_questions'] = any(x in lower for x in ('не давай', 'не давать', 'отмен', 'прекрат', 'пропуст', 'приостанов'))
                     if stage == 2:
                         checks['urgent'] = any(x in lower for x in ('сейчас','немедленно','срочно'))
                         checks['ibuprofen_addressed'] = 'ибупрофен' in lower
