@@ -98,6 +98,19 @@ async def main():
             print('QA_STAGE2 ANSWER '+json.dumps({'case':name,'smoke_pass':ok,'answer':answer},ensure_ascii=False),flush=True)
         except Exception as exc:
             failures.append(name); print('QA_STAGE2 ERROR '+name+' '+type(exc).__name__,flush=True)
+    # Run the real web-aware production wrapper. Assert a web tool call, not merely a URL in prose.
+    total += 1
+    try:
+        response = await asyncio.to_thread(bot.client.responses.create,
+            model='gpt-5.6-sol', instructions=bot.SYSTEM_PROMPT,
+            input=[{'role':'user','content':'Сейчас я в Щёкино. Найди контакты ветеринарного центра Вильдар и проверь адрес и график по официальному сайту. Подтверждены ли банк крови и возможность экстренного переливания именно сейчас? Не выводи это из наличия стационара.'}])
+        calls = [x.get('type') for x in response.model_dump().get('output',[])]
+        ok = 'web_search_call' in calls
+        if not ok: failures.append('clinic_verification')
+        print('QA_STAGE2 ANSWER '+json.dumps({'case':'clinic_verification','web_tool_called':ok,
+            'answer':response.output_text},ensure_ascii=False),flush=True)
+    except Exception as exc:
+        failures.append('clinic_verification'); print('QA_STAGE2 ERROR clinic_verification '+type(exc).__name__,flush=True)
     print('QA_STAGE2 SUMMARY '+json.dumps({'total':total,'failed':failures,'elapsed_seconds':round(time.monotonic()-started,1)}),flush=True)
     return int(bool(failures))
 
