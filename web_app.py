@@ -34,7 +34,7 @@ class WebDocument(storage.Base):
 
 storage.Base.metadata.create_all(storage.engine)
 
-SYSTEM="""Ты — МойДоктор, ветеринарный AI-помощник для владельцев собак и кошек.
+SYSTEM="""Ты — МойДоктор, ветеринарный AI-помощник для владельцев собак и кошек.\nОтвечай только обычным текстом. Никогда не используй Markdown-разметку: символы **, *, #, ###, обратные кавычки и markdown-таблицы запрещены. Для структуры используй короткие заголовки без спецсимволов и обычную нумерацию.
 Работай клинически последовательно: сначала прямой ответ, затем только нужные уточнения.
 Не придумывай данные, диагнозы, дозы или результаты исследований. Разделяй факт, предположение и то, что требует подтверждения.
 При конкретном пациенте учитывай его карточку и историю. Общий вопрос не привязывай к питомцу без явного указания.
@@ -143,7 +143,7 @@ def chat():
     text=(request.json or {}).get("message","").strip()
     if not text:return jsonify({"error":"empty"}),400
     with storage.SessionLocal() as db:
-        user=db.get(storage.User,session["uid"]);pctx=pet_context(db,user)
+        user=db.get(storage.User,session["uid"]);pctx=pet_context(db,user,text)
         prev=db.scalars(select(storage.Consultation).where(storage.Consultation.user_id==user.id).order_by(storage.Consultation.id.desc()).limit(6)).all()
         history=[]
         for item in reversed(prev):
@@ -155,7 +155,7 @@ def chat():
             answer=(response.output_text or "").strip()
         except Exception:
             return jsonify({"error":"Временная ошибка медицинского помощника. Попробуйте ещё раз."}),503
-        db.add(storage.Consultation(user_id=user.id,pet_id=user.active_pet_id,kind="web_chat",user_text=text,assistant_text=answer));db.commit()
+        pet_for_history=user.active_pet_id if pctx else None\n        db.add(storage.Consultation(user_id=user.id,pet_id=pet_for_history,kind="web_chat",user_text=text,assistant_text=answer));db.commit()
     return jsonify({"answer":answer})
 
 @app.post("/documents")
