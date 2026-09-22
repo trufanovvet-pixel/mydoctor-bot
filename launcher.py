@@ -20,6 +20,7 @@ import voice_router_patch
 import media_direct_client_patch
 import medical_memory_patch
 import feedback_patch
+import web_login_patch
 
 
 _original_install = enhanced_app2.enhanced.install_features
@@ -53,6 +54,7 @@ def _install_clean_menu_with_onboarding(bot):
     voice_router_patch.install(bot)
     medical_memory_patch.install(bot)
     feedback_patch.install(bot)
+    web_login_patch.install(bot)
 
 
 enhanced_app2.enhanced.install_features = _install_with_patches
