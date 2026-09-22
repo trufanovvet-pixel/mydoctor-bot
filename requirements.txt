@@ -6,3 +6,5 @@ Pillow
 pymorphy3==2.0.6
 flask
 gunicorn
+pytest
+pytest-asyncio
