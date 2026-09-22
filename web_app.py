@@ -119,10 +119,10 @@ def cabinet():
     with storage.SessionLocal() as db:
         user=db.get(storage.User,session["uid"])
         pets=db.scalars(select(storage.Pet).where(storage.Pet.user_id==user.id).order_by(storage.Pet.created_at)).all()
-        consultations=db.scalars(select(storage.Consultation).where(storage.Consultation.user_id==user.id).order_by(storage.Consultation.id.desc()).limit(12)).all()
+        consultations=db.scalars(select(storage.Consultation).where(storage.Consultation.user_id==user.id).order_by(storage.Consultation.id.desc()).limit(12)).all()\n        chat_started=session.get("chat_started_at")\n        visible_consultations=consultations\n        if chat_started:\n            try:\n                cutoff=datetime.fromisoformat(chat_started); visible_consultations=[c for c in consultations if c.created_at>=cutoff]\n            except ValueError: pass
         docs=db.scalars(select(WebDocument).where(WebDocument.user_id==user.id).order_by(WebDocument.id.desc()).limit(12)).all()
         active=next((p for p in pets if p.id==user.active_pet_id),None)
-        return render_template("webapp.html",user=user,pets=pets,active=active,consultations=consultations,docs=docs)
+        return render_template("webapp.html",user=user,pets=pets,active=active,consultations=visible_consultations,history_consultations=consultations,docs=docs)
 
 @app.post("/pets")
 def add_pet():
@@ -173,6 +173,12 @@ def chat():
         pet_for_history=user.active_pet_id if pctx else None
         db.add(storage.Consultation(user_id=user.id,pet_id=pet_for_history,kind="web_chat",user_text=text,assistant_text=answer));db.commit()
     return jsonify({"answer":answer})
+
+@app.post("/api/chat/clear")
+def clear_chat():
+    if not session.get("uid"):return jsonify({"error":"auth"}),401
+    session["chat_started_at"]=datetime.utcnow().isoformat()
+    return jsonify({"ok":True})
 
 @app.post("/documents")
 def upload_document():
