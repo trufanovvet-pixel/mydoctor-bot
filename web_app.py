@@ -9,7 +9,7 @@ import storage
 from web_models import WebAccount, PetMedicalProfile, WebMessage, WebDocument
 from web_ai import answer
 
-app=Flask(__name__,template_folder="web_templates",static_folder="web_static")
+app=Flask(__name__,template_folder="web_templates",static_folder="web_static",static_url_path="/static")
 app.secret_key=os.environ.get("WEB_SECRET_KEY","dev-change-me")
 UPLOAD=Path(os.environ.get("WEB_UPLOAD_DIR","/tmp/mydoctor_uploads")); UPLOAD.mkdir(parents=True,exist_ok=True)
 storage.Base.metadata.create_all(storage.engine)
