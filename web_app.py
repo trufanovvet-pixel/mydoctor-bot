@@ -6,11 +6,12 @@ from sqlalchemy import DateTime, ForeignKey, Integer, LargeBinary, String, Text,
 from sqlalchemy.orm import Mapped, mapped_column
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+import re
 import storage, knowledge
 
 app=Flask(__name__,template_folder="web_templates",static_folder="web_static",static_url_path="/static")
 app.secret_key=os.getenv("FLASK_SECRET_KEY",secrets.token_hex(32))
-app.config.update(MAX_CONTENT_LENGTH=20*1024*1024,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE="Lax")
+app.config.update(MAX_CONTENT_LENGTH=20*1024*1024,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE="Lax",SESSION_COOKIE_SECURE=True)
 client=OpenAI()
 
 class WebAccount(storage.Base):
@@ -62,11 +63,21 @@ def new_virtual_telegram_id(db):
         value=-secrets.randbelow(8_000_000_000_000_000)-1
         if not db.scalar(select(storage.User.id).where(storage.User.telegram_id==value)): return value
 
-def pet_context(db,user):
+def _plain(text):
+    value=(text or "").replace("**","").replace("###","").replace("##","").replace("`","")
+    return re.sub(r"(?m)^#\\s*", "", value).strip()
+
+def _pet_requested(text, pet):
+    value=(text or "").lower().replace("ё","е")
+    name=(pet.name or "").lower().replace("ё","е")
+    if name and re.search(rf"(?<!\\w){re.escape(name)}(?:а|у|ом|е|ы|и)?(?!\\w)", value): return True
+    return any(x in value for x in ("мой питомец","моя собака","мой пес","мой кот","моя кошка","у моего питомца"))
+
+def pet_context(db,user,text):
     if not user.active_pet_id:return ""
     pet=db.scalar(select(storage.Pet).where(storage.Pet.id==user.active_pet_id,storage.Pet.user_id==user.id))
-    if not pet:return ""
-    return f"Активный питомец: {pet.name}; вид: {pet.species}; порода: {pet.breed or 'не указана'}; возраст: {pet.age or 'не указан'}; пол: {pet.sex or 'не указан'}; вес: {pet.weight_kg if pet.weight_kg is not None else 'не указан'} кг."
+    if not pet or not _pet_requested(text,pet):return ""
+    return f"Пользователь явно спрашивает об этом питомце. Имя: {pet.name}; вид: {pet.species}; порода: {pet.breed or 'не указана'}; возраст: {pet.age or 'не указан'}; пол: {pet.sex or 'не указан'}; вес: {pet.weight_kg if pet.weight_kg is not None else 'не указан'} кг."
 
 @app.get("/")
 def home(): return render_template("index.html",logged=bool(session.get("uid")))
@@ -118,10 +129,11 @@ def add_pet():
     gate=require_login()
     if gate:return gate
     name=(request.form.get("name") or "").strip();species=(request.form.get("species") or "").strip()
-    if not name or not species:return redirect(url_for("cabinet"))
+    if not name or not species: flash("Укажите имя и вид питомца."); return redirect(url_for("cabinet"))
     weight=None
     try: weight=float((request.form.get("weight") or "").replace(",", ".")) if request.form.get("weight") else None
-    except ValueError: pass
+    except ValueError: flash("Вес должен быть числом."); return redirect(url_for("cabinet"))
+    if weight is not None and (weight <= 0 or weight > 300): flash("Проверьте вес питомца."); return redirect(url_for("cabinet"))
     with storage.SessionLocal() as db:
         user=db.get(storage.User,session["uid"])
         pet=storage.Pet(user_id=user.id,name=name,species=species,breed=(request.form.get("breed") or "").strip() or None,age=(request.form.get("age") or "").strip() or None,sex=(request.form.get("sex") or "").strip() or None,weight_kg=weight)
@@ -140,11 +152,14 @@ def active_pet(pet_id):
 @app.post("/api/chat")
 def chat():
     if not session.get("uid"):return jsonify({"error":"auth"}),401
-    text=(request.json or {}).get("message","").strip()
+    payload=request.get_json(silent=True) or {}
+    text=str(payload.get("message") or "").strip()
+    if len(text)>12000:return jsonify({"error":"Сообщение слишком длинное."}),413
     if not text:return jsonify({"error":"empty"}),400
     with storage.SessionLocal() as db:
         user=db.get(storage.User,session["uid"]);pctx=pet_context(db,user,text)
-        prev=db.scalars(select(storage.Consultation).where(storage.Consultation.user_id==user.id).order_by(storage.Consultation.id.desc()).limit(6)).all()
+        scope_pet=user.active_pet_id if pctx else None
+        prev=db.scalars(select(storage.Consultation).where(storage.Consultation.user_id==user.id, storage.Consultation.pet_id==scope_pet).order_by(storage.Consultation.id.desc()).limit(6)).all()
         history=[]
         for item in reversed(prev):
             history += [{"role":"user","content":item.user_text},{"role":"assistant","content":item.assistant_text}]
@@ -152,10 +167,11 @@ def chat():
         prompt=(pctx+"\n"+extra+"\nВопрос пользователя: "+text).strip()
         try:
             response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM,input=history+[{"role":"user","content":prompt}])
-            answer=(response.output_text or "").strip()
+            answer=_plain(response.output_text)
         except Exception:
             return jsonify({"error":"Временная ошибка медицинского помощника. Попробуйте ещё раз."}),503
-        pet_for_history=user.active_pet_id if pctx else None\n        db.add(storage.Consultation(user_id=user.id,pet_id=pet_for_history,kind="web_chat",user_text=text,assistant_text=answer));db.commit()
+        pet_for_history=user.active_pet_id if pctx else None
+        db.add(storage.Consultation(user_id=user.id,pet_id=pet_for_history,kind="web_chat",user_text=text,assistant_text=answer));db.commit()
     return jsonify({"answer":answer})
 
 @app.post("/documents")
@@ -165,7 +181,8 @@ def upload_document():
     f=request.files.get("file")
     if not f or not f.filename:return redirect(url_for("cabinet"))
     data=f.read(); mime=f.mimetype or "application/octet-stream"
-    allowed=mime.startswith("image/") or mime=="application/pdf"
+    if len(data)>20*1024*1024: flash("Файл слишком большой. Максимум 20 МБ."); return redirect(url_for("cabinet"))
+    allowed=mime in {"image/jpeg","image/png","image/webp","application/pdf"}
     if not allowed or not data:flash("Поддерживаются изображения и PDF.");return redirect(url_for("cabinet"))
     pet_id=request.form.get("pet_id",type=int)
     analysis=None
@@ -176,7 +193,7 @@ def upload_document():
         else:
             uploaded=client.files.create(file=(secure_filename(f.filename) or "document.pdf",io.BytesIO(data),mime),purpose="user_data")
             inp=[{"role":"user","content":[{"type":"input_text","text":"Разбери ветеринарный документ. Извлеки ключевые результаты, интерпретируй их в контексте и укажи ограничения."},{"type":"input_file","file_id":uploaded.id}]}]
-        response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM,input=inp);analysis=(response.output_text or "").strip()
+        response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM,input=inp);analysis=_plain(response.output_text)
     except Exception:
         analysis="Файл сохранён. Автоматический разбор сейчас не удалось выполнить."
     with storage.SessionLocal() as db:
