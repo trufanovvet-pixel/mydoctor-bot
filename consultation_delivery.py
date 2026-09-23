@@ -9,6 +9,7 @@ from sqlalchemy import DateTime, ForeignKey, Integer, String, select, update
 from sqlalchemy.orm import Mapped, mapped_column
 import storage
 from owner_profile import ConsultationContact
+from consultation_chat import deliver_message_notifications
 
 
 class WebConsultationDelivery(storage.Base):
@@ -53,7 +54,7 @@ def mark_delivery(delivery_id, delivered):
         item.delivered_at = datetime.utcnow() if delivered else None
         item.next_attempt = datetime.utcnow() + timedelta(seconds=min(300, 30 * item.attempts))
         record = db.get(storage.Consultation, item.consultation_id)
-        record.assistant_text = ('Заявка передана врачу. Ожидайте связи по указанному контакту. '
+        record.assistant_text = ('Заявка передана врачу. Продолжайте общение в переписке на этой странице. '
                                  'Время консультации и оплата ещё не согласованы.' if delivered else
                                  'Заявка сохранена. Доставка врачу задерживается; отправка повторится автоматически.')
         db.commit()
@@ -100,6 +101,7 @@ async def delivery_loop(application):
     while True:
         try:
             await deliver_pending(application)
+            await deliver_message_notifications(application)
         except Exception as exc:
             logging.getLogger(__name__).error('Web request delivery worker: %s', type(exc).__name__)
         await asyncio.sleep(5)

@@ -16,14 +16,14 @@ REMEMBER_SECONDS = 30 * 24 * 60 * 60
 
 def doctor_destination(value):
     """Only supported doctor pages may be used as a login return address."""
-    return value if isinstance(value,str) and re.fullmatch(r'/doctor(?:/requests/[1-9]\d*)?',value) else '/doctor'
+    return value if isinstance(value,str) and re.fullmatch(r'/doctor(?:/requests/[1-9]\d*|/clients(?:/[1-9]\d*)?)?',value) else '/doctor'
 
 
 def telegram_login_url(target):
     username=storage.get_bot_setting('doctor_bot_username')
     if not username or not re.fullmatch(r'[A-Za-z0-9_]{5,32}',username):return None
     target=doctor_destination(target)
-    payload='doctor' if target=='/doctor' else 'doctor_'+target.rsplit('/',1)[1]
+    payload='doctor_'+target.rsplit('/',1)[1] if target.startswith('/doctor/requests/') else 'doctor'
     return f'https://t.me/{username}?start={payload}'
 
 

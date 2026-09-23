@@ -11,7 +11,7 @@
 <label>WhatsApp<input type="tel" name="whatsapp" placeholder="+66 81 234 5678" maxlength="40" value="{{values.whatsapp}}"></label>
 <label>Instagram<input name="instagram" placeholder="@username" autocapitalize="none" spellcheck="false" maxlength="100" value="{{values.instagram}}"></label>
 <label>{{t("ВКонтакте")}}<input name="vk" placeholder="https://vk.com/username" autocapitalize="none" spellcheck="false" maxlength="120" value="{{values.vk}}"></label>
-<label>{{t("Предпочтительный способ связи")}}<select name="preferred">{% for key,label in [('phone','Телефон'),('email','Электронная почта'),('telegram','Telegram'),('whatsapp','WhatsApp'),('instagram','Instagram'),('vk','ВКонтакте')] %}<option value="{{key}}" {{'selected' if values.preferred==key}}>{{t(label)}}</option>{% endfor %}</select></label>
+<label>{{t("Предпочтительный способ связи")}}<select name="preferred">{% for key,label in [('site','Переписка на сайте'),('phone','Телефон'),('email','Электронная почта'),('telegram','Telegram'),('whatsapp','WhatsApp'),('instagram','Instagram'),('vk','ВКонтакте')] %}<option value="{{key}}" {{'selected' if values.preferred==key}}>{{t(label)}}</option>{% endfor %}</select></label>
 <p class="muted">{{t("Почта для связи не меняет email для входа. Для Telegram укажите публичное имя пользователя — тогда врач сможет открыть ваш чат.")}}</p>
 <button type="submit">{{t("Сохранить контакты")}}</button>
 </form></div>

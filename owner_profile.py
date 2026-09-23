@@ -69,9 +69,9 @@ def validate_contacts(form):
         if value and (not re.fullmatch(pattern,value) or '..' in value or value.startswith('.') or value.endswith('.')):
             raise ValueError('Укажите имя пользователя или прямую ссылку на профиль Instagram / ВК.')
         values[key]=value
-    if values['preferred'] not in ('phone', 'email', 'telegram', 'whatsapp', 'instagram', 'vk'):
+    if values['preferred'] not in ('site', 'phone', 'email', 'telegram', 'whatsapp', 'instagram', 'vk'):
         raise ValueError('Выберите удобный способ связи.')
-    if not values[values['preferred']]:
+    if values['preferred']!='site' and not values[values['preferred']]:
         raise ValueError('Заполните контакт для выбранного способа связи.')
     return values
 
@@ -79,11 +79,12 @@ def validate_contacts(form):
 def profile_values(profile, user=None, email=''):
     if profile:
         return {key: getattr(profile, key) for key in ('name', 'phone', 'email', 'telegram', 'whatsapp', 'instagram', 'vk', 'preferred')}
-    return dict(name=user.first_name or '' if user else '', phone='', email=email, telegram='', whatsapp='', instagram='', vk='', preferred='email')
+    return dict(name=user.first_name or '' if user else '', phone='', email=email, telegram='', whatsapp='', instagram='', vk='', preferred='site')
 
 
 def preferred_contact(values):
     kind = values.get('preferred', 'email')
+    if kind=='site':return ''
     value = values.get(kind, '')
     if kind in ('telegram','instagram') and value:return '@' + value
     if kind=='vk' and value:return 'https://vk.com/'+value

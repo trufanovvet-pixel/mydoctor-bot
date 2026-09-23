@@ -2,15 +2,16 @@
 <span class="confirmation-icon" aria-hidden="true">✓</span>
 <h2>{{t("Заявка №")}}{{record.id}} {{t("сохранена")}}</h2>
 <p><strong>{{t('Статус заявки')}}:</strong> <span class="workflow-badge" data-workflow-status>{{t(statuses[case.status if case else 'new'])}}</span></p>
-{% if case and case.paid_confirmed %}<p>{{t('Оплата подтверждена врачом')}}</p>{% endif %}
+<p data-chat-paid {{'hidden' if not (case and case.paid_confirmed)}}>{{t('Оплата подтверждена врачом')}}</p>
 <p data-delivery-message>{{delivery_message|plain}}</p>
 {% if state in ['pending','sending'] %}<p class="muted" data-delivery-hint>{{t("Отправляем уведомление врачу. Статус обновится автоматически.")}}</p>
 {% elif state=='retry' %}<p class="muted" data-delivery-hint>{{t("Повторная отправка произойдёт автоматически. Создавать новую заявку не нужно.")}}</p>
-{% elif state=='saved' %}<p class="muted">{{t("Эта заявка сохранена до подключения отправки врачу. Чтобы передать её врачу, заполните новую заявку по кнопке ниже.")}}</p>{% endif %}
-<p>{{t("Время консультации и оплату нужно согласовать отдельно. Деньги при отправке заявки не списываются.")}}</p>
+{% elif state=='saved' %}<p class="muted">{{t("Напишите врачу в переписке ниже — он получит уведомление о сообщении.")}}</p>{% endif %}
+<p>{{t("Время и оплату можно согласовать с врачом в переписке ниже. Отправка заявки не списывает деньги.")}}</p>
 <a href="{{url_for('consultation_request_page',rid=record.id)}}">{{t("Обновить статус")}}</a>
 </section>
-<div class="panel"><h2>{{t("Ваша анкета")}}</h2><p class="plain-content">{{record.user_text}}</p></div>
+{% include 'consultation_chat.html' %}
+<details class="panel"><summary>{{t("Ваша анкета")}}</summary><p class="plain-content">{{record.user_text}}</p></details>
 {% if files %}<div class="panel"><h2>{{t('Приложенные документы')}}</h2>{% for file in files %}<a class="record-row" href="{{url_for('consultation_file',fid=file.id)}}"><strong>{{file.filename}}</strong><span>{{t('Скачать →')}}</span></a>{% endfor %}</div>{% endif %}
-<a class="btn" href="/consultation">{{t("Все заявки и новая запись →")}}</a>
+<a class="btn" href="/messages">{{t("Все диалоги →")}}</a>
 <script src="/static/consultation.js?v=20260923-doctor" defer></script>

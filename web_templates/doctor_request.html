@@ -1,10 +1,11 @@
-<a class="back-link" href="/doctor">{{t('← Все заявки')}}</a>
+<div class="guide-links"><a class="back-link" href="/doctor">{{t('← Все заявки')}}</a><a href="{{url_for('doctor_client',uid=record.user_id)}}">{{t('Карточка владельца →')}}</a></div>
 {% if error %}<div class="notice" role="alert">{{t(error)}}</div>{% endif %}
 <div class="doctor-columns"><div>
-<section class="panel"><h2>{{t('Анкета и причина обращения')}}</h2><p class="muted">{{record.created_at.strftime('%d.%m.%Y %H:%M')}} UTC</p><div class="plain-content">{{record.user_text}}</div></section>
+{% if chat_available %}{% include 'consultation_chat.html' %}{% else %}<div class="panel"><p>{{t('У этого владельца пока нет аккаунта на сайте. Используйте контакт из заявки.')}}</p></div>{% endif %}
+<details class="panel"><summary>{{t('Анкета и причина обращения')}}</summary><p class="muted">{{record.created_at.strftime('%d.%m.%Y %H:%M')}} UTC</p><div class="plain-content">{{record.user_text}}</div></details>
 {% if contact and contact.links %}<section class="panel"><h2>{{t('Связаться с владельцем')}}</h2><div class="contact-buttons">{% for label,url in contact.links.items() %}<a class="btn" href="{{url}}" target="_blank" rel="noopener noreferrer">{{label}} ↗</a>{% endfor %}</div></section>{% endif %}
 {% if case and case.contacts %}<div class="contact-buttons">{% if case.contacts.get('email') %}<a class="btn" href="mailto:{{case.contacts.email}}">{{t('Написать на почту')}}</a>{% endif %}{% if case.contacts.get('phone') %}<a class="btn" href="tel:{{case.contacts.phone}}">{{t('Телефон')}}: {{case.contacts.phone}}</a>{% endif %}</div>{% endif %}
-<section class="panel"><h2>{{t('Приложенные документы')}}</h2>{% for file in files %}<a class="record-row" href="{{url_for('consultation_file',fid=file.id)}}"><div><strong>{{file.filename}}</strong></div><span>{{t('Скачать →')}}</span></a>{% else %}<p class="muted">{{t('К этой заявке документы не приложены.')}}</p>{% endfor %}</section>
+<details class="panel"><summary>{{t('Приложенные документы')}} · {{files|length}}</summary>{% for file in files %}<a class="record-row" href="{{url_for('consultation_file',fid=file.id)}}"><div><strong>{{file.filename}}</strong></div><span>{{t('Скачать →')}}</span></a>{% else %}<p class="muted">{{t('К этой заявке документы не приложены.')}}</p>{% endfor %}</details>
 </div><div>
 <section class="panel"><h2>{{t('Работа с заявкой')}}</h2><form method="post" class="doctor-workflow"><input type="hidden" name="doctor_csrf" value="{{doctor_csrf}}"><input type="hidden" name="version" value="{{case.version if case else 0}}">
 <label>{{t('Статус заявки')}}<select name="status">{% for key,label in statuses.items() %}<option value="{{key}}" {{'selected' if key==(case.status if case else 'new')}}>{{t(label)}}</option>{% endfor %}</select></label>

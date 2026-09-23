@@ -271,3 +271,5 @@ import web_sections
 web_sections.install(app, WebDocument)
 import doctor_portal
 doctor_portal.install(app, WebDocument)
+import consultation_chat
+consultation_chat.install(app)

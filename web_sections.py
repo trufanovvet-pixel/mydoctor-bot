@@ -12,6 +12,7 @@ from consultation_delivery import WebConsultationDelivery
 from owner_profile import OwnerProfile, ConsultationContact, profile_values, validate_contacts, preferred_contact, contact_links
 from web_i18n import t, language
 from consultation_cases import ConsultationCase,RequestAttachment,TYPES,STATUSES,available_documents,validate_intake,request_files
+from consultation_chat import thread_context
 
 MAX_FILE=20*1024*1024
 KINDS={'vaccination':'Вакцинация','worms':'Обработка от гельминтов','ecto':'Блохи и клещи','checkup':'Контрольный осмотр'}
@@ -254,7 +255,8 @@ def install(app,WebDocument):
                 if existing:return redirect(url_for('consultation_request_page',rid=existing.consultation_id),code=303)
                 contact=request.form.get('contact','').strip();question=request.form.get('question','').strip()
                 error=None
-                if not contact or not question:error='Укажите контакт и причину обращения.'
+                if not contact:contact=t('Переписка на сайте')
+                if not question:error='Укажите причину обращения.'
                 elif len(contact)>200 or len(question)>6000:error='Контакт — до 200 символов, причина обращения — до 6000.'
                 elif not key or not secrets.compare_digest(key,session.get('consultation_key','')):error='Форма устарела. Проверьте данные и нажмите «Отправить заявку» ещё раз.'
                 intake=None
@@ -274,13 +276,14 @@ def install(app,WebDocument):
                 if contacts:
                     labels={'name':'Владелец','phone':'Телефон','email':'Почта','telegram':'Telegram','whatsapp':'WhatsApp','instagram':'Instagram','vk':'ВКонтакте'}
                     lines=[t(label)+': '+contacts[key] for key,label in labels.items() if contacts.get(key)]
-                    text='\n'.join(lines)+'\n'+t('Предпочтительный способ связи')+': '+contacts['preferred']+'\n\n'+text
+                    text='\n'.join(lines)+'\n'+t('Предпочтительный способ связи')+': '+(t('Переписка на сайте') if contacts['preferred']=='site' else contacts['preferred'])+'\n\n'+text
                 text=t('Язык общения')+': '+('English' if language()=='en' else 'Русский')+'\n'+text
                 record=storage.Consultation(user_id=session['uid'],pet_id=intake['pet_id'],kind='consult_request',user_text=text,assistant_text='Заявка сохранена и ожидает отправки врачу.')
                 try:
                     db.add(record);db.flush()
                     db.add(ConsultationContact(consultation_id=record.id,links=contact_links(contacts or {}),language=language()))
-                    db.add(ConsultationCase(consultation_id=record.id,consultation_type=intake['kind'],patient=patient,contacts=contacts or {},status='new'))
+                    owner=db.get(storage.User,session['uid'])
+                    db.add(ConsultationCase(consultation_id=record.id,consultation_type=intake['kind'],patient=patient,contacts=contacts or {'name':owner.first_name or '', 'preferred':'site'},status='new'))
                     for file in intake['attachments']:db.add(RequestAttachment(consultation_id=record.id,**file))
                     db.add(WebConsultationDelivery(consultation_id=record.id,request_key=key));db.commit()
                     rid=record.id
@@ -309,4 +312,6 @@ def install(app,WebDocument):
                 response=jsonify(state=state,message=delivery_message,workflow_status=t(STATUSES[case.status if case else 'new']))
                 response.headers['Cache-Control']='private, no-store'
                 return response
-            return render('consultation_request',t('Заявка №')+str(row.id),record=row,state=state,case=case,statuses=STATUSES,files=request_files(db,rid),delivery_message=delivery_message)
+            response=app.make_response(render('consultation_request',t('Заявка №')+str(row.id),record=row,state=state,case=case,statuses=STATUSES,files=request_files(db,rid),delivery_message=delivery_message,**thread_context(db,rid,'owner')))
+            response.headers['Cache-Control']='private, no-store'
+            return response

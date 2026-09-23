@@ -49,10 +49,10 @@ def test_booking_confirmation_duplicate_submit_and_private_status():
 
 def test_booking_validation_keeps_entered_text():
     reset_db();c,data=form_client()
-    response=c.post('/consultation',data={**data,'contact':' '})
+    response=c.post('/consultation',data={**data,'contact':'x'*201})
     assert response.status_code==400
     html=response.get_data(as_text=True)
-    assert 'Укажите контакт и причину обращения' in html
+    assert 'Контакт — до 200 символов' in html
     assert data['question'] in html
     response=c.post('/consultation',data={**data,'request_key':'expired'})
     assert response.status_code==400 and 'Форма устарела' in response.get_data(as_text=True)

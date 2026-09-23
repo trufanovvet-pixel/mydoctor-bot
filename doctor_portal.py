@@ -9,6 +9,7 @@ from consultation_cases import ConsultationCase,RequestStatusEvent,RequestAttach
 from owner_profile import ConsultationContact
 from doctor_access import DoctorAccess,consume_doctor_link,doctor_identity,hashed,doctor_destination,telegram_login_url,DOCTOR_COOKIE,REMEMBER_SECONDS
 from web_i18n import t
+from consultation_chat import ConsultationMessage, MessageFile, thread_context, unread_counts
 
 
 def install(app,WebDocument):
@@ -23,6 +24,8 @@ def install(app,WebDocument):
                     g.doctor_identity=user;g.doctor_grant=grant
                     break
         return g.doctor_identity
+
+    app.extensions['doctor_identity']=identity
 
     @app.context_processor
     def doctor_context():return {'is_doctor':bool(identity())}
@@ -112,8 +115,11 @@ def install(app,WebDocument):
                 condition=func.lower(storage.Consultation.user_text).contains(q.lower(),autoescape=True)
                 if q.isdigit():condition=or_(condition,storage.Consultation.id==int(q))
                 base=base.where(condition)
-            rows=db.execute(base.order_by(storage.Consultation.id.desc()).offset((page-1)*limit).limit(limit+1)).all()
-            return render('doctor_dashboard','Кабинет врача',rows=rows[:limit],has_more=len(rows)>limit,page_number=page,counts=counts,status=status,q=q)
+            activity=select(ConsultationMessage.consultation_id,func.max(ConsultationMessage.created_at).label('last_at')).group_by(ConsultationMessage.consultation_id).subquery()
+            base=base.outerjoin(activity,activity.c.consultation_id==storage.Consultation.id)
+            rows=db.execute(base.order_by(func.coalesce(activity.c.last_at,storage.Consultation.created_at).desc(),storage.Consultation.id.desc()).offset((page-1)*limit).limit(limit+1)).all()
+            unread=unread_counts(db,'doctor',ids=[row[0].id for row in rows])
+            return render('doctor_dashboard','Кабинет врача',rows=rows[:limit],has_more=len(rows)>limit,page_number=page,counts=counts,status=status,q=q,unread=unread)
 
     @app.route('/doctor/requests/<int:rid>',methods=['GET','POST'])
     @require_doctor
@@ -123,6 +129,9 @@ def install(app,WebDocument):
             record=db.scalar(query.with_for_update() if request.method=='POST' else query)
             if not record:abort(404)
             case=db.get(ConsultationCase,rid)
+            from web_app import WebAccount
+            chat_available=bool(db.scalar(select(WebAccount.id).where(WebAccount.user_id==record.user_id)))
+            chat=thread_context(db,rid,'doctor') if chat_available else {}
             if request.method=='POST':
                 check_csrf()
                 status=request.form.get('status','');paid=request.form.get('paid_confirmed')=='1'
@@ -133,13 +142,48 @@ def install(app,WebDocument):
                 elif len(notes)>10000:error='Заметка должна быть не длиннее 10000 символов.'
                 elif request.form.get('version',type=int)!=(case.version if case else 0):error='Заявка уже изменена. Обновите страницу перед сохранением.';code=409
                 if error:
-                    return render('doctor_request',t('Заявка №')+str(rid),record=record,case=case,files=request_files(db,rid),contact=db.get(ConsultationContact,rid),events=db.scalars(select(RequestStatusEvent).where(RequestStatusEvent.consultation_id==rid).order_by(RequestStatusEvent.id.desc())).all(),error=error),code
+                    return render('doctor_request',t('Заявка №')+str(rid),record=record,case=case,files=request_files(db,rid),contact=db.get(ConsultationContact,rid),events=db.scalars(select(RequestStatusEvent).where(RequestStatusEvent.consultation_id==rid).order_by(RequestStatusEvent.id.desc())).all(),error=error,chat_available=chat_available,**chat),code
                 if not case:case=ConsultationCase(consultation_id=rid,consultation_type='unknown',patient={},contacts={},status='new',version=0);db.add(case)
                 db.add(RequestStatusEvent(consultation_id=rid,actor_telegram_id=identity(),previous_status=case.status,status=status,paid_confirmed=paid))
                 case.status=status;case.paid_confirmed=paid;case.doctor_notes=notes;case.version+=1;case.updated_at=datetime.utcnow();db.commit()
                 flash('Изменения сохранены. Статус доступен владельцу в его заявке.')
                 return redirect(url_for('doctor_request',rid=rid),code=303)
-            return render('doctor_request',t('Заявка №')+str(rid),record=record,case=case,files=request_files(db,rid),contact=db.get(ConsultationContact,rid),events=db.scalars(select(RequestStatusEvent).where(RequestStatusEvent.consultation_id==rid).order_by(RequestStatusEvent.id.desc())).all())
+            return render('doctor_request',t('Заявка №')+str(rid),record=record,case=case,files=request_files(db,rid),contact=db.get(ConsultationContact,rid),events=db.scalars(select(RequestStatusEvent).where(RequestStatusEvent.consultation_id==rid).order_by(RequestStatusEvent.id.desc())).all(),chat_available=chat_available,**chat)
+
+    @app.get('/doctor/clients')
+    @require_doctor
+    def doctor_clients():
+        q=request.args.get('q','').strip()[:200];page=max(1,request.args.get('page',1,type=int));limit=30
+        with storage.SessionLocal() as db:
+            query=select(storage.User.id,storage.User.first_name,func.count(storage.Consultation.id).label('total'),
+                func.max(storage.Consultation.created_at).label('last_at')).join(storage.Consultation,
+                storage.Consultation.user_id==storage.User.id).where(storage.Consultation.kind=='consult_request')
+            if q:query=query.where(or_(func.lower(storage.User.first_name).contains(q.lower(),autoescape=True),
+                func.lower(storage.Consultation.user_text).contains(q.lower(),autoescape=True)))
+            rows=db.execute(query.group_by(storage.User.id,storage.User.first_name).order_by(func.max(storage.Consultation.created_at).desc())
+                .offset((page-1)*limit).limit(limit+1)).all()
+            return render('doctor_clients','Картотека владельцев',rows=rows[:limit],has_more=len(rows)>limit,page_number=page,q=q)
+
+    @app.get('/doctor/clients/<int:uid>')
+    @require_doctor
+    def doctor_client(uid):
+        page=max(1,request.args.get('page',1,type=int));limit=30
+        with storage.SessionLocal() as db:
+            owner=db.get(storage.User,uid)
+            if not owner:abort(404)
+            query=select(storage.Consultation,ConsultationCase).outerjoin(ConsultationCase,
+                ConsultationCase.consultation_id==storage.Consultation.id).where(storage.Consultation.user_id==uid,storage.Consultation.kind=='consult_request')
+            latest=db.execute(query.order_by(storage.Consultation.id.desc()).limit(1)).first()
+            if not latest:abort(404)
+            rows=db.execute(query.order_by(storage.Consultation.id.desc()).offset((page-1)*limit).limit(limit+1)).all()
+            ids=[row[0].id for row in rows[:limit]]
+            documents=[dict(filename=file.filename,url=url_for('consultation_file',fid=file.id),rid=file.consultation_id)
+                for file in db.scalars(select(RequestAttachment).where(RequestAttachment.consultation_id.in_(ids))).all()]
+            for file,rid in db.execute(select(MessageFile,ConsultationMessage.consultation_id).join(ConsultationMessage,
+                    MessageFile.message_id==ConsultationMessage.id).where(ConsultationMessage.consultation_id.in_(ids))):
+                documents.append(dict(filename=file.filename,url=url_for('message_file',fid=file.id),rid=rid))
+            return render('doctor_client','Карточка владельца',owner=owner,latest_case=latest[1],rows=rows[:limit],
+                documents=documents,unread=unread_counts(db,'doctor',ids=ids),page_number=page,has_more=len(rows)>limit)
 
     @app.get('/consultation/files/<int:fid>')
     def consultation_file(fid):
