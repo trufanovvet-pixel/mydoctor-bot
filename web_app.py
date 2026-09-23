@@ -119,7 +119,13 @@ def cabinet():
     with storage.SessionLocal() as db:
         user=db.get(storage.User,session["uid"])
         pets=db.scalars(select(storage.Pet).where(storage.Pet.user_id==user.id).order_by(storage.Pet.created_at)).all()
-        consultations=db.scalars(select(storage.Consultation).where(storage.Consultation.user_id==user.id).order_by(storage.Consultation.id.desc()).limit(12)).all()\n        chat_started=session.get("chat_started_at")\n        visible_consultations=consultations\n        if chat_started:\n            try:\n                cutoff=datetime.fromisoformat(chat_started); visible_consultations=[c for c in consultations if c.created_at>=cutoff]\n            except ValueError: pass
+        consultations=db.scalars(select(storage.Consultation).where(storage.Consultation.user_id==user.id).order_by(storage.Consultation.id.desc()).limit(12)).all()
+        chat_started=session.get("chat_started_at")
+        visible_consultations=consultations
+        if chat_started:
+            try:
+                cutoff=datetime.fromisoformat(chat_started); visible_consultations=[c for c in consultations if c.created_at>=cutoff]
+            except ValueError: pass
         docs=db.scalars(select(WebDocument).where(WebDocument.user_id==user.id).order_by(WebDocument.id.desc()).limit(12)).all()
         active=next((p for p in pets if p.id==user.active_pet_id),None)
         return render_template("webapp.html",user=user,pets=pets,active=active,consultations=visible_consultations,history_consultations=consultations,docs=docs)
@@ -160,6 +166,13 @@ def chat():
         user=db.get(storage.User,session["uid"]);pctx=pet_context(db,user,text)
         scope_pet=user.active_pet_id if pctx else None
         prev=db.scalars(select(storage.Consultation).where(storage.Consultation.user_id==user.id, storage.Consultation.pet_id==scope_pet).order_by(storage.Consultation.id.desc()).limit(6)).all()
+        chat_started=session.get("chat_started_at")
+        if chat_started:
+            try:
+                cutoff=datetime.fromisoformat(chat_started)
+                prev=[item for item in prev if item.created_at>=cutoff]
+            except ValueError:
+                pass
         history=[]
         for item in reversed(prev):
             history += [{"role":"user","content":item.user_text},{"role":"assistant","content":item.assistant_text}]

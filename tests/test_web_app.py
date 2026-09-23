@@ -7,7 +7,8 @@ os.environ.setdefault("DATABASE_URL", "sqlite:///" + tempfile.gettempdir() + "/m
 os.environ.setdefault("FLASK_SECRET_KEY", "test-secret")
 
 import storage
-import web_app
+with patch("openai.OpenAI"):
+    import web_app
 
 
 def reset_db():
@@ -42,11 +43,11 @@ def test_pet_validation_and_isolation():
 
 def test_general_question_does_not_pull_active_pet():
     reset_db(); c=web_app.app.test_client(); register(c); c.post("/pets",data={"name":"Гром","species":"Собака","weight":"50"})
-    assert web_app._pet_requested("Как проводится TPLO у собак?", MagicMock(name="Гром")) is False
+    assert web_app._pet_requested("Как проводится TPLO у собак?", type("Pet", (), {"name": "Гром"})()) is False
 
 
 def test_named_pet_does_use_context():
-    assert web_app._pet_requested("Грому назначили TPLO", MagicMock(name="Гром")) is True
+    assert web_app._pet_requested("Грому назначили TPLO", type("Pet", (), {"name": "Гром"})()) is True
 
 
 def test_markdown_removed():
@@ -78,3 +79,24 @@ def test_empty_and_too_long_chat():
     reset_db(); c=web_app.app.test_client(); register(c)
     assert c.post("/api/chat",json={"message":""}).status_code==400
     assert c.post("/api/chat",json={"message":"x"*12001}).status_code==413
+
+
+def test_new_conversation_resets_model_context_but_preserves_archive():
+    reset_db()
+    c=web_app.app.test_client()
+    register(c)
+    with c.session_transaction() as s:
+        uid=s['uid']
+    with storage.SessionLocal() as db:
+        db.add(storage.Consultation(user_id=uid,pet_id=None,kind='web_chat',user_text='Старый вопрос',assistant_text='Старый ответ'))
+        db.commit()
+    assert c.post('/api/chat/clear').status_code==200
+    with patch.object(web_app.client.responses,'create',return_value=type('Response',(),{'output_text':'Новый ответ'})()) as call:
+        assert c.post('/api/chat',json={'message':'Новый общий вопрос'}).status_code==200
+        assert len(call.call_args.kwargs['input'])==1
+    html=c.get('/app').get_data(as_text=True)
+    chat=html.split('id="messages">',1)[1].split('<form id="chat"',1)[0]
+    assert 'Старый вопрос' not in chat
+    assert 'Старый вопрос' in html.split('id="healthHistory"',1)[1]
+    with storage.SessionLocal() as db:
+        assert db.query(storage.Consultation).filter_by(user_id=uid).count()==2
