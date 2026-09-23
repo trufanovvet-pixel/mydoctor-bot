@@ -72,8 +72,9 @@ class VisibleText(HTMLParser):
 
 def test_english_pages_have_translated_interface_and_stable_form_values():
     reset_db();c=web_app.app.test_client();c.get('/language/en');register(c)
+    anonymous=web_app.app.test_client();anonymous.get('/language/en')
     for path in ['/','/login','/register','/dashboard','/how-it-works','/profile','/pets','/analyses','/operations','/assistant','/prevention','/consultation','/history']:
-        response=c.get(path);assert response.status_code==200,path
+        response=(anonymous if path in ('/login','/register') else c).get(path);assert response.status_code==200,path
         html=response.get_data(as_text=True);assert 'lang="en"' in html
         visible=VisibleText();visible.feed(html)
         assert not re.search('[А-Яа-яЁё]',''.join(visible.text)),(path,''.join(visible.text))

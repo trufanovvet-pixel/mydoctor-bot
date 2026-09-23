@@ -470,5 +470,7 @@
   "Не удалось изменить уведомления. Проверьте интернет и попробуйте ещё раз.": "Could not change notification settings. Check your connection and try again.",
   "МойДоктор на телефоне": "MyDoctor on your phone",
   "Открывайте с иконки на главном экране": "Open from your home screen",
-  "Установить →": "Install →"
+  "Установить →": "Install →",
+  "Запомнить меня": "Remember me",
+  "Оставаться в аккаунте на этом устройстве 30 дней": "Stay signed in on this device for 30 days"
 }

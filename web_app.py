@@ -1,5 +1,5 @@
 import base64, io, os, secrets
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash, send_file
 from openai import OpenAI
 from sqlalchemy import DateTime, ForeignKey, Integer, LargeBinary, String, Text, select
@@ -14,7 +14,8 @@ import math
 
 app=Flask(__name__,template_folder="web_templates",static_folder="web_static",static_url_path="/static")
 app.secret_key=os.getenv("FLASK_SECRET_KEY",secrets.token_hex(32))
-app.config.update(MAX_CONTENT_LENGTH=20*1024*1024,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE="Lax",SESSION_COOKIE_SECURE=True)
+app.config.update(MAX_CONTENT_LENGTH=20*1024*1024,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE="Lax",SESSION_COOKIE_SECURE=True,
+                  PERMANENT_SESSION_LIFETIME=timedelta(days=30))
 client=OpenAI()
 
 class WebAccount(storage.Base):
@@ -96,6 +97,7 @@ def home(): return render_template("index.html",logged=bool(session.get("uid")))
 
 @app.route("/register",methods=["GET","POST"])
 def register():
+    if request.method=='GET' and web_account(): return redirect(login_destination())
     if request.method=="POST":
         email=(request.form.get("email") or "").strip().lower(); password=request.form.get("password") or ""
         if "@" not in email or len(password)<8:
@@ -110,11 +112,13 @@ def register():
             from web_push import revoke_browser_subscriptions
             revoke_browser_subscriptions('owner')
             session["uid"]=user.id
+            session.permanent=request.form.get('remember')=='1'
         return redirect(url_for("cabinet"))
     return render_template("auth.html",mode="register")
 
 @app.route("/login",methods=["GET","POST"])
 def login():
+    if request.method=='GET' and web_account(): return redirect(login_destination())
     if request.method=="POST":
         email=(request.form.get("email") or "").strip().lower();password=request.form.get("password") or ""
         with storage.SessionLocal() as db:
@@ -122,7 +126,9 @@ def login():
             if acc and check_password_hash(acc.password_hash,password):
                 from web_push import revoke_browser_subscriptions
                 revoke_browser_subscriptions('owner')
-                session["uid"]=acc.user_id;return redirect(login_destination())
+                session["uid"]=acc.user_id
+                session.permanent=request.form.get('remember')=='1'
+                return redirect(login_destination())
         flash("Неверный email или пароль.")
     return render_template("auth.html",mode="login")
 
