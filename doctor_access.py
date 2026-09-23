@@ -2,11 +2,29 @@
 import asyncio
 import hashlib
 import os
+import re
 import secrets
+from urllib.parse import urlencode
 from datetime import datetime, timedelta
 from sqlalchemy import BigInteger, DateTime, String, select, update
 from sqlalchemy.orm import Mapped, mapped_column
 import storage
+
+DOCTOR_COOKIE = '__Host-mydoctor-doctor'
+REMEMBER_SECONDS = 30 * 24 * 60 * 60
+
+
+def doctor_destination(value):
+    """Only supported doctor pages may be used as a login return address."""
+    return value if isinstance(value,str) and re.fullmatch(r'/doctor(?:/requests/[1-9]\d*)?',value) else '/doctor'
+
+
+def telegram_login_url(target):
+    username=storage.get_bot_setting('doctor_bot_username')
+    if not username or not re.fullmatch(r'[A-Za-z0-9_]{5,32}',username):return None
+    target=doctor_destination(target)
+    payload='doctor' if target=='/doctor' else 'doctor_'+target.rsplit('/',1)[1]
+    return f'https://t.me/{username}?start={payload}'
 
 
 class DoctorAccess(storage.Base):
@@ -33,22 +51,23 @@ def create_doctor_link(telegram_id):
     return token
 
 
-def consume_doctor_link(token):
+def consume_doctor_link(token,remember=False):
     now=datetime.utcnow();grant=secrets.token_urlsafe(32)
     with storage.SessionLocal() as db:
         result=db.execute(update(DoctorAccess).where(DoctorAccess.digest==hashed(token),DoctorAccess.used_at.is_(None),DoctorAccess.expires_at>now)
-            .values(used_at=now,session_digest=hashed(grant),session_expires_at=now+timedelta(hours=8)))
+            .values(used_at=now,session_digest=hashed(grant),session_expires_at=now+timedelta(seconds=REMEMBER_SECONDS) if remember else now+timedelta(hours=8)))
         db.commit()
         return grant if result.rowcount==1 else None
 
 
 def doctor_identity(grant):
     if not grant:return None
+    from notification_patch import _admin_user_id
     with storage.SessionLocal() as db:
-        return db.scalar(select(DoctorAccess.telegram_id).where(DoctorAccess.session_digest==hashed(grant),DoctorAccess.used_at.is_not(None),DoctorAccess.session_expires_at>datetime.utcnow()))
+        return db.scalar(select(DoctorAccess.telegram_id).where(DoctorAccess.session_digest==hashed(grant),DoctorAccess.telegram_id==_admin_user_id(),DoctorAccess.used_at.is_not(None),DoctorAccess.session_expires_at>datetime.utcnow()))
 
 
-async def doctor_command(update,context):
+async def doctor_command(update,context,target='/doctor'):
     from notification_patch import _admin_user_id
     if not update.effective_user or update.effective_user.id!=_admin_user_id():
         await update.message.reply_text('Кабинет врача доступен только администратору.')
@@ -56,8 +75,30 @@ async def doctor_command(update,context):
     if not update.effective_chat or update.effective_chat.type!='private':
         await update.message.reply_text('Для входа отправьте /doctor в личный чат с ботом.')
         return
+    target=doctor_destination(target)
+    if target!='/doctor':
+        def exists():
+            with storage.SessionLocal() as db:
+                return db.scalar(select(storage.Consultation.id).where(storage.Consultation.id==int(target.rsplit('/',1)[1]),storage.Consultation.kind=='consult_request')) is not None
+        if not await asyncio.to_thread(exists):
+            await update.message.reply_text('Заявка не найдена. Откройте кабинет врача командой /doctor.')
+            return
     token=await asyncio.to_thread(create_doctor_link,update.effective_user.id)
     base=os.getenv('MYDOCTOR_WEB_URL','https://mydoctor-web-production.up.railway.app').rstrip('/')
     from telegram import InlineKeyboardButton,InlineKeyboardMarkup
-    await update.message.reply_text('Ваш кабинет врача: заявки, документы, контакты и статусы.\nСсылка одноразовая, действует 10 минут. Не пересылайте её.',
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('Открыть кабинет врача',url=base+'/doctor/access/'+token)]]))
+    label='Открыть кабинет врача' if target=='/doctor' else 'Открыть заявку №'+target.rsplit('/',1)[1]
+    await update.message.reply_text('Вход подтверждён через ваш Telegram. Нажмите кнопку ниже.\nНа сайте можно запомнить это устройство на 30 дней. Ссылка действует 10 минут; не пересылайте её.',
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(label,url=base+'/doctor/access/'+token+'?'+urlencode({'next':target}))]]))
+
+
+def doctor_start_handler(normal_start):
+    async def start(update,context):
+        args=getattr(context,'args',None) or []
+        payload=args[0] if args else ''
+        if payload=='doctor':
+            return await doctor_command(update,context)
+        match=re.fullmatch(r'doctor_([1-9]\d{0,18})',payload)
+        if match:
+            return await doctor_command(update,context,'/doctor/requests/'+match.group(1))
+        return await normal_start(update,context)
+    return start

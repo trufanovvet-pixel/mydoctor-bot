@@ -356,5 +356,15 @@
   "Я проверил получение оплаты": "I have verified receipt of payment",
   "← Все заявки": "← All requests",
   "← Назад": "← Back",
-  "Уведомление о заявке доставлено врачу.": "The request notification has been delivered to the doctor."
+  "Уведомление о заявке доставлено врачу.": "The request notification has been delivered to the doctor.",
+  "Подтвердите вход через свой Telegram. Вводить команды не нужно.": "Confirm your identity through Telegram. No commands to type.",
+  "Войти через Telegram": "Sign in with Telegram",
+  "Подключение входа через Telegram. Обновите страницу через минуту.": "Connecting Telegram sign-in. Refresh this page in a minute.",
+  "В Telegram нажмите «Запустить», если появится эта кнопка, затем откройте ссылку от бота. Она вернёт вас к выбранной заявке.": "In Telegram, tap Start if prompted, then open the link from the bot. It will return you to the selected request.",
+  "Вход подтверждается один раз для каждого браузера. На следующем экране можно запомнить устройство на 30 дней.": "Confirm once for each browser. On the next screen, you can remember this device for 30 days.",
+  "Запомнить это устройство на 30 дней": "Remember this device for 30 days",
+  "На чужом устройстве снимите эту отметку. Завершить вход можно кнопкой «Выйти из кабинета врача».": "Uncheck this on a shared device. Use Sign out of doctor portal to end your session.",
+  "Выйти из кабинета врача": "Sign out of doctor portal",
+  "Открыть заявку": "Open request",
+  "Ссылка истекла или уже использована. Нажмите «Войти через Telegram», чтобы получить новую.": "This link has expired or has already been used. Select Sign in with Telegram to get a new one."
 }

@@ -122,7 +122,17 @@ def login():
     return render_template("auth.html",mode="login")
 
 @app.get("/logout")
-def logout(): session.clear();return redirect(url_for("home"))
+def logout():
+    from doctor_access import DoctorAccess,DOCTOR_COOKIE,hashed
+    from sqlalchemy import update
+    grants={value for value in (request.cookies.get(DOCTOR_COOKIE),session.get('doctor_grant')) if value}
+    if grants:
+        with storage.SessionLocal() as db:
+            db.execute(update(DoctorAccess).where(DoctorAccess.session_digest.in_([hashed(value) for value in grants])).values(session_expires_at=datetime.utcnow()));db.commit()
+    session.clear()
+    response=redirect(url_for("home"))
+    response.delete_cookie(DOCTOR_COOKIE,secure=True,httponly=True,samesite='Lax',path='/')
+    return response
 
 @app.get("/app")
 def cabinet():

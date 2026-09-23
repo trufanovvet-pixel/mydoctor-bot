@@ -7,7 +7,7 @@ from sqlalchemy import select,func,or_,update
 import storage
 from consultation_cases import ConsultationCase,RequestStatusEvent,RequestAttachment,STATUSES,TYPES,request_files,attachment_content
 from owner_profile import ConsultationContact
-from doctor_access import DoctorAccess,consume_doctor_link,doctor_identity,hashed
+from doctor_access import DoctorAccess,consume_doctor_link,doctor_identity,hashed,doctor_destination,telegram_login_url,DOCTOR_COOKIE,REMEMBER_SECONDS
 from web_i18n import t
 
 
@@ -15,7 +15,13 @@ def install(app,WebDocument):
     storage.Base.metadata.create_all(storage.engine)
 
     def identity():
-        if not hasattr(g,'doctor_identity'):g.doctor_identity=doctor_identity(session.get('doctor_grant'))
+        if not hasattr(g,'doctor_identity'):
+            g.doctor_identity=None
+            for grant in (request.cookies.get(DOCTOR_COOKIE),session.get('doctor_grant')):
+                user=doctor_identity(grant)
+                if user:
+                    g.doctor_identity=user;g.doctor_grant=grant
+                    break
         return g.doctor_identity
 
     @app.context_processor
@@ -39,6 +45,9 @@ def install(app,WebDocument):
         if not secrets.compare_digest(request.form.get('doctor_csrf',''),csrf()):abort(400)
 
     def render(page,title,**kw):
+        if page=='doctor_login':
+            target=doctor_destination(session.get('doctor_next'))
+            kw.setdefault('telegram_url',telegram_login_url(target))
         response=app.make_response(render_template('section.html',page=page,title=t(title),statuses=STATUSES,consultation_types=TYPES,doctor_csrf=csrf(),**kw))
         response.headers['Cache-Control']='private, no-store'
         response.headers['Referrer-Policy']='no-referrer'
@@ -46,33 +55,47 @@ def install(app,WebDocument):
 
     @app.get('/doctor/login')
     def doctor_login():
-        if identity():return redirect(url_for('doctor_dashboard'))
+        if request.args.get('next'):
+            session['doctor_next']=doctor_destination(request.args['next'])
+        if identity():return redirect(doctor_destination(session.pop('doctor_next',None)))
         return render('doctor_login','Вход для врача')
 
     @app.get('/doctor/access/<token>')
     def doctor_access_preview(token):
         # GET does not consume links, so Telegram previews cannot log a doctor out.
-        return render('doctor_access','Вход для врача',access_token=token)
+        target=doctor_destination(request.args.get('next',session.get('doctor_next')))
+        if identity():return redirect(target)
+        session['doctor_next']=target
+        return render('doctor_access','Вход для врача',access_token=token,next_target=target)
 
     @app.post('/doctor/access')
     def doctor_access_accept():
         check_csrf()
-        grant=consume_doctor_link(request.form.get('access_token',''))
+        target=doctor_destination(request.form.get('next') or session.get('doctor_next'))
+        session['doctor_next']=target
+        remember=request.form.get('remember')=='1'
+        grant=consume_doctor_link(request.form.get('access_token',''),remember=remember)
         if not grant:
-            return render('doctor_login','Вход для врача',error='Ссылка истекла или уже использована. Получите новую командой /doctor в боте.'),400
+            return render('doctor_login','Вход для врача',error='Ссылка истекла или уже использована. Нажмите «Войти через Telegram», чтобы получить новую.'),400
         session['doctor_grant']=grant;session['doctor_csrf']=secrets.token_urlsafe(32)
-        target=session.pop('doctor_next','/doctor')
-        if not target.startswith('/doctor') or '\\' in target:target='/doctor'
-        return redirect(target,code=303)
+        session.pop('doctor_next',None)
+        response=redirect(target,code=303)
+        response.set_cookie(DOCTOR_COOKIE,grant,max_age=REMEMBER_SECONDS if remember else None,secure=True,httponly=True,samesite='Lax',path='/')
+        response.headers['Cache-Control']='private, no-store'
+        response.headers['Referrer-Policy']='no-referrer'
+        return response
 
     @app.post('/doctor/logout')
     @require_doctor
     def doctor_logout():
         check_csrf()
         with storage.SessionLocal() as db:
-            db.execute(update(DoctorAccess).where(DoctorAccess.session_digest==hashed(session['doctor_grant'])).values(session_expires_at=datetime.utcnow()));db.commit()
+            grants={value for value in (request.cookies.get(DOCTOR_COOKIE),session.get('doctor_grant')) if value}
+            db.execute(update(DoctorAccess).where(DoctorAccess.session_digest.in_([hashed(value) for value in grants])).values(session_expires_at=datetime.utcnow()));db.commit()
         session.pop('doctor_grant',None);session.pop('doctor_csrf',None)
-        return redirect(url_for('doctor_login'),code=303)
+        response=redirect(url_for('doctor_login'),code=303)
+        response.delete_cookie(DOCTOR_COOKIE,secure=True,httponly=True,samesite='Lax',path='/')
+        return response
 
     @app.get('/doctor')
     @require_doctor

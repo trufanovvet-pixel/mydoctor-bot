@@ -8,7 +8,7 @@ from sqlalchemy import select
 import storage
 with patch('openai.OpenAI'):
     import web_app
-from doctor_access import create_doctor_link,DoctorAccess,doctor_command,hashed
+from doctor_access import create_doctor_link,DoctorAccess,doctor_command,hashed,doctor_start_handler,DOCTOR_COOKIE,REMEMBER_SECONDS
 from notification_patch import _admin_user_id
 from consultation_cases import ConsultationCase,RequestAttachment,RequestStatusEvent
 from consultation_delivery import WebConsultationDelivery
@@ -137,3 +137,78 @@ def test_legacy_telegram_requests_are_manageable_without_importing_private_chat(
     page=staff.get(f'/doctor/requests/{rid}').get_data(as_text=True)
     assert staff.post(f'/doctor/requests/{rid}',data={'doctor_csrf':field(page,'doctor_csrf'),'version':'0','status':'contacting'}).status_code==303
     with storage.SessionLocal() as db:assert db.get(ConsultationCase,rid).status=='contacting'
+
+
+@pytest.mark.asyncio
+async def test_telegram_login_button_returns_to_request_in_a_new_browser(update,ctx):
+    from urllib.parse import urlsplit,parse_qs
+    reset_db();_,_,rid,_=request_with_pet_and_documents()
+    storage.set_bot_setting('doctor_bot_username','MyDoctorTestBot')
+    original=web_app.app.test_client()
+    page=original.get(f'/doctor/requests/{rid}',follow_redirects=True).get_data(as_text=True)
+    assert f'https://t.me/MyDoctorTestBot?start=doctor_{rid}' in page
+    assert 'Войти через Telegram' in page and '<code class="doctor-command">' not in page
+    handler=doctor_start_handler(AsyncMock())
+    ctx.args=[f'doctor_{rid}']
+    outsider=update('/start',user_id=999999)
+    await handler(outsider,ctx)
+    assert 'администратору' in outsider.message.reply_text.call_args.args[0]
+    with storage.SessionLocal() as db:assert not db.scalar(select(DoctorAccess))
+    admin=update('/start',user_id=_admin_user_id())
+    await handler(admin,ctx)
+    button=admin.message.reply_text.call_args.kwargs['reply_markup'].inline_keyboard[0][0]
+    url=urlsplit(button.url)
+    assert parse_qs(url.query)['next']==[f'/doctor/requests/{rid}']
+    fresh=web_app.app.test_client()
+    page=fresh.get(url.path+'?'+url.query).get_data(as_text=True)
+    response=fresh.post('/doctor/access',data={'doctor_csrf':field(page,'doctor_csrf'),'access_token':field(page,'access_token'),'next':field(page,'next'),'remember':'1'})
+    assert response.headers['Location']==f'/doctor/requests/{rid}'
+    cookie=next(value for value in response.headers.getlist('Set-Cookie') if value.startswith(DOCTOR_COOKIE+'='))
+    assert f'Max-Age={REMEMBER_SECONDS}' in cookie and 'Secure' in cookie and 'HttpOnly' in cookie and 'SameSite=Lax' in cookie
+    fresh.delete_cookie(web_app.app.config['SESSION_COOKIE_NAME'])
+    assert fresh.get(f'/doctor/requests/{rid}').status_code==200
+    with storage.SessionLocal() as db:
+        grant=db.scalar(select(DoctorAccess))
+        assert timedelta(days=29)<grant.session_expires_at-datetime.utcnow()<=timedelta(days=30)
+    page=fresh.get('/doctor').get_data(as_text=True)
+    stolen=fresh.get_cookie(DOCTOR_COOKIE).value
+    assert fresh.post('/doctor/logout',data={'doctor_csrf':field(page,'doctor_csrf')}).status_code==303
+    assert fresh.get_cookie(DOCTOR_COOKIE) is None
+    fresh.set_cookie(DOCTOR_COOKIE,stolen)
+    assert fresh.get('/doctor').status_code==302
+
+
+def test_login_targets_are_local_expired_links_have_retry_and_site_logout_revokes():
+    reset_db();storage.set_bot_setting('doctor_bot_username','MyDoctorTestBot')
+    for target in ['//example.com','/doctor.evil.com','/doctor/../logout','/doctor\\evil','https://example.com']:
+        client=web_app.app.test_client();token=create_doctor_link(_admin_user_id())
+        page=client.get('/doctor/access/'+token,query_string={'next':target}).get_data(as_text=True)
+        response=client.post('/doctor/access',data={'doctor_csrf':field(page,'doctor_csrf'),'access_token':token,'next':target})
+        assert response.headers['Location']=='/doctor'
+        cookie=next(value for value in response.headers.getlist('Set-Cookie') if value.startswith(DOCTOR_COOKIE+'='))
+        assert 'Max-Age' not in cookie
+        with storage.SessionLocal() as db:
+            assert db.get(DoctorAccess,hashed(token)).session_expires_at<datetime.utcnow()+timedelta(hours=9)
+        saved=client.get_cookie(DOCTOR_COOKIE).value
+        client.get('/logout');client.set_cookie(DOCTOR_COOKIE,saved)
+        assert client.get('/doctor').status_code==302
+    client=web_app.app.test_client()
+    page=client.get('/doctor/access/expired?next=/doctor/requests/114').get_data(as_text=True)
+    result=client.post('/doctor/access',data={'doctor_csrf':field(page,'doctor_csrf'),'access_token':'expired','next':'/doctor/requests/114'})
+    assert result.status_code==400
+    assert 'https://t.me/MyDoctorTestBot?start=doctor_114' in result.get_data(as_text=True)
+    assert client.get_cookie(DOCTOR_COOKIE) is None
+
+
+@pytest.mark.asyncio
+async def test_doctor_deep_link_does_not_break_normal_start_or_leak_in_groups(update,ctx):
+    reset_db();normal=AsyncMock();handler=doctor_start_handler(normal)
+    ctx.args=[];await handler(update('/start'),ctx);normal.assert_awaited_once()
+    ctx.args=['doctor'];admin=update('/start',user_id=_admin_user_id());admin.effective_chat.type='group'
+    await handler(admin,ctx)
+    assert 'личный чат' in admin.message.reply_text.call_args.args[0]
+    with storage.SessionLocal() as db:assert not db.scalar(select(DoctorAccess))
+    ctx.args=['doctor_999999'];admin.effective_chat.type='private'
+    await handler(admin,ctx)
+    assert 'не найдена' in admin.message.reply_text.call_args.args[0]
+    with storage.SessionLocal() as db:assert not db.scalar(select(DoctorAccess))

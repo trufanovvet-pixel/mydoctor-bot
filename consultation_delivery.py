@@ -107,6 +107,7 @@ async def delivery_loop(application):
 
 async def start_delivery_worker(application):
     await asyncio.to_thread(storage.Base.metadata.create_all, storage.engine)
+    await asyncio.to_thread(storage.set_bot_setting,'doctor_bot_username',application.bot.username)
     application.bot_data['web_request_delivery'] = asyncio.create_task(delivery_loop(application))
 
 

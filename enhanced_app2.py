@@ -223,10 +223,10 @@ def main():
     application = (Application.builder().token(bot.TOKEN)
                    .post_init(start_delivery_worker).post_stop(stop_delivery_worker).build())
     application.add_error_handler(handle_error)
-    application.add_handler(CommandHandler("start", bot.start))
+    from doctor_access import doctor_command,doctor_start_handler
+    application.add_handler(CommandHandler("start", doctor_start_handler(bot.start)))
     application.add_handler(CommandHandler("menu", bot.menu_command))
     application.add_handler(CommandHandler("myid", bot.myid_command))
-    from doctor_access import doctor_command
     application.add_handler(CommandHandler("doctor", doctor_command))
     if hasattr(bot, "set_admin_chat_command"):
         application.add_handler(CommandHandler("setadminchat", bot.set_admin_chat_command))
