@@ -16,7 +16,7 @@ REMEMBER_SECONDS = 30 * 24 * 60 * 60
 
 def doctor_destination(value):
     """Only supported doctor pages may be used as a login return address."""
-    return value if isinstance(value,str) and re.fullmatch(r'/doctor(?:/requests/[1-9]\d*|/clients(?:/[1-9]\d*)?|/install)?',value) else '/doctor'
+    return value if isinstance(value,str) and re.fullmatch(r'/doctor(?:/requests/[1-9]\d*|/clients(?:/[1-9]\d*)?|/payments(?:/[a-f0-9]{32})?|/install)?',value) else '/doctor'
 
 
 def telegram_login_url(target):
@@ -24,6 +24,8 @@ def telegram_login_url(target):
     if not username or not re.fullmatch(r'[A-Za-z0-9_]{5,32}',username):return None
     target=doctor_destination(target)
     payload='doctor_'+target.rsplit('/',1)[1] if target.startswith('/doctor/requests/') else 'doctor_install' if target=='/doctor/install' else 'doctor'
+    if target=='/doctor/payments':payload='doctor_payments'
+    elif target.startswith('/doctor/payments/'):payload='doctor_payment_'+target.rsplit('/',1)[1]
     return f'https://t.me/{username}?start={payload}'
 
 
@@ -99,6 +101,11 @@ def doctor_start_handler(normal_start):
             return await doctor_command(update,context)
         if payload=='doctor_install':
             return await doctor_command(update,context,'/doctor/install')
+        if payload=='doctor_payments':
+            return await doctor_command(update,context,'/doctor/payments')
+        payment=re.fullmatch(r'doctor_payment_([a-f0-9]{32})',payload)
+        if payment:
+            return await doctor_command(update,context,'/doctor/payments/'+payment.group(1))
         match=re.fullmatch(r'doctor_([1-9]\d{0,18})',payload)
         if match:
             return await doctor_command(update,context,'/doctor/requests/'+match.group(1))

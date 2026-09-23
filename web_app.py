@@ -11,6 +11,7 @@ import storage, knowledge
 from patient_records import plain_text, CATEGORIES, DocumentLabel, classify_document
 from web_i18n import t, ai_language
 import math
+import billing
 
 app=Flask(__name__,template_folder="web_templates",static_folder="web_static",static_url_path="/static")
 app.secret_key=os.getenv("FLASK_SECRET_KEY",secrets.token_hex(32))
@@ -202,12 +203,27 @@ def chat():
         extra=knowledge.protocol_context(text)
         prompt=(pctx+"\n"+extra+"\nВопрос пользователя: "+text).strip()
         try:
-            response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM+ai_language(),input=history+[{"role":"user","content":prompt}])
+            usage,replay=billing.reserve(user.id,'chat',payload.get('request_key'),(str(scope_pet)+'\n'+text).encode())
+        except billing.BillingError as exc:
+            return jsonify({'error':t(str(exc)),'billing_url':'/billing'}),exc.status
+        if replay:
+            saved=db.scalar(select(storage.Consultation).where(storage.Consultation.id==usage.source_id,storage.Consultation.user_id==user.id))
+            if not saved:return jsonify({'error':t('Сохранённый ответ не найден.')}),409
+            return jsonify({'answer':saved.assistant_text})
+        try:
+            response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM+ai_language(),input=history+[{"role":"user","content":prompt}],max_output_tokens=3000)
             answer=_plain(response.output_text)
+            if not answer:raise ValueError('Empty AI output')
+            billing.lock_user(db,user.id)
+            pet_for_history=user.active_pet_id if pctx else None
+            record=storage.Consultation(user_id=user.id,pet_id=pet_for_history,kind="web_chat",user_text=text,assistant_text=answer)
+            db.add(record);db.flush()
+            billing.complete(db,user.id,usage.id,record.id,response)
+            db.commit()
         except Exception:
+            db.rollback()
+            billing.fail(user.id,usage.id)
             return jsonify({"error":t("Временная ошибка медицинского помощника. Попробуйте ещё раз.")}),503
-        pet_for_history=user.active_pet_id if pctx else None
-        db.add(storage.Consultation(user_id=user.id,pet_id=pet_for_history,kind="web_chat",user_text=text,assistant_text=answer));db.commit()
     return jsonify({"answer":answer})
 
 @app.post("/api/chat/clear")
@@ -235,7 +251,23 @@ def upload_document():
         flash("Проверьте дату исследования.");return redirect(url_for("analyses_page"))
     with storage.SessionLocal() as db:
         if pet_id and not db.scalar(select(storage.Pet.id).where(storage.Pet.id==pet_id,storage.Pet.user_id==session["uid"])):return "Not found",404
+        paid_mode=billing.metered(db,session['uid'])
+    if paid_mode and mime=='application/pdf':
+        try:
+            from pypdf import PdfReader
+            pdf=PdfReader(io.BytesIO(data))
+            if pdf.is_encrypted or not 1<=len(pdf.pages)<=5:raise ValueError('PDF limit')
+        except Exception:
+            flash('Для разбора нужен PDF без пароля, не более 5 страниц.');return redirect(url_for('analyses_page'))
+    import hashlib
+    try:
+        fingerprint=(str(pet_id)+'\n'+category+'\n'+str(study_date)+'\n'+hashlib.sha256(data).hexdigest()).encode()
+        usage,replay=billing.reserve(session['uid'],'document',request.form.get('request_key'),fingerprint)
+    except billing.BillingError as exc:
+        flash(str(exc));return redirect(url_for('billing_page') if exc.status==402 else url_for('analyses_page'))
+    if replay:return redirect('/analyses/'+str(usage.source_id))
     analysis=None
+    ai_response=None
     try:
         if mime.startswith("image/"):
             encoded=base64.b64encode(data).decode()
@@ -243,17 +275,29 @@ def upload_document():
         else:
             uploaded=client.files.create(file=(secure_filename(f.filename) or "document.pdf",io.BytesIO(data),mime),purpose="user_data")
             inp=[{"role":"user","content":[{"type":"input_text","text":"Разбери ветеринарный документ. Извлеки ключевые результаты, интерпретируй их в контексте и укажи ограничения."},{"type":"input_file","file_id":uploaded.id}]}]
-        response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM+ai_language(),input=inp);analysis=_plain(response.output_text)
+        response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM+ai_language(),input=inp,max_output_tokens=3000);analysis=_plain(response.output_text)
+        if not analysis:raise ValueError('Empty AI output')
+        ai_response=response
     except Exception:
+        billing.fail(session['uid'],usage.id)
         analysis=t("Файл сохранён. Автоматический разбор сейчас не удалось выполнить.")
-    with storage.SessionLocal() as db:
-        user=db.get(storage.User,session["uid"])
-        if pet_id and not db.scalar(select(storage.Pet.id).where(storage.Pet.id==pet_id,storage.Pet.user_id==user.id)):pet_id=None
-        filename=f.filename.replace("\\","/").split("/")[-1][:255] or "Документ"
-        doc=WebDocument(user_id=user.id,pet_id=pet_id,filename=filename,mime_type=mime,data=data,analysis=analysis)
-        db.add(doc);db.flush()
-        if category=="auto":category=classify_document(filename+"\n"+(analysis or "")[:1500])
-        db.add(DocumentLabel(source="web",document_id=doc.id,category=category,study_date=study_date));db.commit()
+    try:
+        with storage.SessionLocal() as db:
+            billing.lock_user(db,session['uid'])
+            user=db.get(storage.User,session["uid"])
+            if pet_id and not db.scalar(select(storage.Pet.id).where(storage.Pet.id==pet_id,storage.Pet.user_id==user.id)):pet_id=None
+            filename=f.filename.replace("\\","/").split("/")[-1][:255] or "Документ"
+            doc=WebDocument(user_id=user.id,pet_id=pet_id,filename=filename,mime_type=mime,data=data,analysis=analysis)
+            db.add(doc);db.flush()
+            if category=="auto":category=classify_document(filename+"\n"+(analysis or "")[:1500])
+            db.add(DocumentLabel(source="web",document_id=doc.id,category=category,study_date=study_date))
+            if ai_response:
+                billing.complete(db,user.id,usage.id,doc.id,ai_response)
+            db.commit()
+    except Exception:
+        billing.fail(session['uid'],usage.id)
+        flash('Не удалось сохранить исследование. Баллы не списаны. Попробуйте ещё раз.')
+        return redirect(url_for('analyses_page'))
     return redirect(url_for("analyses_page"))
 
 @app.get("/documents/<int:doc_id>")
@@ -284,6 +328,8 @@ import web_sections
 web_sections.install(app, WebDocument)
 import doctor_portal
 doctor_portal.install(app, WebDocument)
+import web_billing
+web_billing.install(app, WebAccount)
 import consultation_chat
 consultation_chat.install(app)
 
