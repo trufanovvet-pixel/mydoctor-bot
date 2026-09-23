@@ -8,6 +8,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import re
 import storage, knowledge
+from patient_records import plain_text, CATEGORIES, DocumentLabel, classify_document
+import math
 
 app=Flask(__name__,template_folder="web_templates",static_folder="web_static",static_url_path="/static")
 app.secret_key=os.getenv("FLASK_SECRET_KEY",secrets.token_hex(32))
@@ -56,7 +58,13 @@ def web_account():
         return db.scalar(select(WebAccount).where(WebAccount.user_id==uid))
 
 def require_login():
-    if not session.get("uid"): return redirect(url_for("login"))
+    if not session.get("uid"): return redirect(url_for("login",next=request.path))
+
+def login_destination():
+    target=request.args.get("next","")
+    if target.startswith("/") and not target.startswith("//") and "\\" not in target and "\n" not in target and "\r" not in target:
+        return target
+    return url_for("cabinet")
 
 def new_virtual_telegram_id(db):
     while True:
@@ -64,13 +72,14 @@ def new_virtual_telegram_id(db):
         if not db.scalar(select(storage.User.id).where(storage.User.telegram_id==value)): return value
 
 def _plain(text):
-    value=(text or "").replace("**","").replace("###","").replace("##","").replace("`","")
-    return re.sub(r"(?m)^#\\s*", "", value).strip()
+    return plain_text(text)
+
+app.jinja_env.filters["plain"] = plain_text
 
 def _pet_requested(text, pet):
     value=(text or "").lower().replace("ё","е")
     name=(pet.name or "").lower().replace("ё","е")
-    if name and re.search(rf"(?<!\\w){re.escape(name)}(?:а|у|ом|е|ы|и)?(?!\\w)", value): return True
+    if name and re.search(rf"(?<!\w){re.escape(name)}(?:а|у|ом|е|ы|и)?(?!\w)", value): return True
     return any(x in value for x in ("мой питомец","моя собака","мой пес","мой кот","моя кошка","у моего питомца"))
 
 def pet_context(db,user,text):
@@ -105,7 +114,7 @@ def login():
         with storage.SessionLocal() as db:
             acc=db.scalar(select(WebAccount).where(WebAccount.email==email))
             if acc and check_password_hash(acc.password_hash,password):
-                session["uid"]=acc.user_id;return redirect(url_for("cabinet"))
+                session["uid"]=acc.user_id;return redirect(login_destination())
         flash("Неверный email или пароль.")
     return render_template("auth.html",mode="login")
 
@@ -116,19 +125,7 @@ def logout(): session.clear();return redirect(url_for("home"))
 def cabinet():
     gate=require_login()
     if gate:return gate
-    with storage.SessionLocal() as db:
-        user=db.get(storage.User,session["uid"])
-        pets=db.scalars(select(storage.Pet).where(storage.Pet.user_id==user.id).order_by(storage.Pet.created_at)).all()
-        consultations=db.scalars(select(storage.Consultation).where(storage.Consultation.user_id==user.id).order_by(storage.Consultation.id.desc()).limit(12)).all()
-        chat_started=session.get("chat_started_at")
-        visible_consultations=consultations
-        if chat_started:
-            try:
-                cutoff=datetime.fromisoformat(chat_started); visible_consultations=[c for c in consultations if c.created_at>=cutoff]
-            except ValueError: pass
-        docs=db.scalars(select(WebDocument).where(WebDocument.user_id==user.id).order_by(WebDocument.id.desc()).limit(12)).all()
-        active=next((p for p in pets if p.id==user.active_pet_id),None)
-        return render_template("webapp.html",user=user,pets=pets,active=active,consultations=visible_consultations,history_consultations=consultations,docs=docs)
+    return redirect(url_for("dashboard"))
 
 @app.post("/pets")
 def add_pet():
@@ -139,12 +136,12 @@ def add_pet():
     weight=None
     try: weight=float((request.form.get("weight") or "").replace(",", ".")) if request.form.get("weight") else None
     except ValueError: flash("Вес должен быть числом."); return redirect(url_for("cabinet"))
-    if weight is not None and (weight <= 0 or weight > 300): flash("Проверьте вес питомца."); return redirect(url_for("cabinet"))
+    if weight is not None and (not math.isfinite(weight) or weight <= 0 or weight > 300): flash("Проверьте вес питомца."); return redirect(url_for("cabinet"))
     with storage.SessionLocal() as db:
         user=db.get(storage.User,session["uid"])
         pet=storage.Pet(user_id=user.id,name=name,species=species,breed=(request.form.get("breed") or "").strip() or None,age=(request.form.get("age") or "").strip() or None,sex=(request.form.get("sex") or "").strip() or None,weight_kg=weight)
         db.add(pet);db.flush();user.active_pet_id=pet.id;db.commit()
-    return redirect(url_for("cabinet"))
+    return redirect(url_for("pet_page",pid=pet.id))
 
 @app.post("/pets/<int:pet_id>/active")
 def active_pet(pet_id):
@@ -153,7 +150,7 @@ def active_pet(pet_id):
     with storage.SessionLocal() as db:
         user=db.get(storage.User,session["uid"]);pet=db.scalar(select(storage.Pet).where(storage.Pet.id==pet_id,storage.Pet.user_id==user.id))
         if pet:user.active_pet_id=pet.id;db.commit()
-    return redirect(url_for("cabinet"))
+    return redirect(url_for("pet_page",pid=pet_id))
 
 @app.post("/api/chat")
 def chat():
@@ -165,7 +162,7 @@ def chat():
     with storage.SessionLocal() as db:
         user=db.get(storage.User,session["uid"]);pctx=pet_context(db,user,text)
         scope_pet=user.active_pet_id if pctx else None
-        prev=db.scalars(select(storage.Consultation).where(storage.Consultation.user_id==user.id, storage.Consultation.pet_id==scope_pet).order_by(storage.Consultation.id.desc()).limit(6)).all()
+        prev=db.scalars(select(storage.Consultation).where(storage.Consultation.user_id==user.id, storage.Consultation.pet_id==scope_pet, storage.Consultation.kind=="web_chat").order_by(storage.Consultation.id.desc()).limit(6)).all()
         chat_started=session.get("chat_started_at")
         if chat_started:
             try:
@@ -198,12 +195,20 @@ def upload_document():
     gate=require_login()
     if gate:return gate
     f=request.files.get("file")
-    if not f or not f.filename:return redirect(url_for("cabinet"))
+    if not f or not f.filename:return redirect(url_for("analyses_page"))
     data=f.read(); mime=f.mimetype or "application/octet-stream"
-    if len(data)>20*1024*1024: flash("Файл слишком большой. Максимум 20 МБ."); return redirect(url_for("cabinet"))
+    if len(data)>20*1024*1024: flash("Файл слишком большой. Максимум 20 МБ."); return redirect(url_for("analyses_page"))
     allowed=mime in {"image/jpeg","image/png","image/webp","application/pdf"}
-    if not allowed or not data:flash("Поддерживаются изображения и PDF.");return redirect(url_for("cabinet"))
+    if not allowed or not data:flash("Поддерживаются изображения и PDF.");return redirect(url_for("analyses_page"))
     pet_id=request.form.get("pet_id",type=int)
+    category=request.form.get("category","auto")
+    if category!="auto" and category not in CATEGORIES:return "Invalid category",400
+    try:
+        study_date=datetime.strptime(request.form["study_date"],"%Y-%m-%d").date() if request.form.get("study_date") else None
+    except ValueError:
+        flash("Проверьте дату исследования.");return redirect(url_for("analyses_page"))
+    with storage.SessionLocal() as db:
+        if pet_id and not db.scalar(select(storage.Pet.id).where(storage.Pet.id==pet_id,storage.Pet.user_id==session["uid"])):return "Not found",404
     analysis=None
     try:
         if mime.startswith("image/"):
@@ -218,8 +223,12 @@ def upload_document():
     with storage.SessionLocal() as db:
         user=db.get(storage.User,session["uid"])
         if pet_id and not db.scalar(select(storage.Pet.id).where(storage.Pet.id==pet_id,storage.Pet.user_id==user.id)):pet_id=None
-        db.add(WebDocument(user_id=user.id,pet_id=pet_id,filename=secure_filename(f.filename) or "document",mime_type=mime,data=data,analysis=analysis));db.commit()
-    return redirect(url_for("cabinet"))
+        filename=f.filename.replace("\\","/").split("/")[-1][:255] or "Документ"
+        doc=WebDocument(user_id=user.id,pet_id=pet_id,filename=filename,mime_type=mime,data=data,analysis=analysis)
+        db.add(doc);db.flush()
+        if category=="auto":category=classify_document(filename+"\n"+(analysis or "")[:1500])
+        db.add(DocumentLabel(source="web",document_id=doc.id,category=category,study_date=study_date));db.commit()
+    return redirect(url_for("analyses_page"))
 
 @app.get("/documents/<int:doc_id>")
 def document(doc_id):
@@ -244,3 +253,6 @@ def feedback():
 
 @app.get("/health")
 def health():return {"ok":True,"service":"mydoctor-web"}
+
+import web_sections
+web_sections.install(app, WebDocument)

@@ -1,4 +1,5 @@
 from telegram import Message
+from patient_records import plain_text
 
 
 MAX_CHUNK = 3900
@@ -40,7 +41,7 @@ def install():
     _original_reply_text = Message.reply_text
 
     async def safe_reply_text(self, text, *args, **kwargs):
-        chunks = _split_text(text)
+        chunks = _split_text(plain_text(text))
         if len(chunks) == 1:
             return await _original_reply_text(self, chunks[0], *args, **kwargs)
 

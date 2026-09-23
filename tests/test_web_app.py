@@ -94,9 +94,9 @@ def test_new_conversation_resets_model_context_but_preserves_archive():
     with patch.object(web_app.client.responses,'create',return_value=type('Response',(),{'output_text':'Новый ответ'})()) as call:
         assert c.post('/api/chat',json={'message':'Новый общий вопрос'}).status_code==200
         assert len(call.call_args.kwargs['input'])==1
-    html=c.get('/app').get_data(as_text=True)
-    chat=html.split('id="messages">',1)[1].split('<form id="chat"',1)[0]
+    html=c.get('/assistant').get_data(as_text=True)
+    chat=html.split('id="messages"',1)[1].split('<form id="chat"',1)[0]
     assert 'Старый вопрос' not in chat
-    assert 'Старый вопрос' in html.split('id="healthHistory"',1)[1]
+    assert 'Старый вопрос' in c.get('/history').get_data(as_text=True)
     with storage.SessionLocal() as db:
         assert db.query(storage.Consultation).filter_by(user_id=uid).count()==2
