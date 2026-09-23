@@ -9,6 +9,7 @@ from werkzeug.utils import secure_filename
 import re
 import storage, knowledge
 from patient_records import plain_text, CATEGORIES, DocumentLabel, classify_document
+from web_i18n import t, ai_language
 import math
 
 app=Flask(__name__,template_folder="web_templates",static_folder="web_static",static_url_path="/static")
@@ -36,6 +37,8 @@ class WebDocument(storage.Base):
     created_at: Mapped[datetime]=mapped_column(DateTime,default=datetime.utcnow,index=True,nullable=False)
 
 storage.Base.metadata.create_all(storage.engine)
+import web_i18n
+web_i18n.install(app)
 
 SYSTEM="""Ты — МойДоктор, ветеринарный AI-помощник для владельцев собак и кошек.\nОтвечай только обычным текстом. Никогда не используй Markdown-разметку: символы **, *, #, ###, обратные кавычки и markdown-таблицы запрещены. Для структуры используй короткие заголовки без спецсимволов и обычную нумерацию.
 Работай клинически последовательно: сначала прямой ответ, затем только нужные уточнения.
@@ -80,7 +83,7 @@ def _pet_requested(text, pet):
     value=(text or "").lower().replace("ё","е")
     name=(pet.name or "").lower().replace("ё","е")
     if name and re.search(rf"(?<!\w){re.escape(name)}(?:а|у|ом|е|ы|и)?(?!\w)", value): return True
-    return any(x in value for x in ("мой питомец","моя собака","мой пес","мой кот","моя кошка","у моего питомца"))
+    return any(x in value for x in ("мой питомец","моя собака","мой пес","мой кот","моя кошка","у моего питомца","my pet","my dog","my cat","my puppy","my kitten"))
 
 def pet_context(db,user,text):
     if not user.active_pet_id:return ""
@@ -157,7 +160,7 @@ def chat():
     if not session.get("uid"):return jsonify({"error":"auth"}),401
     payload=request.get_json(silent=True) or {}
     text=str(payload.get("message") or "").strip()
-    if len(text)>12000:return jsonify({"error":"Сообщение слишком длинное."}),413
+    if len(text)>12000:return jsonify({"error":t("Сообщение слишком длинное.")}),413
     if not text:return jsonify({"error":"empty"}),400
     with storage.SessionLocal() as db:
         user=db.get(storage.User,session["uid"]);pctx=pet_context(db,user,text)
@@ -176,10 +179,10 @@ def chat():
         extra=knowledge.protocol_context(text)
         prompt=(pctx+"\n"+extra+"\nВопрос пользователя: "+text).strip()
         try:
-            response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM,input=history+[{"role":"user","content":prompt}])
+            response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM+ai_language(),input=history+[{"role":"user","content":prompt}])
             answer=_plain(response.output_text)
         except Exception:
-            return jsonify({"error":"Временная ошибка медицинского помощника. Попробуйте ещё раз."}),503
+            return jsonify({"error":t("Временная ошибка медицинского помощника. Попробуйте ещё раз.")}),503
         pet_for_history=user.active_pet_id if pctx else None
         db.add(storage.Consultation(user_id=user.id,pet_id=pet_for_history,kind="web_chat",user_text=text,assistant_text=answer));db.commit()
     return jsonify({"answer":answer})
@@ -217,9 +220,9 @@ def upload_document():
         else:
             uploaded=client.files.create(file=(secure_filename(f.filename) or "document.pdf",io.BytesIO(data),mime),purpose="user_data")
             inp=[{"role":"user","content":[{"type":"input_text","text":"Разбери ветеринарный документ. Извлеки ключевые результаты, интерпретируй их в контексте и укажи ограничения."},{"type":"input_file","file_id":uploaded.id}]}]
-        response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM,input=inp);analysis=_plain(response.output_text)
+        response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM+ai_language(),input=inp);analysis=_plain(response.output_text)
     except Exception:
-        analysis="Файл сохранён. Автоматический разбор сейчас не удалось выполнить."
+        analysis=t("Файл сохранён. Автоматический разбор сейчас не удалось выполнить.")
     with storage.SessionLocal() as db:
         user=db.get(storage.User,session["uid"])
         if pet_id and not db.scalar(select(storage.Pet.id).where(storage.Pet.id==pet_id,storage.Pet.user_id==user.id)):pet_id=None

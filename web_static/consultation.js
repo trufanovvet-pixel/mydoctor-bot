@@ -4,7 +4,7 @@ if (requestForm) {
     if (requestForm.dataset.submitting) { event.preventDefault(); return; }
     requestForm.dataset.submitting = 'true';
     requestForm.querySelector('button[type=submit]').disabled = true;
-    requestForm.querySelector('[data-submit-status]').textContent = 'Сохраняем заявку…';
+    requestForm.querySelector('[data-submit-status]').textContent = window.uiText('Сохраняем заявку…');
   });
   window.addEventListener('pageshow', () => {
     delete requestForm.dataset.submitting;
@@ -25,15 +25,15 @@ if (confirmation && ['pending', 'sending', 'retry'].includes(confirmation.datase
       confirmation.querySelector('[data-delivery-message]').textContent = status.message;
       const hint = confirmation.querySelector('[data-delivery-hint]');
       if (status.state === 'delivered') {
-        if (hint) hint.textContent = 'Уведомление доставлено врачу в Telegram.';
+        if (hint) hint.textContent = window.uiText('Уведомление доставлено врачу в Telegram.');
         return;
       }
-      if (hint && status.state === 'retry') hint.textContent = 'Доставка задерживается. Повторим автоматически; новую заявку создавать не нужно.';
+      if (hint && status.state === 'retry') hint.textContent = window.uiText('Доставка задерживается. Повторим автоматически; новую заявку создавать не нужно.');
     } catch (_) { /* The saved request remains available through the refresh link. */ }
     if (attempts < 24) setTimeout(refreshStatus, 5000);
     else {
       const hint = confirmation.querySelector('[data-delivery-hint]');
-      if (hint) hint.textContent = 'Заявка сохранена. Проверить доставку можно по ссылке «Обновить статус».';
+      if (hint) hint.textContent = window.uiText('Заявка сохранена. Проверить доставку можно по ссылке «Обновить статус».');
     }
   }
   setTimeout(refreshStatus, 1500);

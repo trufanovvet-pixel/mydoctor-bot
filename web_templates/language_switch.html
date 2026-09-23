@@ -1,0 +1,1 @@
+<nav class="language-switch" aria-label="Language"><a href="{{url_for('set_language',lang='ru',next=request.full_path.rstrip('?'))}}" lang="ru" aria-current="{{'true' if language=='ru' else 'false'}}">RU</a><a href="{{url_for('set_language',lang='en',next=request.full_path.rstrip('?'))}}" lang="en" aria-current="{{'true' if language=='en' else 'false'}}">EN</a></nav>

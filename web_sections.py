@@ -9,6 +9,8 @@ import storage
 from patient_records import CATEGORIES, DocumentLabel, PetPhoto, OperationRecord, OperationAttachment, classify_document
 from prevention_patch import PreventiveEvent
 from consultation_delivery import WebConsultationDelivery
+from owner_profile import OwnerProfile, ConsultationContact, profile_values, validate_contacts, preferred_contact, contact_links
+from web_i18n import t, language
 
 MAX_FILE=20*1024*1024
 KINDS={'vaccination':'Вакцинация','worms':'Обработка от гельминтов','ecto':'Блохи и клещи','checkup':'Контрольный осмотр'}
@@ -43,7 +45,7 @@ def install(app,WebDocument):
         if not op:abort(404)
         return op
     def pets_for(db):return db.scalars(select(storage.Pet).where(storage.Pet.user_id==session['uid']).order_by(storage.Pet.created_at)).all()
-    def render(page,title,**kw):return render_template('section.html',page=page,title=title,categories=CATEGORIES,kinds=KINDS,**kw)
+    def render(page,title,**kw):return render_template('section.html',page=page,title=title if page in ('pet','analysis','operation') else t(title),categories=CATEGORIES,kinds=KINDS,**kw)
     def picked_pet(db):
         pid=request.args.get('pet_id',type=int)
         if pid:owned_pet(db,pid)
@@ -55,6 +57,31 @@ def install(app,WebDocument):
 
     @app.get('/how-it-works')
     def how_it_works():return render('how','Как это работает')
+
+    @app.route('/profile',methods=['GET','POST'])
+    @login_required
+    def owner_profile_page():
+        with storage.SessionLocal() as db:
+            profile=db.get(OwnerProfile,session['uid'])
+            user=db.get(storage.User,session['uid'])
+            from web_app import WebAccount
+            account=db.scalar(select(WebAccount).where(WebAccount.user_id==session['uid']))
+            values=profile_values(profile,user,account.email if account else '')
+            session.setdefault('profile_key',secrets.token_urlsafe(32))
+            if request.method=='POST':
+                try:
+                    if not secrets.compare_digest(request.form.get('profile_key',''),session['profile_key']):
+                        raise ValueError('Форма устарела. Обновите страницу и попробуйте ещё раз.')
+                    values=validate_contacts(request.form)
+                    if not profile:
+                        profile=OwnerProfile(user_id=session['uid']);db.add(profile)
+                    for key,value in values.items():setattr(profile,key,value)
+                    profile.language=language()
+                    db.commit();flash('Контакты сохранены.')
+                    return redirect(url_for('owner_profile_page'),code=303)
+                except ValueError as exc:
+                    return render('profile','Мой профиль',values=request.form,error=str(exc),profile_key=session['profile_key']),400
+            return render('profile','Мой профиль',values=values,profile_key=session['profile_key'])
 
     @app.get('/pets')
     @login_required
@@ -214,6 +241,8 @@ def install(app,WebDocument):
     @login_required
     def consultation_page():
         with storage.SessionLocal() as db:
+            profile=db.get(OwnerProfile,session['uid'])
+            contacts=profile_values(profile) if profile else None
             if request.method=='POST':
                 key=request.form.get('request_key','')
                 existing=db.scalar(select(WebConsultationDelivery).join(storage.Consultation).where(
@@ -226,11 +255,17 @@ def install(app,WebDocument):
                 elif not key or not secrets.compare_digest(key,session.get('consultation_key','')):error='Форма устарела. Проверьте данные и нажмите «Отправить заявку» ещё раз.'
                 if error:
                     session.setdefault('consultation_key',secrets.token_urlsafe(32))
-                    return render('consultation','Консультация врача',requests=[],values=request.form,error=error,request_key=session['consultation_key']),400
-                text='Контакт: '+contact[:200]+'\nФормат: '+request.form.get('format','')[:60]+'\nЗапрос: '+question[:6000]
+                    return render('consultation','Консультация врача',requests=[],values=request.form,contacts=contacts,error=error,request_key=session['consultation_key']),400
+                text=t('Контакт')+': '+contact[:200]+'\n'+t('Формат')+': '+t(request.form.get('format','')[:60])+'\n'+t('Запрос')+': '+question[:6000]
+                if contacts:
+                    labels={'name':'Владелец','phone':'Телефон','email':'Почта','telegram':'Telegram','whatsapp':'WhatsApp','instagram':'Instagram','vk':'ВКонтакте'}
+                    lines=[t(label)+': '+contacts[key] for key,label in labels.items() if contacts.get(key)]
+                    text='\n'.join(lines)+'\n'+t('Предпочтительный способ связи')+': '+contacts['preferred']+'\n\n'+text
+                text=t('Язык общения')+': '+('English' if language()=='en' else 'Русский')+'\n'+text
                 record=storage.Consultation(user_id=session['uid'],pet_id=None,kind='consult_request',user_text=text,assistant_text='Заявка сохранена и ожидает отправки врачу.')
                 try:
                     db.add(record);db.flush()
+                    db.add(ConsultationContact(consultation_id=record.id,links=contact_links(contacts or {}),language=language()))
                     db.add(WebConsultationDelivery(consultation_id=record.id,request_key=key));db.commit()
                     rid=record.id
                 except IntegrityError:
@@ -241,7 +276,7 @@ def install(app,WebDocument):
                 return redirect(url_for('consultation_request_page',rid=rid),code=303)
             session['consultation_key']=secrets.token_urlsafe(32)
             rows=db.scalars(select(storage.Consultation).where(storage.Consultation.user_id==session['uid'],storage.Consultation.kind=='consult_request').order_by(storage.Consultation.id.desc()).limit(10)).all()
-            return render('consultation','Консультация врача',requests=rows,values={},request_key=session['consultation_key'])
+            return render('consultation','Консультация врача',requests=rows,values={'contact':preferred_contact(contacts) if contacts else ''},contacts=contacts,request_key=session['consultation_key'])
 
     @app.get('/consultation/requests/<int:rid>')
     @login_required
@@ -252,7 +287,7 @@ def install(app,WebDocument):
             delivery=db.scalar(select(WebConsultationDelivery).where(WebConsultationDelivery.consultation_id==rid))
             state=delivery.state if delivery else 'saved'
             if request.args.get('status')=='1':
-                response=jsonify(state=state,message=row.assistant_text)
+                response=jsonify(state=state,message=t(row.assistant_text))
                 response.headers['Cache-Control']='private, no-store'
                 return response
-            return render('consultation_request',f'Заявка №{row.id}',record=row,state=state)
+            return render('consultation_request',t('Заявка №')+str(row.id),record=row,state=state)

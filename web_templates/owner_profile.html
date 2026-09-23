@@ -1,0 +1,18 @@
+<p class="page-lead">{{t("Сохраните контакты один раз — они будут подставляться в заявки на консультацию.")}}</p>
+<div class="panel">
+<h2>{{t("Контакты владельца")}}</h2>
+{% if error %}<div class="notice" role="alert">{{t(error)}}</div>{% endif %}
+<form method="post" action="/profile" class="form-grid">
+<input type="hidden" name="profile_key" value="{{profile_key}}">
+<label>{{t("Ваше имя")}}<input name="name" autocomplete="name" maxlength="120" value="{{values.name}}"></label>
+<label>{{t("Телефон")}}<input type="tel" name="phone" autocomplete="tel" placeholder="+66 81 234 5678" maxlength="40" value="{{values.phone}}"></label>
+<label>{{t("Почта для связи")}}<input type="email" name="email" autocomplete="email" maxlength="255" value="{{values.email}}"></label>
+<label>Telegram<input name="telegram" placeholder="@username" autocapitalize="none" spellcheck="false" maxlength="80" value="{{values.telegram}}"></label>
+<label>WhatsApp<input type="tel" name="whatsapp" placeholder="+66 81 234 5678" maxlength="40" value="{{values.whatsapp}}"></label>
+<label>Instagram<input name="instagram" placeholder="@username" autocapitalize="none" spellcheck="false" maxlength="100" value="{{values.instagram}}"></label>
+<label>{{t("ВКонтакте")}}<input name="vk" placeholder="https://vk.com/username" autocapitalize="none" spellcheck="false" maxlength="120" value="{{values.vk}}"></label>
+<label>{{t("Предпочтительный способ связи")}}<select name="preferred">{% for key,label in [('phone','Телефон'),('email','Электронная почта'),('telegram','Telegram'),('whatsapp','WhatsApp'),('instagram','Instagram'),('vk','ВКонтакте')] %}<option value="{{key}}" {{'selected' if values.preferred==key}}>{{t(label)}}</option>{% endfor %}</select></label>
+<p class="muted">{{t("Почта для связи не меняет email для входа. Для Telegram укажите публичное имя пользователя — тогда врач сможет открыть ваш чат.")}}</p>
+<button type="submit">{{t("Сохранить контакты")}}</button>
+</form></div>
+<div class="panel"><h2>{{t("Связь с врачом")}}</h2><p>{{t("Контакты видны только вам и передаются врачу, когда вы отправляете заявку. В самой заявке можно указать другой удобный контакт.")}}</p><a class="btn" href="/consultation">{{t("Перейти к записи →")}}</a></div>

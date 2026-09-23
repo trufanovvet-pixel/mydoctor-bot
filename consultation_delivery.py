@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import DateTime, ForeignKey, Integer, String, select, update
 from sqlalchemy.orm import Mapped, mapped_column
 import storage
+from owner_profile import ConsultationContact
 
 
 class WebConsultationDelivery(storage.Base):
@@ -59,6 +60,7 @@ def mark_delivery(delivery_id, delivered):
 
 async def deliver_pending(application):
     from notification_patch import _admin_chat_id
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
     for _ in range(20):
         item = await asyncio.to_thread(claim_next)
         if item is None:
@@ -66,15 +68,23 @@ async def deliver_pending(application):
         delivery_id, request_id, body = item
         try:
             target = await asyncio.to_thread(_admin_chat_id)
+            def buttons():
+                with storage.SessionLocal() as db:
+                    contacts=db.get(ConsultationContact,request_id)
+                    if not contacts or not contacts.links:return None
+                    return InlineKeyboardMarkup([[InlineKeyboardButton(label,url=url)] for label,url in contacts.links.items()])
+            markup=await asyncio.to_thread(buttons)
             text = f'Новая заявка с сайта МойДоктор №{request_id}\n\n{body}'
             if len(text.encode('utf-16-le')) // 2 > 3500:
                 document = io.BytesIO(text.encode('utf-8'))
                 document.name = f'consultation-{request_id}.txt'
                 await application.bot.send_document(chat_id=target, document=document,
                     caption=f'Новая заявка с сайта МойДоктор №{request_id}. Полная анкета в файле.',
+                    reply_markup=markup,
                     read_timeout=20, write_timeout=20, connect_timeout=10)
             else:
                 await application.bot.send_message(chat_id=target, text=text,
+                    reply_markup=markup,
                     read_timeout=20, write_timeout=20, connect_timeout=10)
         except Exception as exc:
             logging.getLogger(__name__).warning('Web request %s delivery failed: %s', request_id, type(exc).__name__)

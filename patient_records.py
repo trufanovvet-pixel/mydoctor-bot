@@ -9,7 +9,7 @@ CATEGORIES = {'ultrasound':'УЗИ','mri':'МРТ','ct':'КТ','xray':'Рент�
 
 def classify_document(text):
     text=(text or '').lower().replace('ё','е')
-    rules=[('ultrasound',r'\bузи\b|ультразвук'),('mri',r'\bмрт\b|магнитно.резонанс'),('ct',r'\bкт\b|компьютерн.{0,8}томограф'),('xray',r'рентген|\bx.ray\b'),('urine',r'моч[аиу]|\bоам\b'),('biochemistry',r'биохим|\bбх\b'),('cbc',r'общ.{0,8}анализ крови|\bоак\b|гематолог')]
+    rules=[('ultrasound',r'\bузи\b|ультразвук|\bultrasound\b'),('mri',r'\bмрт\b|магнитно.резонанс|\bmri\b|magnetic resonance'),('ct',r'\bкт\b|компьютерн.{0,8}томограф|\bct\b|computed tomography'),('xray',r'рентген|\bx.ray\b|radiograph'),('urine',r'моч[аиу]|\bоам\b|\burine\b|urinalysis'),('biochemistry',r'биохим|\bбх\b|biochem|blood chemistry'),('cbc',r'общ.{0,8}анализ крови|\bоак\b|гематолог|\bcbc\b|complete blood count|h[ae]ematolog')]
     for key,pattern in rules:
         if re.search(pattern,text):return key
     return 'other'
