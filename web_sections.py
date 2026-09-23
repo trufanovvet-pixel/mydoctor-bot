@@ -1,12 +1,14 @@
-import io, math
+import io, math, secrets
 from datetime import date, datetime
 from functools import wraps
-from flask import request, session, redirect, url_for, render_template, abort, flash, send_file
+from flask import request, session, redirect, url_for, render_template, abort, flash, send_file, jsonify
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from PIL import Image, ImageOps, UnidentifiedImageError
 import storage
 from patient_records import CATEGORIES, DocumentLabel, PetPhoto, OperationRecord, OperationAttachment, classify_document
 from prevention_patch import PreventiveEvent
+from consultation_delivery import WebConsultationDelivery
 
 MAX_FILE=20*1024*1024
 KINDS={'vaccination':'Вакцинация','worms':'Обработка от гельминтов','ecto':'Блохи и клещи','checkup':'Контрольный осмотр'}
@@ -50,6 +52,9 @@ def install(app,WebDocument):
     @app.get('/dashboard')
     @login_required
     def dashboard():return render('dashboard','МойДоктор')
+
+    @app.get('/how-it-works')
+    def how_it_works():return render('how','Как это работает')
 
     @app.get('/pets')
     @login_required
@@ -210,11 +215,44 @@ def install(app,WebDocument):
     def consultation_page():
         with storage.SessionLocal() as db:
             if request.method=='POST':
+                key=request.form.get('request_key','')
+                existing=db.scalar(select(WebConsultationDelivery).join(storage.Consultation).where(
+                    WebConsultationDelivery.request_key==key,storage.Consultation.user_id==session['uid']))
+                if existing:return redirect(url_for('consultation_request_page',rid=existing.consultation_id),code=303)
                 contact=request.form.get('contact','').strip();question=request.form.get('question','').strip()
-                if not contact or not question:flash('Укажите контакт и причину обращения.');return redirect(url_for('consultation_page'))
+                error=None
+                if not contact or not question:error='Укажите контакт и причину обращения.'
+                elif len(contact)>200 or len(question)>6000:error='Контакт — до 200 символов, причина обращения — до 6000.'
+                elif not key or not secrets.compare_digest(key,session.get('consultation_key','')):error='Форма устарела. Проверьте данные и нажмите «Отправить заявку» ещё раз.'
+                if error:
+                    session.setdefault('consultation_key',secrets.token_urlsafe(32))
+                    return render('consultation','Консультация врача',requests=[],values=request.form,error=error,request_key=session['consultation_key']),400
                 text='Контакт: '+contact[:200]+'\nФормат: '+request.form.get('format','')[:60]+'\nЗапрос: '+question[:6000]
-                db.add(storage.Consultation(user_id=session['uid'],pet_id=None,kind='consult_request',user_text=text,assistant_text='Заявка сохранена. Время и оплата ещё не подтверждены.'));db.commit()
-                flash('Заявка сохранена в кабинете. Это ещё не подтверждённая запись: время и оплату нужно согласовать с врачом.')
-                return redirect(url_for('consultation_page'))
+                record=storage.Consultation(user_id=session['uid'],pet_id=None,kind='consult_request',user_text=text,assistant_text='Заявка сохранена и ожидает отправки врачу.')
+                try:
+                    db.add(record);db.flush()
+                    db.add(WebConsultationDelivery(consultation_id=record.id,request_key=key));db.commit()
+                    rid=record.id
+                except IntegrityError:
+                    db.rollback()
+                    existing=db.scalar(select(WebConsultationDelivery).join(storage.Consultation).where(WebConsultationDelivery.request_key==key,storage.Consultation.user_id==session['uid']))
+                    if not existing:raise
+                    rid=existing.consultation_id
+                return redirect(url_for('consultation_request_page',rid=rid),code=303)
+            session['consultation_key']=secrets.token_urlsafe(32)
             rows=db.scalars(select(storage.Consultation).where(storage.Consultation.user_id==session['uid'],storage.Consultation.kind=='consult_request').order_by(storage.Consultation.id.desc()).limit(10)).all()
-            return render('consultation','Консультация врача',requests=rows)
+            return render('consultation','Консультация врача',requests=rows,values={},request_key=session['consultation_key'])
+
+    @app.get('/consultation/requests/<int:rid>')
+    @login_required
+    def consultation_request_page(rid):
+        with storage.SessionLocal() as db:
+            row=db.scalar(select(storage.Consultation).where(storage.Consultation.id==rid,storage.Consultation.user_id==session['uid'],storage.Consultation.kind=='consult_request'))
+            if not row:abort(404)
+            delivery=db.scalar(select(WebConsultationDelivery).where(WebConsultationDelivery.consultation_id==rid))
+            state=delivery.state if delivery else 'saved'
+            if request.args.get('status')=='1':
+                response=jsonify(state=state,message=row.assistant_text)
+                response.headers['Cache-Control']='private, no-store'
+                return response
+            return render('consultation_request',f'Заявка №{row.id}',record=row,state=state)

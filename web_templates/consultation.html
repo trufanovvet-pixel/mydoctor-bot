@@ -1,0 +1,12 @@
+<div class="panel"><h2>Онлайн-консультация ветеринарного врача</h2><p>Хирургия, офтальмология, ортопедия и неврология. Разбор обследований, второе мнение и послеоперационный контроль.</p><div class="price-options"><span>Первичная <strong>3000 ₽ / $35</strong></span><span>Повторная <strong>1500 ₽ / $20</strong></span></div><p class="muted">Предварительная оплата после согласования времени. Отправка заявки не подтверждает запись и не списывает деньги.</p></div>
+<div class="panel"><h2>Оставить заявку</h2><p>Оставьте контакт, по которому врач сможет с вами связаться. После отправки вы увидите номер заявки и её статус.</p>
+{% if error %}<div class="notice" role="alert">{{error}}</div>{% endif %}
+<form action="/consultation" method="post" class="form-grid" data-consultation-form>
+<input type="hidden" name="request_key" value="{{request_key}}">
+<label>Как с вами связаться<input name="contact" placeholder="Телефон, email или Telegram" autocomplete="off" required maxlength="200" value="{{values.get('contact','')}}"></label>
+<label>Формат<select name="format">{% for choice in ['Видеозвонок','Голосовые сообщения','Переписка'] %}<option {{'selected' if values.get('format')==choice}}>{{choice}}</option>{% endfor %}</select></label>
+<label class="full-width">Причина обращения<textarea name="question" placeholder="Кто ваш питомец, что беспокоит и как давно" required maxlength="6000">{{values.get('question','')}}</textarea></label>
+<button type="submit">Отправить заявку</button><p class="muted" role="status" data-submit-status></p>
+</form></div>
+{% if requests %}<h2>Мои заявки</h2>{% for r in requests %}<a class="record-row" href="/consultation/requests/{{r.id}}"><div><strong>Заявка №{{r.id}}</strong><small>{{r.created_at.strftime('%d.%m.%Y')}} · {{r.assistant_text|plain}}</small></div><span>Открыть →</span></a>{% endfor %}{% endif %}
+<script src="/static/consultation.js?v=20260923-fix" defer></script>

@@ -1,0 +1,13 @@
+<section class="panel request-confirmation" aria-live="polite" data-request-status="{{state}}" data-status-url="{{url_for('consultation_request_page',rid=record.id,status=1)}}">
+<span class="confirmation-icon" aria-hidden="true">✓</span>
+<h2>Заявка №{{record.id}} сохранена</h2>
+<p data-delivery-message>{{record.assistant_text|plain}}</p>
+{% if state in ['pending','sending'] %}<p class="muted" data-delivery-hint>Отправляем уведомление врачу. Статус обновится автоматически.</p>
+{% elif state=='retry' %}<p class="muted" data-delivery-hint>Повторная отправка произойдёт автоматически. Создавать новую заявку не нужно.</p>
+{% elif state=='saved' %}<p class="muted">Эта заявка сохранена до подключения отправки врачу. Чтобы передать её врачу, заполните новую заявку по кнопке ниже.</p>{% endif %}
+<p>Время консультации и оплату нужно согласовать отдельно. Деньги при отправке заявки не списываются.</p>
+<a href="{{url_for('consultation_request_page',rid=record.id)}}">Обновить статус</a>
+</section>
+<div class="panel"><h2>Ваша анкета</h2><p class="plain-content">{{record.user_text}}</p></div>
+<a class="btn" href="/consultation">Все заявки и новая запись →</a>
+<script src="/static/consultation.js?v=20260923-fix" defer></script>

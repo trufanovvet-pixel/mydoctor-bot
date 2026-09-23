@@ -219,7 +219,9 @@ def main():
         raise RuntimeError("TELEGRAM_BOT_TOKEN is not set")
 
     bot.init_db()
-    application = Application.builder().token(bot.TOKEN).build()
+    from consultation_delivery import start_delivery_worker, stop_delivery_worker
+    application = (Application.builder().token(bot.TOKEN)
+                   .post_init(start_delivery_worker).post_stop(stop_delivery_worker).build())
     application.add_error_handler(handle_error)
     application.add_handler(CommandHandler("start", bot.start))
     application.add_handler(CommandHandler("menu", bot.menu_command))
