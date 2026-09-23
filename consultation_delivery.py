@@ -2,6 +2,7 @@
 import asyncio
 import io
 import logging
+import os
 from datetime import datetime, timedelta
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, select, update
@@ -71,8 +72,10 @@ async def deliver_pending(application):
             def buttons():
                 with storage.SessionLocal() as db:
                     contacts=db.get(ConsultationContact,request_id)
-                    if not contacts or not contacts.links:return None
-                    return InlineKeyboardMarkup([[InlineKeyboardButton(label,url=url)] for label,url in contacts.links.items()])
+                    rows=[[InlineKeyboardButton(label,url=url)] for label,url in (contacts.links if contacts else {}).items()]
+                    base=os.getenv('MYDOCTOR_WEB_URL','https://mydoctor-web-production.up.railway.app').rstrip('/')
+                    rows.append([InlineKeyboardButton('Открыть заявку в кабинете врача',url=base+'/doctor/requests/'+str(request_id))])
+                    return InlineKeyboardMarkup(rows)
             markup=await asyncio.to_thread(buttons)
             text = f'Новая заявка с сайта МойДоктор №{request_id}\n\n{body}'
             if len(text.encode('utf-16-le')) // 2 > 3500:

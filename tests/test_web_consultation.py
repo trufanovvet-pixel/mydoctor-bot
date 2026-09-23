@@ -17,7 +17,7 @@ def form_client(email='booking@example.com'):
     register(client,email)
     html=client.get('/consultation').get_data(as_text=True)
     token=re.search(r'name="request_key" value="([^"]+)"',html).group(1)
-    return client,dict(contact='owner@example.com',format='Переписка',question='Хромота после прогулки',request_key=token)
+    return client,dict(contact='owner@example.com',format='Переписка',question='Хромота после прогулки',pet_summary='Гром, собака 5 лет, 50 кг',request_key=token)
 
 
 def test_how_it_works_opens_real_public_page():

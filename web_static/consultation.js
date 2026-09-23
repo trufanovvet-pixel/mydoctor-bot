@@ -1,5 +1,21 @@
 const requestForm = document.querySelector('[data-consultation-form]');
 if (requestForm) {
+  const pet = requestForm.querySelector('[data-booking-pet]');
+  if (pet) {
+    function syncPet() {
+      const manual = requestForm.querySelector('[data-manual-pet]');
+      manual.hidden = Boolean(pet.value);
+      manual.querySelector('input').required = !pet.value;
+      requestForm.querySelectorAll('[data-document-pet]').forEach(row => {
+        const incompatible = Boolean(pet.value && row.dataset.documentPet && row.dataset.documentPet !== pet.value);
+        row.hidden = incompatible;
+        row.querySelector('input').disabled = incompatible;
+        if (incompatible) row.querySelector('input').checked = false;
+      });
+    }
+    pet.addEventListener('change', syncPet);
+    syncPet();
+  }
   requestForm.addEventListener('submit', (event) => {
     if (requestForm.dataset.submitting) { event.preventDefault(); return; }
     requestForm.dataset.submitting = 'true';
@@ -23,6 +39,8 @@ if (confirmation && ['pending', 'sending', 'retry'].includes(confirmation.datase
       const status = await response.json();
       confirmation.dataset.requestStatus = status.state;
       confirmation.querySelector('[data-delivery-message]').textContent = status.message;
+      const workflow = confirmation.querySelector('[data-workflow-status]');
+      if (workflow && status.workflow_status) workflow.textContent = status.workflow_status;
       const hint = confirmation.querySelector('[data-delivery-hint]');
       if (status.state === 'delivered') {
         if (hint) hint.textContent = window.uiText('Уведомление доставлено врачу в Telegram.');

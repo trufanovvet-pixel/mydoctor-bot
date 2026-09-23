@@ -1,7 +1,9 @@
 <section class="panel request-confirmation" aria-live="polite" data-request-status="{{state}}" data-status-url="{{url_for('consultation_request_page',rid=record.id,status=1)}}">
 <span class="confirmation-icon" aria-hidden="true">✓</span>
 <h2>{{t("Заявка №")}}{{record.id}} {{t("сохранена")}}</h2>
-<p data-delivery-message>{{t(record.assistant_text)|plain}}</p>
+<p><strong>{{t('Статус заявки')}}:</strong> <span class="workflow-badge" data-workflow-status>{{t(statuses[case.status if case else 'new'])}}</span></p>
+{% if case and case.paid_confirmed %}<p>{{t('Оплата подтверждена врачом')}}</p>{% endif %}
+<p data-delivery-message>{{delivery_message|plain}}</p>
 {% if state in ['pending','sending'] %}<p class="muted" data-delivery-hint>{{t("Отправляем уведомление врачу. Статус обновится автоматически.")}}</p>
 {% elif state=='retry' %}<p class="muted" data-delivery-hint>{{t("Повторная отправка произойдёт автоматически. Создавать новую заявку не нужно.")}}</p>
 {% elif state=='saved' %}<p class="muted">{{t("Эта заявка сохранена до подключения отправки врачу. Чтобы передать её врачу, заполните новую заявку по кнопке ниже.")}}</p>{% endif %}
@@ -9,5 +11,6 @@
 <a href="{{url_for('consultation_request_page',rid=record.id)}}">{{t("Обновить статус")}}</a>
 </section>
 <div class="panel"><h2>{{t("Ваша анкета")}}</h2><p class="plain-content">{{record.user_text}}</p></div>
+{% if files %}<div class="panel"><h2>{{t('Приложенные документы')}}</h2>{% for file in files %}<a class="record-row" href="{{url_for('consultation_file',fid=file.id)}}"><strong>{{file.filename}}</strong><span>{{t('Скачать →')}}</span></a>{% endfor %}</div>{% endif %}
 <a class="btn" href="/consultation">{{t("Все заявки и новая запись →")}}</a>
-<script src="/static/consultation.js?v=20260923-lang" defer></script>
+<script src="/static/consultation.js?v=20260923-doctor" defer></script>

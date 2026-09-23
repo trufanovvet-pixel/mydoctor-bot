@@ -226,6 +226,8 @@ def main():
     application.add_handler(CommandHandler("start", bot.start))
     application.add_handler(CommandHandler("menu", bot.menu_command))
     application.add_handler(CommandHandler("myid", bot.myid_command))
+    from doctor_access import doctor_command
+    application.add_handler(CommandHandler("doctor", doctor_command))
     if hasattr(bot, "set_admin_chat_command"):
         application.add_handler(CommandHandler("setadminchat", bot.set_admin_chat_command))
     if hasattr(bot, "admin_chat_shared"):

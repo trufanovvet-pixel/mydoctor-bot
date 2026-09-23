@@ -47,7 +47,7 @@ async def test_request_contacts_are_a_snapshot_with_messenger_buttons():
     reset_db();c=web_app.app.test_client();register(c)
     saved=contacts(c);c.post('/profile',data=saved)
     key=token(c,'/consultation','request_key')
-    result=c.post('/consultation',data={'contact':'+66 82 234 5678','question':'Follow-up','format':'Переписка','request_key':key})
+    result=c.post('/consultation',data={'contact':'+66 82 234 5678','question':'Follow-up','pet_summary':'Dog, 5 years, 12 kg','format':'Переписка','request_key':key})
     assert result.status_code==303
     # Changing the profile later must not change the recipient links on an existing request.
     c.post('/profile',data={**saved,'telegram':'other_owner'})
@@ -56,7 +56,7 @@ async def test_request_contacts_are_a_snapshot_with_messenger_buttons():
     payload=app.bot.send_message.call_args.kwargs
     assert 'alex@example.com' in payload['text'] and 'Alex Owner' in payload['text']
     buttons=payload['reply_markup'].inline_keyboard
-    links={row[0].text:row[0].url for row in buttons}
+    links={row[0].text:row[0].url for row in buttons if row[0].text in ('Telegram','WhatsApp','Instagram','VK')}
     assert links=={'Telegram':'https://t.me/alex_owner','WhatsApp':'https://wa.me/66822345678','Instagram':'https://www.instagram.com/alex.owner/','VK':'https://vk.com/alex_owner'}
 
 
@@ -102,6 +102,6 @@ def test_assistant_uses_english_and_request_status_is_localized():
         assert c.post('/api/chat',json={'message':'What is an MRI?'}).json['answer']=='How can I help?'
         assert 'Reply in English' in call.call_args.kwargs['instructions']
     key=token(c,'/consultation','request_key')
-    location=c.post('/consultation',data={'contact':'alex@example.com','question':'Follow-up','format':'Переписка','request_key':key}).headers['Location']
+    location=c.post('/consultation',data={'contact':'alex@example.com','question':'Follow-up','pet_summary':'Dog, 5 years, 12 kg','format':'Переписка','request_key':key}).headers['Location']
     assert 'Your request is saved' in c.get(location+'?status=1').json['message']
     assert 'Preferred language: English' in c.get(location).get_data(as_text=True)

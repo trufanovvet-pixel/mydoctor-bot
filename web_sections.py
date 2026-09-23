@@ -11,6 +11,7 @@ from prevention_patch import PreventiveEvent
 from consultation_delivery import WebConsultationDelivery
 from owner_profile import OwnerProfile, ConsultationContact, profile_values, validate_contacts, preferred_contact, contact_links
 from web_i18n import t, language
+from consultation_cases import ConsultationCase,RequestAttachment,TYPES,STATUSES,available_documents,validate_intake,request_files
 
 MAX_FILE=20*1024*1024
 KINDS={'vaccination':'Вакцинация','worms':'Обработка от гельминтов','ecto':'Блохи и клещи','checkup':'Контрольный осмотр'}
@@ -243,6 +244,9 @@ def install(app,WebDocument):
         with storage.SessionLocal() as db:
             profile=db.get(OwnerProfile,session['uid'])
             contacts=profile_values(profile) if profile else None
+            pets=pets_for(db)
+            def booking_form(**kw):
+                return render('consultation','Консультация врача',contacts=contacts,pets=pets,documents=available_documents(db,session['uid'],WebDocument),consultation_types=TYPES,**kw)
             if request.method=='POST':
                 key=request.form.get('request_key','')
                 existing=db.scalar(select(WebConsultationDelivery).join(storage.Consultation).where(
@@ -253,19 +257,31 @@ def install(app,WebDocument):
                 if not contact or not question:error='Укажите контакт и причину обращения.'
                 elif len(contact)>200 or len(question)>6000:error='Контакт — до 200 символов, причина обращения — до 6000.'
                 elif not key or not secrets.compare_digest(key,session.get('consultation_key','')):error='Форма устарела. Проверьте данные и нажмите «Отправить заявку» ещё раз.'
+                intake=None
+                if not error:
+                    try:intake=validate_intake(db,session['uid'],request.form,WebDocument)
+                    except ValueError as exc:error=str(exc)
                 if error:
                     session.setdefault('consultation_key',secrets.token_urlsafe(32))
-                    return render('consultation','Консультация врача',requests=[],values=request.form,contacts=contacts,error=error,request_key=session['consultation_key']),400
+                    return booking_form(requests=[],values=request.form,selected_documents=request.form.getlist('documents'),error=error,request_key=session['consultation_key']),400
                 text=t('Контакт')+': '+contact[:200]+'\n'+t('Формат')+': '+t(request.form.get('format','')[:60])+'\n'+t('Запрос')+': '+question[:6000]
+                patient=intake['patient']
+                patient_text=patient.get('summary') or ', '.join(str(value) for value in (patient.get('name'),t(patient.get('species')),patient.get('breed'),patient.get('age'),t(patient.get('sex')),str(patient.get('weight_kg'))+' '+t('кг') if patient.get('weight_kg') else '') if value)
+                text=t('Тип консультации')+': '+t(TYPES[intake['kind']])+'\n'+t('Питомец')+': '+patient_text+'\n'+text
+                if intake['symptoms_since']:text+='\n'+t('Как давно беспокоит')+': '+intake['symptoms_since']
+                if intake['treatment']:text+='\n'+t('Лечение и обследования')+': '+intake['treatment']
+                if intake['attachments']:text+='\n'+t('Приложенные документы')+': '+', '.join(a['filename'] for a in intake['attachments'])
                 if contacts:
                     labels={'name':'Владелец','phone':'Телефон','email':'Почта','telegram':'Telegram','whatsapp':'WhatsApp','instagram':'Instagram','vk':'ВКонтакте'}
                     lines=[t(label)+': '+contacts[key] for key,label in labels.items() if contacts.get(key)]
                     text='\n'.join(lines)+'\n'+t('Предпочтительный способ связи')+': '+contacts['preferred']+'\n\n'+text
                 text=t('Язык общения')+': '+('English' if language()=='en' else 'Русский')+'\n'+text
-                record=storage.Consultation(user_id=session['uid'],pet_id=None,kind='consult_request',user_text=text,assistant_text='Заявка сохранена и ожидает отправки врачу.')
+                record=storage.Consultation(user_id=session['uid'],pet_id=intake['pet_id'],kind='consult_request',user_text=text,assistant_text='Заявка сохранена и ожидает отправки врачу.')
                 try:
                     db.add(record);db.flush()
                     db.add(ConsultationContact(consultation_id=record.id,links=contact_links(contacts or {}),language=language()))
+                    db.add(ConsultationCase(consultation_id=record.id,consultation_type=intake['kind'],patient=patient,contacts=contacts or {},status='new'))
+                    for file in intake['attachments']:db.add(RequestAttachment(consultation_id=record.id,**file))
                     db.add(WebConsultationDelivery(consultation_id=record.id,request_key=key));db.commit()
                     rid=record.id
                 except IntegrityError:
@@ -276,7 +292,8 @@ def install(app,WebDocument):
                 return redirect(url_for('consultation_request_page',rid=rid),code=303)
             session['consultation_key']=secrets.token_urlsafe(32)
             rows=db.scalars(select(storage.Consultation).where(storage.Consultation.user_id==session['uid'],storage.Consultation.kind=='consult_request').order_by(storage.Consultation.id.desc()).limit(10)).all()
-            return render('consultation','Консультация врача',requests=rows,values={'contact':preferred_contact(contacts) if contacts else ''},contacts=contacts,request_key=session['consultation_key'])
+            cases={c.consultation_id:c for c in db.scalars(select(ConsultationCase).where(ConsultationCase.consultation_id.in_([r.id for r in rows]))).all()}
+            return booking_form(requests=rows,cases=cases,statuses=STATUSES,values={'contact':preferred_contact(contacts) if contacts else ''},selected_documents=[],request_key=session['consultation_key'])
 
     @app.get('/consultation/requests/<int:rid>')
     @login_required
@@ -286,8 +303,10 @@ def install(app,WebDocument):
             if not row:abort(404)
             delivery=db.scalar(select(WebConsultationDelivery).where(WebConsultationDelivery.consultation_id==rid))
             state=delivery.state if delivery else 'saved'
+            case=db.get(ConsultationCase,rid)
+            delivery_message=t('Уведомление о заявке доставлено врачу.') if state=='delivered' and case and case.status!='new' else t(row.assistant_text)
             if request.args.get('status')=='1':
-                response=jsonify(state=state,message=t(row.assistant_text))
+                response=jsonify(state=state,message=delivery_message,workflow_status=t(STATUSES[case.status if case else 'new']))
                 response.headers['Cache-Control']='private, no-store'
                 return response
-            return render('consultation_request',t('Заявка №')+str(row.id),record=row,state=state)
+            return render('consultation_request',t('Заявка №')+str(row.id),record=row,state=state,case=case,statuses=STATUSES,files=request_files(db,rid),delivery_message=delivery_message)

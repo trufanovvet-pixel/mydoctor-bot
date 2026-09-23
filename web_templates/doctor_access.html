@@ -1,0 +1,2 @@
+<div class="panel doctor-login"><h2>{{t('Открыть кабинет врача')}}</h2><p>{{t('После входа станут доступны заявки, контакты владельцев и приложенные документы.')}}</p>
+<form method="post" action="/doctor/access"><input type="hidden" name="doctor_csrf" value="{{doctor_csrf}}"><input type="hidden" name="access_token" value="{{access_token}}"><button type="submit">{{t('Войти в кабинет врача')}}</button></form></div>
