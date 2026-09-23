@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 import storage
 from owner_profile import ConsultationContact
 from consultation_chat import deliver_message_notifications
+from web_push import deliver_push_notifications
 
 
 class WebConsultationDelivery(storage.Base):
@@ -107,17 +108,29 @@ async def delivery_loop(application):
         await asyncio.sleep(5)
 
 
+async def push_delivery_loop():
+    # A slow push provider must not hold up Telegram request delivery.
+    while True:
+        try:
+            await deliver_push_notifications()
+        except Exception as exc:
+            logging.getLogger(__name__).error('Web push worker: %s', type(exc).__name__)
+        await asyncio.sleep(5)
+
+
 async def start_delivery_worker(application):
     await asyncio.to_thread(storage.Base.metadata.create_all, storage.engine)
     await asyncio.to_thread(storage.set_bot_setting,'doctor_bot_username',application.bot.username)
     application.bot_data['web_request_delivery'] = asyncio.create_task(delivery_loop(application))
+    application.bot_data['web_push_delivery'] = asyncio.create_task(push_delivery_loop())
 
 
 async def stop_delivery_worker(application):
-    task = application.bot_data.pop('web_request_delivery', None)
-    if task:
-        task.cancel()
-        try:
-            await task
-        except asyncio.CancelledError:
-            pass
+    for name in ('web_request_delivery', 'web_push_delivery'):
+        task = application.bot_data.pop(name, None)
+        if task:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass

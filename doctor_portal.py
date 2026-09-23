@@ -92,6 +92,8 @@ def install(app,WebDocument):
     @require_doctor
     def doctor_logout():
         check_csrf()
+        from web_push import revoke_browser_subscriptions
+        revoke_browser_subscriptions('doctor')
         with storage.SessionLocal() as db:
             grants={value for value in (request.cookies.get(DOCTOR_COOKIE),session.get('doctor_grant')) if value}
             db.execute(update(DoctorAccess).where(DoctorAccess.session_digest.in_([hashed(value) for value in grants])).values(session_expires_at=datetime.utcnow()));db.commit()

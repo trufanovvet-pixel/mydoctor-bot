@@ -188,6 +188,8 @@ def install(app):
                 db.add(saved); db.flush()
                 for file in prepared: db.add(MessageFile(message_id=saved.id, **file))
                 if role == 'owner': db.add(MessageNotification(message_id=saved.id))
+                from web_push import enqueue_message
+                enqueue_message(db, saved, record.user_id)
                 db.commit()
             if request.headers.get('X-Chat-Request') == '1':
                 return private(jsonify(message=serialized_messages(db, [saved])[0]))

@@ -106,7 +106,10 @@ def register():
             user=storage.User(telegram_id=new_virtual_telegram_id(db),first_name=(request.form.get("name") or "").strip() or None)
             db.add(user);db.flush()
             db.add(WebAccount(user_id=user.id,email=email,password_hash=generate_password_hash(password)))
-            db.commit();session["uid"]=user.id
+            db.commit()
+            from web_push import revoke_browser_subscriptions
+            revoke_browser_subscriptions('owner')
+            session["uid"]=user.id
         return redirect(url_for("cabinet"))
     return render_template("auth.html",mode="register")
 
@@ -117,12 +120,16 @@ def login():
         with storage.SessionLocal() as db:
             acc=db.scalar(select(WebAccount).where(WebAccount.email==email))
             if acc and check_password_hash(acc.password_hash,password):
+                from web_push import revoke_browser_subscriptions
+                revoke_browser_subscriptions('owner')
                 session["uid"]=acc.user_id;return redirect(login_destination())
         flash("Неверный email или пароль.")
     return render_template("auth.html",mode="login")
 
 @app.get("/logout")
 def logout():
+    from web_push import revoke_browser_subscriptions
+    revoke_browser_subscriptions()
     from doctor_access import DoctorAccess,DOCTOR_COOKIE,hashed
     from sqlalchemy import update
     grants={value for value in (request.cookies.get(DOCTOR_COOKIE),session.get('doctor_grant')) if value}
@@ -273,3 +280,8 @@ import doctor_portal
 doctor_portal.install(app, WebDocument)
 import consultation_chat
 consultation_chat.install(app)
+
+import web_pwa
+web_pwa.install(app)
+import web_push
+web_push.install(app)

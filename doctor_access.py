@@ -16,14 +16,14 @@ REMEMBER_SECONDS = 30 * 24 * 60 * 60
 
 def doctor_destination(value):
     """Only supported doctor pages may be used as a login return address."""
-    return value if isinstance(value,str) and re.fullmatch(r'/doctor(?:/requests/[1-9]\d*|/clients(?:/[1-9]\d*)?)?',value) else '/doctor'
+    return value if isinstance(value,str) and re.fullmatch(r'/doctor(?:/requests/[1-9]\d*|/clients(?:/[1-9]\d*)?|/install)?',value) else '/doctor'
 
 
 def telegram_login_url(target):
     username=storage.get_bot_setting('doctor_bot_username')
     if not username or not re.fullmatch(r'[A-Za-z0-9_]{5,32}',username):return None
     target=doctor_destination(target)
-    payload='doctor_'+target.rsplit('/',1)[1] if target.startswith('/doctor/requests/') else 'doctor'
+    payload='doctor_'+target.rsplit('/',1)[1] if target.startswith('/doctor/requests/') else 'doctor_install' if target=='/doctor/install' else 'doctor'
     return f'https://t.me/{username}?start={payload}'
 
 
@@ -76,7 +76,7 @@ async def doctor_command(update,context,target='/doctor'):
         await update.message.reply_text('Для входа отправьте /doctor в личный чат с ботом.')
         return
     target=doctor_destination(target)
-    if target!='/doctor':
+    if target.startswith('/doctor/requests/'):
         def exists():
             with storage.SessionLocal() as db:
                 return db.scalar(select(storage.Consultation.id).where(storage.Consultation.id==int(target.rsplit('/',1)[1]),storage.Consultation.kind=='consult_request')) is not None
@@ -86,7 +86,7 @@ async def doctor_command(update,context,target='/doctor'):
     token=await asyncio.to_thread(create_doctor_link,update.effective_user.id)
     base=os.getenv('MYDOCTOR_WEB_URL','https://mydoctor-web-production.up.railway.app').rstrip('/')
     from telegram import InlineKeyboardButton,InlineKeyboardMarkup
-    label='Открыть кабинет врача' if target=='/doctor' else 'Открыть заявку №'+target.rsplit('/',1)[1]
+    label='Установить приложение' if target=='/doctor/install' else 'Открыть заявку №'+target.rsplit('/',1)[1] if target.startswith('/doctor/requests/') else 'Открыть кабинет врача'
     await update.message.reply_text('Вход подтверждён через ваш Telegram. Нажмите кнопку ниже.\nНа сайте можно запомнить это устройство на 30 дней. Ссылка действует 10 минут; не пересылайте её.',
         reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(label,url=base+'/doctor/access/'+token+'?'+urlencode({'next':target}))]]))
 
@@ -97,6 +97,8 @@ def doctor_start_handler(normal_start):
         payload=args[0] if args else ''
         if payload=='doctor':
             return await doctor_command(update,context)
+        if payload=='doctor_install':
+            return await doctor_command(update,context,'/doctor/install')
         match=re.fullmatch(r'doctor_([1-9]\d{0,18})',payload)
         if match:
             return await doctor_command(update,context,'/doctor/requests/'+match.group(1))

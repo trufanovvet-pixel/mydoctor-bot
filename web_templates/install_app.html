@@ -1,0 +1,44 @@
+<div class="app-install" data-app-setup data-role="{{install_role}}" data-signed-in="{{'1' if install_role=='doctor' or session.get('uid') else '0'}}">
+  <section class="app-intro panel">
+    <img src="/app-icon/192.png" width="88" height="88" alt="">
+    <div><span class="app-eyebrow">{{t('Кабинет врача') if install_role=='doctor' else t('Для владельца питомца')}}</span>
+      <h2>{{t('МойДоктор — всегда под рукой')}}</h2>
+      <p>{{t('Открывайте заявки, переписку и картотеку с экрана телефона.') if install_role=='doctor' else t('Питомцы, анализы и переписка с врачом — с одной иконки на телефоне.')}}</p>
+    </div>
+  </section>
+  <section class="panel app-setup-card">
+    <span class="app-step">1</span><h2>{{t('Добавьте на главный экран')}}</h2>
+    <p>{{t('Ваш аккаунт и все документы останутся теми же. Повторно создавать анкету не нужно.')}}</p>
+    <button type="button" data-install-button hidden>{{t('Установить МойДоктор')}}</button>
+    <p class="app-installed" data-installed hidden>{{t('Приложение уже открыто. Всё готово!')}}</p>
+    <p class="muted" data-install-status role="status" aria-live="polite"></p>
+    <div class="app-instructions" data-install-instructions>
+      <details data-platform="ios"><summary>iPhone / iPad</summary><ol>
+        <li>{{t('Откройте эту страницу в Safari.')}}</li>
+        <li>{{t('Нажмите «Поделиться» → «На экран Домой».')}}</li>
+        <li>{{t('Если есть переключатель «Открывать как веб-приложение», включите его. Нажмите «Добавить».')}}</li>
+        <li>{{t('Откройте МойДоктор с появившейся иконки и войдите в свой аккаунт.')}}</li>
+      </ol></details>
+      <details data-platform="android"><summary>Android / Huawei</summary><ol>
+        <li>{{t('Откройте эту страницу в Chrome или браузере телефона.')}}</li>
+        <li>{{t('Нажмите «Установить МойДоктор» или выберите в меню браузера «Установить приложение» / «Добавить на главный экран».')}}</li>
+        <li>{{t('Подтвердите добавление и откройте приложение с новой иконки.')}}</li>
+      </ol></details>
+      <details data-platform="desktop"><summary>{{t('На компьютере')}}</summary><p>{{t('В Chrome или Edge нажмите значок установки в адресной строке либо откройте меню браузера и выберите установку приложения.')}}</p></details>
+      <p class="muted">{{t('Если страница открыта внутри Telegram или другого приложения, сначала выберите «Открыть в браузере».')}}</p>
+    </div>
+    <noscript><p>{{t('Для установки кнопкой и уведомлений включите JavaScript в браузере.')}}</p></noscript>
+  </section>
+  <section class="panel app-setup-card">
+    <span class="app-step">2</span><h2>{{t('Включите уведомления')}}</h2>
+    <p>{{t('Узнавайте о новых сообщениях. Текст переписки и медицинские документы не показываются в уведомлении.')}}</p>
+    {% if install_role=='doctor' or session.get('uid') %}
+      <button type="button" data-push-button disabled>{{t('Включить уведомления')}}</button>
+      <p class="muted" data-push-status role="status" aria-live="polite">{{t('Проверяем поддержку уведомлений…')}}</p>
+    {% else %}
+      <a class="btn" href="/login?next=/install">{{t('Войти и настроить уведомления')}}</a>
+    {% endif %}
+    <p class="muted">{{t('На iPhone и iPad сначала установите приложение и откройте его с главного экрана. Уведомления поддерживаются начиная с iOS 16.4.')}}</p>
+  </section>
+  <p class="app-return"><a class="btn" href="{{'/doctor' if install_role=='doctor' else '/dashboard'}}">{{t('Открыть кабинет врача') if install_role=='doctor' else t('Открыть личный кабинет')}}</a></p>
+</div>

@@ -8,3 +8,4 @@ flask
 gunicorn
 pytest
 pytest-asyncio
+pywebpush==2.3.0
