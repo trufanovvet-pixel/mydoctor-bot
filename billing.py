@@ -8,7 +8,7 @@ import json
 import secrets
 from datetime import datetime, timedelta
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func, select, update
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func, select, update, text as sql_text
 from sqlalchemy.orm import Mapped, mapped_column
 import storage
 
@@ -20,6 +20,15 @@ PLANS = {
 ORDER_STATES = {'awaiting': 'Ожидает перевода', 'review': 'Проверяем оплату', 'paid': 'Оплата подтверждена',
                 'rejected': 'Оплата не подтверждена', 'cancelled': 'Отменено'}
 TRIAL_CREDITS = 5
+
+
+def init_schema():
+    # Gunicorn workers must not race PostgreSQL's check-then-create DDL on first boot.
+    # The transaction-scoped lock is released on both commit and rollback.
+    with storage.engine.begin() as connection:
+        if connection.dialect.name == 'postgresql':
+            connection.execute(sql_text('SELECT pg_advisory_xact_lock(:key)'), {'key': 728190423})
+        storage.Base.metadata.create_all(connection)
 
 
 class PaymentMethod(storage.Base):

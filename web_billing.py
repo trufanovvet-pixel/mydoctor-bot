@@ -12,7 +12,7 @@ from web_i18n import t
 
 def install(app, WebAccount):
     import billing_i18n  # Registers the English copy alongside the billing module.
-    storage.Base.metadata.create_all(storage.engine)
+    b.init_schema()
 
     @app.context_processor
     def billing_helpers():

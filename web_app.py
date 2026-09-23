@@ -38,7 +38,7 @@ class WebDocument(storage.Base):
     analysis: Mapped[str|None]=mapped_column(Text,nullable=True)
     created_at: Mapped[datetime]=mapped_column(DateTime,default=datetime.utcnow,index=True,nullable=False)
 
-storage.Base.metadata.create_all(storage.engine)
+billing.init_schema()
 import web_i18n
 web_i18n.install(app)
 
