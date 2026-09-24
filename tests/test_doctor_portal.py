@@ -212,3 +212,12 @@ async def test_doctor_deep_link_does_not_break_normal_start_or_leak_in_groups(up
     await handler(admin,ctx)
     assert 'не найдена' in admin.message.reply_text.call_args.args[0]
     with storage.SessionLocal() as db:assert not db.scalar(select(DoctorAccess))
+
+
+def test_ai_usage_dashboard_is_doctor_only():
+    reset_db(); owner,_=form_client(); staff=doctor()
+    assert owner.get('/doctor/ai').status_code==302
+    html=staff.get('/doctor/ai').get_data(as_text=True)
+    assert 'AI расходы' in html
+    assert '3000' in html and '500 ₽' in html
+    assert 'OpenAI Usage' in html
