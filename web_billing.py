@@ -114,6 +114,8 @@ def install(app, WebAccount):
                     order.payment_reference = reference
                     order.status = 'review'
                     order.reported_at = datetime.utcnow()
+                    from payment_notifications import PaymentNotice
+                    db.add(PaymentNotice(order_id=order.id))
                 elif action == 'cancel' and order.status == 'awaiting':
                     order.status = 'cancelled'
                 elif action == 'report' and order.status in ('review', 'paid'):

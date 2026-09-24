@@ -237,6 +237,8 @@ def main():
     application.add_handler(CallbackQueryHandler(bot.add_pet_callback, pattern=r"^pets:add$"))
     application.add_handler(CallbackQueryHandler(bot.pet_callback, pattern=r"^pet:\d+$"))
     application.add_handler(CallbackQueryHandler(bot.consult_callback, pattern=r"^consult:"))
+    from payment_notifications import payment_callback
+    application.add_handler(CallbackQueryHandler(payment_callback, pattern=r"^pay:"))
     application.add_handler(MessageHandler(filters.VOICE, bot.voice_message))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, bot.message))
     application.add_handler(MessageHandler(filters.PHOTO | filters.Document.ALL, bot.media))

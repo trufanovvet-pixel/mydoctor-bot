@@ -13,6 +13,7 @@ from web_i18n import t, ai_language
 import math
 import billing
 import telegram_billing
+import payment_notifications
 
 app=Flask(__name__,template_folder="web_templates",static_folder="web_static",static_url_path="/static")
 app.secret_key=os.getenv("FLASK_SECRET_KEY",secrets.token_hex(32))

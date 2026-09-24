@@ -11,6 +11,7 @@ import storage
 from owner_profile import ConsultationContact
 from consultation_chat import deliver_message_notifications
 from web_push import deliver_push_notifications
+from payment_notifications import deliver_payment_notifications
 
 
 class WebConsultationDelivery(storage.Base):
@@ -103,6 +104,7 @@ async def delivery_loop(application):
         try:
             await deliver_pending(application)
             await deliver_message_notifications(application)
+            await deliver_payment_notifications(application)
         except Exception as exc:
             logging.getLogger(__name__).error('Web request delivery worker: %s', type(exc).__name__)
         await asyncio.sleep(5)
@@ -119,7 +121,8 @@ async def push_delivery_loop():
 
 
 async def start_delivery_worker(application):
-    await asyncio.to_thread(storage.Base.metadata.create_all, storage.engine)
+    from billing import init_schema
+    await asyncio.to_thread(init_schema)
     await asyncio.to_thread(storage.set_bot_setting,'doctor_bot_username',application.bot.username)
     application.bot_data['web_request_delivery'] = asyncio.create_task(delivery_loop(application))
     application.bot_data['web_push_delivery'] = asyncio.create_task(push_delivery_loop())
