@@ -202,12 +202,19 @@ def chat():
     if not session.get("uid"):return jsonify({"error":"auth"}),401
     payload=request.get_json(silent=True) or {}
     text=str(payload.get("message") or "").strip()
-    if len(text)>12000:return jsonify({"error":t("Сообщение слишком длинное.")}),413
     if not text:return jsonify({"error":"empty"}),400
     with storage.SessionLocal() as db:
-        user=db.get(storage.User,session["uid"]);pctx=pet_context(db,user,text)
+        user=db.get(storage.User,session["uid"])
+        paid_access=billing.has_paid_access(db,user.id)
+        max_chars=12000 if paid_access else 3000
+        if len(text)>max_chars:
+            message=("Сообщение слишком длинное. Бесплатный запрос — до 3000 символов. "
+                     "Сократите текст или пополните пакет на 500 ₽ для расширенного лимита.") if not paid_access else "Сообщение слишком длинное. Максимум 12000 символов."
+            return jsonify({"error":t(message),"billing_url":"/billing","max_chars":max_chars}),413
+        pctx=pet_context(db,user,text)
         scope_pet=user.active_pet_id if pctx else None
-        prev=db.scalars(select(storage.Consultation).where(storage.Consultation.user_id==user.id, storage.Consultation.pet_id==scope_pet, storage.Consultation.kind=="web_chat").order_by(storage.Consultation.id.desc()).limit(6)).all()
+        history_limit=4 if not paid_access else 6
+        prev=db.scalars(select(storage.Consultation).where(storage.Consultation.user_id==user.id, storage.Consultation.pet_id==scope_pet, storage.Consultation.kind=="web_chat").order_by(storage.Consultation.id.desc()).limit(history_limit)).all()
         chat_started=session.get("chat_started_at")
         if chat_started:
             try:
@@ -229,7 +236,7 @@ def chat():
             if not saved:return jsonify({'error':t('Сохранённый ответ не найден.')}),409
             return jsonify({'answer':saved.assistant_text})
         try:
-            response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM+ai_language(),input=history+[{"role":"user","content":prompt}],max_output_tokens=3000)
+            response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM+ai_language(),input=history+[{"role":"user","content":prompt}],max_output_tokens=3000 if paid_access else 1600)
             answer=_plain(response.output_text)
             if not answer:raise ValueError('Empty AI output')
             billing.lock_user(db,user.id)
