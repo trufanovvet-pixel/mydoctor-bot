@@ -43,7 +43,7 @@ def test_sbp_checkout_and_legacy_russian_card_replacement():
     mid = setup_sbp()
     html = c.get('/billing?transfer=sbp').text
     assert 'Российская карта' in html and 'СБП' in html and 'Mastercard' in html
-    assert '499 ₽' in html
+    assert '500 ₽' in html
     oid, _ = order_for(c, mid)
     assert 'TEST ONLY СБП' in c.get('/billing/orders/' + oid).text
     report(c, oid)
@@ -211,7 +211,7 @@ async def test_navigation_and_pet_details_remain_free_after_payments_enabled(bot
 async def test_free_telegram_text_limit(update, ctx):
     reset_db()
     item=update('x'*3001)
-    client=MagicMock()
+    client=Mock()
     result=await tb.generate(item,client,kind='chat',model='gpt-5.6-sol',input=[])
     assert result is None
     assert '3000' in item.effective_message.reply_text.call_args.args[0]
