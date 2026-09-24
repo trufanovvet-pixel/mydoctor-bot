@@ -112,7 +112,8 @@ async def generate(update, client, kind='chat', **kwargs):
     uid = await asyncio.to_thread(account_id, user.id)
     if kind == 'chat':
         with storage.SessionLocal() as db:
-            paid_access = b.has_paid_access(db, uid)
+            owner_access = b.is_owner_account(db, uid)
+            paid_access = b.has_paid_access(db, uid) or owner_access
         max_chars = 12000 if paid_access else 3000
         raw_text = ((getattr(update.effective_message, 'text', None) or getattr(update.effective_message, 'caption', None) or '').strip())
         if len(raw_text) > max_chars:
@@ -120,6 +121,13 @@ async def generate(update, client, kind='chat', **kwargs):
                        'Сократите текст или пополните пакет на 500 ₽ для расширенного лимита.') if not paid_access else 'Сообщение слишком длинное. Максимум 12000 символов.'
             await update.effective_message.reply_text(message)
             return None
+        from web_app import routed_model, ai_complexity
+        selected_model, complexity = routed_model(raw_text, paid_access=paid_access, owner=owner_access)
+        kwargs['model'] = selected_model
+        if ai_complexity(raw_text) == 'master' and not (paid_access or owner_access):
+            kwargs['instructions'] = (kwargs.get('instructions') or '') + ('\nЭтот случай относится к сложным. Не выполняй углублённый Master-разбор. '
+                'Дай безопасный ограниченный ответ: срочность, красные флаги, что подготовить для врача и какие данные нужны. '
+                'Не делай вид, что проведён полный клинический разбор. В конце кратко сообщи, что расширенный разбор доступен после пополнения пакета.')
         current_cap = kwargs.get('max_output_tokens')
         allowed_cap = 3000 if paid_access else 1600
         kwargs['max_output_tokens'] = min(current_cap, allowed_cap) if isinstance(current_cap, int) and current_cap > 0 else allowed_cap
