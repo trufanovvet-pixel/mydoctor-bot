@@ -10,7 +10,7 @@ import re
 from decimal import Decimal
 from datetime import datetime, timedelta
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func, select, update, text as sql_text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, LargeBinary, String, Text, UniqueConstraint, func, select, update, text as sql_text
 from sqlalchemy.orm import Mapped, mapped_column
 import storage
 
@@ -85,6 +85,15 @@ class PaymentMethodPrice(storage.Base):
     method_id: Mapped[int] = mapped_column(ForeignKey('billing_payment_methods.id'), primary_key=True)
     plan: Mapped[str] = mapped_column(String(32), primary_key=True)
     amount_minor: Mapped[int] = mapped_column(Integer)
+
+
+class PaymentReceipt(storage.Base):
+    __tablename__ = 'billing_payment_receipts'
+    order_id: Mapped[str] = mapped_column(ForeignKey('billing_payment_orders.id'), primary_key=True)
+    filename: Mapped[str] = mapped_column(String(255))
+    mime_type: Mapped[str] = mapped_column(String(120))
+    data: Mapped[bytes] = mapped_column(LargeBinary)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 def method_prices(db, method):
