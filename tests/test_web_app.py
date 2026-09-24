@@ -112,3 +112,25 @@ def test_free_chat_limit_and_social_links():
     assert 'https://t.me/my1doctor_bot' in home
     assert 'https://www.instagram.com/mydoctor.vet/' in home
     assert 'https://www.facebook.com/profile.php?id=61594867434549' in home
+
+
+def test_hidden_ai_routing_and_free_master_gate():
+    assert web_app.ai_complexity('Что такое вакцинация?') == 'simple'
+    assert web_app.ai_complexity('У собаки рвота, какие анализы нужны?') == 'standard'
+    assert web_app.ai_complexity('IVDD, парез, МРТ и план операции') == 'master'
+    assert web_app.routed_model('IVDD, парез, МРТ и план операции', paid_access=False, owner=False)[1] == 'standard'
+    assert web_app.routed_model('IVDD, парез, МРТ и план операции', paid_access=True, owner=False)[1] == 'master'
+
+
+def test_owner_account_does_not_spend_internal_credits():
+    reset_db(); c=web_app.app.test_client(); register(c)
+    with c.session_transaction() as s: uid=s['uid']
+    from notification_patch import _admin_user_id
+    with storage.SessionLocal() as db:
+        db.get(storage.User,uid).telegram_id=_admin_user_id();db.commit()
+    storage.set_bot_setting('billing_live','1')
+    with patch.object(web_app.client.responses,'create',return_value=type('R',(),{'output_text':'ok','model':'gpt-5.6-sol','usage':None})()):
+        assert c.post('/api/chat',json={'message':'IVDD, парез, МРТ и план операции'}).status_code==200
+    with storage.SessionLocal() as db:
+        usage=db.scalar(select(__import__('billing').CreditUsage))
+        assert usage.credits==0
