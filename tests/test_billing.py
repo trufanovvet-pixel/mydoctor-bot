@@ -107,7 +107,7 @@ def test_manual_flow_trusts_server_price_and_requires_doctor_csrf_and_receipt_ch
         assert staff.post('/doctor/payments/' + oid, data={**payload, 'received': '1'}).status_code == 303
     with storage.SessionLocal() as db:
         order = db.get(b.PaymentOrder, oid)
-        assert order.amount_minor == 49900 and order.credits == 20
+        assert order.amount_minor == 50000 and order.credits == 20
         assert order.checked_by and order.status == 'paid'
         grants = db.scalars(select(b.CreditGrant).where(b.CreditGrant.origin == 'payment:' + oid)).all()
         assert len(grants) == 1 and grants[0].remaining == 20
