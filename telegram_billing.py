@@ -110,6 +110,19 @@ async def generate(update, client, kind='chat', **kwargs):
     user = update.effective_user
     await asyncio.to_thread(storage.ensure_user, user.id, user.username, user.first_name)
     uid = await asyncio.to_thread(account_id, user.id)
+    if kind == 'chat':
+        with storage.SessionLocal() as db:
+            paid_access = b.has_paid_access(db, uid)
+        max_chars = 12000 if paid_access else 3000
+        raw_text = ((getattr(update.effective_message, 'text', None) or getattr(update.effective_message, 'caption', None) or '').strip())
+        if len(raw_text) > max_chars:
+            message = ('Сообщение слишком длинное. Бесплатный запрос — до 3000 символов. '
+                       'Сократите текст или пополните пакет на 500 ₽ для расширенного лимита.') if not paid_access else 'Сообщение слишком длинное. Максимум 12000 символов.'
+            await update.effective_message.reply_text(message)
+            return None
+        current_cap = kwargs.get('max_output_tokens')
+        allowed_cap = 3000 if paid_access else 1600
+        kwargs['max_output_tokens'] = min(current_cap, allowed_cap) if isinstance(current_cap, int) and current_cap > 0 else allowed_cap
     key, fingerprint = request_identity(update, kind)
     try:
         return await asyncio.to_thread(create_response, client, uid, kind, key, fingerprint, kwargs)
