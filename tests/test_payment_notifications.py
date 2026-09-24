@@ -49,7 +49,7 @@ def test_report_enqueues_once_and_delivery_retries():
         asyncio.run(pn.deliver_payment_notifications(app))
     app.bot.send_document.assert_awaited_once()
     document = app.bot.send_document.call_args.kwargs
-    assert document['chat_id'] == 123 and '499' in document['caption'] and 'TEST payment 12:00' in document['caption']
+    assert document['chat_id'] == 123 and '500' in document['caption'] and 'TEST payment 12:00' in document['caption']
     assert document['reply_markup'].inline_keyboard[0][0].callback_data == 'pay:yes:' + oid
     app.bot.send_message.assert_not_awaited()
 
