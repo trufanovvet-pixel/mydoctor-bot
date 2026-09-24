@@ -252,6 +252,17 @@ def metered(db, uid):
     return live() or bool(db.scalar(select(CreditGrant.id).where(CreditGrant.user_id == uid, CreditGrant.origin.like('payment:%')).limit(1)))
 
 
+def is_owner_account(db, uid):
+    if not uid:
+        return False
+    from notification_patch import _admin_user_id
+    from doctor_access import DoctorWebAccount
+    admin = _admin_user_id()
+    user = db.get(storage.User, uid)
+    binding = db.get(DoctorWebAccount, uid)
+    return bool(user and (user.telegram_id == admin or (binding and binding.telegram_id == admin)))
+
+
 def has_paid_access(db, uid):
     now = datetime.utcnow()
     return bool(db.scalar(select(CreditGrant.id).where(
@@ -284,7 +295,7 @@ def reserve(uid, kind, key, content):
             usage = previous
         else:
             usage = CreditUsage(id=secrets.token_hex(16), user_id=uid, request_key=key, fingerprint=fingerprint, kind=kind)
-        cost = (1 if kind == 'chat' else 5) if metered(db, uid) else 0
+        cost = 0 if is_owner_account(db, uid) else ((1 if kind == 'chat' else 5) if metered(db, uid) else 0)
         allocation = []
         if cost:
             trial(db, uid)
