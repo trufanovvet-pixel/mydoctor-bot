@@ -121,3 +121,11 @@ EN.update({
     'Сейчас открыт другой аккаунт. Продолжение переключит вход на указанный Telegram-аккаунт; балансы не объединяются.': 'Another account is currently signed in. Continuing switches to this Telegram account; balances are not merged.',
     'Продолжить к оплате': 'Continue to payment', 'Открыть кабинет': 'Open account',
 })
+
+EN.update({
+    'Каждый месяц — 5 бесплатных баллов': '5 free credits every month',
+    'Обновляются 1-го числа каждого месяца (UTC). Неиспользованные бесплатные баллы не переносятся.': 'Renewed on the first day of each calendar month (UTC). Unused free credits do not roll over.',
+    '«Мои питомцы» и «Профилактика» всегда бесплатны, даже при нулевом балансе.': 'My pets and Preventive care are always free, even with a zero credit balance.',
+    'Ежемесячные бесплатные баллы': 'Monthly free credits',
+    'При включении владельцам доступны пакеты и 5 бесплатных баллов каждый месяц. Подтверждённые пакеты учитываются и после остановки новых продаж.': 'Enabling this makes packages and 5 free credits every month available. Existing paid packages remain metered if new sales are paused.',
+})

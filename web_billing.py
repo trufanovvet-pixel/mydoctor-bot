@@ -68,7 +68,7 @@ def install(app, WebAccount):
         with storage.SessionLocal() as db:
             b.lock_user(db, uid)
             b.release_stale(db, uid)
-            if b.live():
+            if b.metered(db, uid):
                 b.trial(db, uid)
             db.commit()
             info = b.summary(db, uid)

@@ -355,3 +355,85 @@ def test_doctor_telegram_login_returns_to_the_requested_payment():
             context = SimpleNamespace(args=[payload])
             asyncio.run(doctor_access.doctor_start_handler(AsyncMock())(update, context))
             command.assert_awaited_once_with(update, context, target)
+
+
+def allowance_at(uid, now):
+    with patch.object(b, 'datetime', wraps=datetime) as clock:
+        clock.utcnow.return_value = now
+        with storage.SessionLocal() as db:
+            b.lock_user(db, uid)
+            b.trial(db, uid)
+            db.commit()
+            return b.summary(db, uid)['balance']
+
+
+def test_monthly_free_credits_rollover_no_backfill_and_keep_paid_balance():
+    c, uid = owner(); enable()
+    with storage.SessionLocal() as db:
+        db.add(b.CreditGrant(user_id=uid, origin='payment:test', total=20, remaining=17,
+                            expires_at=datetime(2027, 5, 1)))
+        db.commit()
+    assert allowance_at(uid, datetime(2026, 12, 31, 23, 59)) == 22
+    with storage.SessionLocal() as db:
+        free = db.scalar(select(b.CreditGrant).where(b.CreditGrant.origin.like('monthly:%')))
+        free.remaining = 2
+        db.commit()
+    assert allowance_at(uid, datetime(2026, 12, 31, 23, 59)) == 19
+    assert allowance_at(uid, datetime(2027, 1, 1)) == 22
+    assert allowance_at(uid, datetime(2027, 1, 1)) == 22
+    assert allowance_at(uid, datetime(2027, 4, 1)) == 22
+    with storage.SessionLocal() as db:
+        grants = db.scalars(select(b.CreditGrant).where(b.CreditGrant.origin.like('monthly:%'))).all()
+        assert len(grants) == 3  # No credit accumulation for February and March.
+        assert db.scalar(select(b.CreditGrant).where(b.CreditGrant.origin == 'payment:test')).remaining == 17
+
+
+def test_existing_trial_is_not_granted_twice_during_migration():
+    c, uid = owner()
+    with storage.SessionLocal() as db:
+        db.add(b.CreditGrant(user_id=uid, origin=f'trial:{uid}', total=5, remaining=1,
+                            created_at=datetime(2026, 9, 10)))
+        db.commit()
+    assert allowance_at(uid, datetime(2026, 9, 24)) == 1
+    assert allowance_at(uid, datetime(2026, 10, 1)) == 5
+
+
+def test_old_trial_expires_and_concurrent_monthly_grants_are_unique():
+    c, uid = owner()
+    with storage.SessionLocal() as db:
+        db.add(b.CreditGrant(user_id=uid, origin=f'trial:{uid}', total=5, remaining=3,
+                            created_at=datetime(2020, 1, 1)))
+        db.commit()
+    now = datetime.utcnow()
+    def grant(_):
+        with storage.SessionLocal() as db:
+            b.lock_user(db, uid); b.trial(db, uid); db.commit()
+    with ThreadPoolExecutor(max_workers=5) as pool:
+        list(pool.map(grant, range(5)))
+    with storage.SessionLocal() as db:
+        assert b.summary(db, uid)['balance'] == 5
+        assert len(db.scalars(select(b.CreditGrant).where(b.CreditGrant.origin.like('monthly:%'))).all()) == 1
+        assert db.scalar(select(b.CreditGrant).where(b.CreditGrant.origin == f'trial:{uid}')).expires_at <= now
+
+
+def test_pet_and_prevention_remain_free_with_zero_credits():
+    from prevention_patch import PreventiveEvent
+    c, uid = owner(); enable(); c.get('/billing')
+    with storage.SessionLocal() as db:
+        for grant in db.scalars(select(b.CreditGrant).where(b.CreditGrant.user_id == uid)):
+            grant.remaining = 0
+        db.commit()
+    assert c.post('/pets', data={'name': 'Free pet', 'species': 'Собака', 'weight': '10'}).status_code == 302
+    with storage.SessionLocal() as db:
+        pid = db.scalar(select(storage.Pet.id).where(storage.Pet.user_id == uid))
+    assert c.get('/pets').status_code == 200
+    assert c.get(f'/pets/{pid}').status_code == 200
+    assert c.get('/prevention').status_code == 200
+    assert c.post('/prevention', data={'pet_id': pid, 'kind': 'vaccination', 'due_date': '2027-01-01'}).status_code == 302
+    with storage.SessionLocal() as db:
+        assert db.scalar(select(PreventiveEvent).where(PreventiveEvent.user_id == uid))
+        assert b.summary(db, uid)['balance'] == 0
+        assert not db.scalar(select(b.CreditUsage.id))
+    html = c.get('/billing').text
+    assert 'Каждый месяц — 5 бесплатных баллов' in html
+    assert 'всегда бесплатны' in html

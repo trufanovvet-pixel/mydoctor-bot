@@ -182,7 +182,7 @@ async def test_telegram_photo_analysis_uses_document_paywall_and_cannot_bypass_z
     ctx.bot.get_file = AsyncMock(return_value=SimpleNamespace(
         download_as_bytearray=AsyncMock(return_value=bytearray(payload))))
 
-    first = update(photo=[SimpleNamespace(file_id='photo-1', file_size=len(payload))])
+    first = update(photo=[SimpleNamespace(file_id='photo-1', file_unique_id='unique-photo-1', file_size=len(payload))])
     first.message.message_id = 601
     await bot.media(first, ctx)
     uid = tb.account_id(100)
@@ -191,7 +191,7 @@ async def test_telegram_photo_analysis_uses_document_paywall_and_cannot_bypass_z
         assert len(usages) == 1 and usages[0].kind == 'document' and usages[0].credits == 5
         assert b.summary(db, uid)['balance'] == 0
 
-    second = update(photo=[SimpleNamespace(file_id='photo-2', file_size=len(payload))])
+    second = update(photo=[SimpleNamespace(file_id='photo-2', file_unique_id='unique-photo-2', file_size=len(payload))])
     second.message.message_id = 602
     await bot.media(second, ctx)
     assert any('Недостаточно баллов' in str(call.args[0]) for call in second.message.reply_text.call_args_list)

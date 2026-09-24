@@ -207,9 +207,27 @@ def lock_user(db, uid):
 
 
 def trial(db, uid):
-    if not db.scalar(select(CreditGrant.id).where(CreditGrant.origin == f'trial:{uid}')):
-        db.add(CreditGrant(user_id=uid, origin=f'trial:{uid}', total=TRIAL_CREDITS, remaining=TRIAL_CREDITS))
-        db.flush()
+    """Ensure this calendar month's free allowance, under the caller's user lock.
+
+    UTC boundaries are shared by web and Telegram. Missed months do not accrue.
+    Keep an existing trial's spent balance in its original month during rollout.
+    """
+    now = datetime.utcnow()
+    start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    end = (start.replace(day=28) + timedelta(days=4)).replace(day=1)
+    origin = f'monthly:{uid}:{start:%Y-%m}'
+    if db.scalar(select(CreditGrant.id).where(CreditGrant.origin == origin)):
+        return
+    legacy = db.scalar(select(CreditGrant).where(CreditGrant.origin == f'trial:{uid}'))
+    if legacy and legacy.created_at >= start:
+        legacy.origin = origin
+        legacy.expires_at = end
+    else:
+        if legacy and legacy.expires_at is None:
+            legacy.expires_at = start
+        db.add(CreditGrant(user_id=uid, origin=origin, total=TRIAL_CREDITS,
+                           remaining=TRIAL_CREDITS, expires_at=end))
+    db.flush()
 
 
 def refundable_failure(db, usage):
