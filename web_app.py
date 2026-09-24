@@ -353,6 +353,45 @@ import web_sections
 web_sections.install(app, WebDocument)
 import doctor_portal
 doctor_portal.install(app, WebDocument)
+
+# Failsafe registration for the doctor AI-usage page. Some production workers may
+# load an older doctor_portal route map during rolling deploys, so keep this route
+# anchored in the main Flask module as well.
+if not any(rule.rule == '/doctor/ai' for rule in app.url_map.iter_rules()):
+    @app.get('/doctor/ai')
+    def doctor_ai_fallback():
+        identity = app.extensions.get('doctor_identity')
+        if not identity or not identity():
+            session['doctor_next'] = '/doctor/ai'
+            return redirect('/doctor/login')
+        now=datetime.utcnow()
+        month_start=now.replace(day=1,hour=0,minute=0,second=0,microsecond=0)
+        day_start=now.replace(hour=0,minute=0,second=0,microsecond=0)
+        def usage_since(db,start):
+            row=db.execute(select(
+                func.count(billing.CreditUsage.id),
+                func.coalesce(func.sum(billing.CreditUsage.input_tokens),0),
+                func.coalesce(func.sum(billing.CreditUsage.output_tokens),0),
+                func.coalesce(func.sum(billing.CreditUsage.credits),0),
+            ).where(billing.CreditUsage.status=='success',billing.CreditUsage.created_at>=start)).one()
+            return {'requests':int(row[0] or 0),'input_tokens':int(row[1] or 0),'output_tokens':int(row[2] or 0),'credits':int(row[3] or 0)}
+        with storage.SessionLocal() as db:
+            today=usage_since(db,day_start);month=usage_since(db,month_start)
+            grants=db.scalars(select(billing.CreditGrant).where(billing.CreditGrant.origin.like(f'monthly:%:{now:%Y-%m}'))).all()
+            free_issued=sum(x.total for x in grants);free_left=sum(x.remaining for x in grants);free_used=max(0,free_issued-free_left)
+            paid_active=db.scalar(select(func.count(billing.CreditGrant.id)).where(
+                billing.CreditGrant.origin.like('payment:%'),billing.CreditGrant.remaining>0,
+                (billing.CreditGrant.expires_at.is_(None)) | (billing.CreditGrant.expires_at>now))) or 0
+        input_rate=float(os.getenv('OPENAI_GPT56_SOL_INPUT_USD_PER_1M','4'))
+        output_rate=float(os.getenv('OPENAI_GPT56_SOL_OUTPUT_USD_PER_1M','20'))
+        estimated=(month['input_tokens']*input_rate+month['output_tokens']*output_rate)/1_000_000
+        try: budget=max(0.0,float(os.getenv('MYDOCTOR_AI_BUDGET_USD','100')))
+        except ValueError: budget=100.0
+        budget_pct=(estimated/budget*100) if budget else 0
+        budget_state='danger' if budget and budget_pct>=95 else 'warning' if budget and budget_pct>=80 else 'ok'
+        response=app.make_response(render_template('section.html',page='doctor_ai',title=t('AI расходы'),statuses=doctor_portal.STATUSES if hasattr(doctor_portal,'STATUSES') else {},doctor_csrf=session.get('doctor_csrf',''),today=today,month=month,free_issued=free_issued,free_used=free_used,free_left=free_left,paid_active=int(paid_active),estimated_cost=estimated,budget=budget,budget_pct=budget_pct,budget_state=budget_state,input_rate=input_rate,output_rate=output_rate))
+        response.headers['Cache-Control']='private, no-store'
+        return response
 import web_billing
 web_billing.install(app, WebAccount)
 import web_auth
