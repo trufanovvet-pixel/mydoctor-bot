@@ -104,3 +104,20 @@ EN.update({
     'Не удалось сохранить исследование. Баллы не списаны. Попробуйте ещё раз.': 'Could not save the study. No credits were charged. Please try again.',
     'Разбор одного фото или PDF до 5 страниц — 5 баллов. При ошибке баллы возвращаются.': 'Analysis of one photo or a PDF of up to 5 pages costs 5 credits. Failed requests are refunded.',
 })
+
+EN.update({
+    'Российская карта': 'Russian card', 'Карта': 'Card', 'СБП': 'SBP',
+    'Заполните реквизиты: российская карта, СБП и Mastercard. Оплату можно открыть отдельно для каждого способа.': 'Enter receiving details for a Russian card, SBP and Mastercard. Each method can be enabled separately.',
+    'Номер телефона для СБП, банк и имя получателя': 'Phone number for SBP, bank and recipient name',
+    'Пакеты для AI-помощника. Консультации врача оплачиваются отдельно.': 'AI assistant packages. Veterinarian consultations are paid separately.',
+    'При входе по ссылке из бота баланс общий с Telegram. Аккаунт, созданный отдельно по почте, имеет свой баланс.': 'When you sign in using the bot link, your balance is shared with Telegram. A separate email account has its own balance.',
+    'Пакеты действуют на сайте и в Telegram. При входе по ссылке из бота используется его аккаунт и общий баланс.': 'Packages work on the website and in Telegram. The bot link opens its account and shared balance.',
+    'Если вы вошли по ссылке из бота, баллы уже доступны в Telegram. Вернитесь в чат и продолжайте.': 'If you signed in using the bot link, your credits are already available in Telegram. Return to the chat to continue.',
+    'Оплата и баланс': 'Payments & balance', 'Вход из Telegram': 'Sign in from Telegram',
+    'Ссылка больше не действует': 'This link has expired',
+    'Откройте в боте «Оплата и баланс» или отправьте /pay, чтобы получить новую ссылку.': 'Open Payments & balance in the bot or send /pay to get a new link.',
+    'Ваш аккаунт Telegram:': 'Your Telegram account:',
+    'Пакет будет начислен этому аккаунту и доступен в боте и на сайте.': 'The package will be credited to this account and available in the bot and on the website.',
+    'Сейчас открыт другой аккаунт. Продолжение переключит вход на указанный Telegram-аккаунт; балансы не объединяются.': 'Another account is currently signed in. Continuing switches to this Telegram account; balances are not merged.',
+    'Продолжить к оплате': 'Continue to payment', 'Открыть кабинет': 'Open account',
+})

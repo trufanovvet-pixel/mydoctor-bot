@@ -260,7 +260,7 @@ def test_incomplete_and_legacy_methods_cannot_create_new_orders():
         with pytest.raises(b.BillingError): b.create_order(uid, 'start', mid, secrets.token_hex(16))
     html = c.get('/billing?transfer=mastercard').text
     assert 'name="method_id"' not in html and 'USDT' not in html
-    assert 'Перевод на карту Мир' in html and 'Перевод на Mastercard' in html
+    assert 'Российская карта' in html and 'Перевод на Mastercard' in html
 
 
 def test_only_latest_transfer_details_can_be_reenabled_and_are_translated():
@@ -272,7 +272,7 @@ def test_only_latest_transfer_details_can_be_reenabled_and_are_translated():
     assert staff.post(f'/doctor/payments/methods/{latest}/toggle', data={'billing_csrf': csrf, 'enabled': '0'}).status_code == 303
     c, _ = owner(); c.set_cookie('language', 'en')
     html = c.get('/billing').text
-    assert 'Transfer to a Mir card' in html and 'Transfer to a Mastercard' in html
+    assert 'Russian card' in html and 'Transfer to a Mastercard' in html
     assert 'Перевод на' not in html
 
 

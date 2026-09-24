@@ -156,12 +156,14 @@ def install(bot):
         )
 
         try:
-            response = await asyncio.to_thread(
-                bot.client.responses.create,
+            from telegram_billing import generate
+            response = await generate(update, bot.client,
                 model="gpt-5.6-sol",
                 instructions=bot.SYSTEM_PROMPT,
                 input=[{"role": "user", "content": prompt}],
             )
+            if response is None:
+                return
             answer = (response.output_text or "").strip()
         except Exception as exc:
             print(f"medical memory compare error: {exc!r}", flush=True)

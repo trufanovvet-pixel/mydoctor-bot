@@ -57,6 +57,8 @@ def _install_clean_menu_with_onboarding(bot):
     web_login_patch.install(bot)
     import operations_patch
     operations_patch.install(bot)
+    import telegram_billing
+    telegram_billing.install(bot)
 
 
 enhanced_app2.enhanced.install_features = _install_with_patches

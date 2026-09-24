@@ -178,7 +178,9 @@ def install(app, WebAccount):
             if not method:
                 abort(404)
             enabled = request.form.get('enabled') == '1'
-            latest = db.scalar(select(b.PaymentMethod.id).where(b.PaymentMethod.name == method.name).order_by(b.PaymentMethod.id.desc()).limit(1))
+            route = b.method_route(method.name)
+            names = b.route_names(route) if route else (method.name,)
+            latest = db.scalar(select(b.PaymentMethod.id).where(b.PaymentMethod.name.in_(names)).order_by(b.PaymentMethod.id.desc()).limit(1))
             if enabled and (mid != latest or not b.method_prices(db, method)):
                 abort(409)
             method.enabled = enabled

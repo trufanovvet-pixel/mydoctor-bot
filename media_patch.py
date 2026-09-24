@@ -181,6 +181,13 @@ def install(bot):
             print(f"media received type={input_type} mime={mime_type} bytes={len(file_bytes)} filename={filename}", flush=True)
 
             if input_type == "input_file":
+                from telegram_billing import validate_paid_pdf
+                from billing import BillingError
+                try:
+                    await asyncio.to_thread(validate_paid_pdf, update.effective_user.id, file_bytes)
+                except BillingError as error:
+                    await update.message.reply_text(str(error), reply_markup=bot.MENU)
+                    return
                 encoded = base64.b64encode(file_bytes).decode("ascii")
                 media_parts = [{"type": "input_file", "filename": filename, "file_data": f"data:{mime_type};base64,{encoded}"}]
             else:
@@ -195,12 +202,14 @@ def install(bot):
                 "content": media_parts + [{"type": "input_text", "text": user_request}],
             }]
 
-            response = await asyncio.to_thread(
-                bot.client.responses.create,
+            from telegram_billing import generate
+            response = await generate(update, bot.client, kind='document',
                 model="gpt-5.6-sol",
                 instructions=instructions,
                 input=response_input,
             )
+            if response is None:
+                return
             answer = (response.output_text or "").strip()
             print(f"media model response chars={len(answer)}", flush=True)
             if not answer:

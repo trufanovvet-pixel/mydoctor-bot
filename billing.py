@@ -23,9 +23,18 @@ ORDER_STATES = {'awaiting': 'Ожидает перевода', 'review': 'Про
                 'rejected': 'Оплата не подтверждена', 'cancelled': 'Отменено'}
 TRIAL_CREDITS = 5
 CARD_TRANSFERS = {
-    'mir': {'name': 'Перевод на карту Мир', 'currencies': ('RUB',), 'default_currency': 'RUB'},
-    'mastercard': {'name': 'Перевод на Mastercard', 'currencies': ('BYN', 'KZT', 'USD', 'RUB', 'EUR'), 'default_currency': 'BYN'},
+    'mir': {'name': 'Российская карта', 'aliases': ('Перевод на карту Мир',), 'mark': 'Карта', 'currencies': ('RUB',), 'default_currency': 'RUB'},
+    'sbp': {'name': 'СБП', 'mark': 'СБП', 'currencies': ('RUB',), 'default_currency': 'RUB'},
+    'mastercard': {'name': 'Перевод на Mastercard', 'mark': 'Mastercard', 'currencies': ('BYN', 'KZT', 'USD', 'RUB', 'EUR'), 'default_currency': 'BYN'},
 }
+
+
+def route_names(route):
+    return (route['name'], *route.get('aliases', ()))
+
+
+def method_route(name):
+    return next((v for v in CARD_TRANSFERS.values() if name in route_names(v)), None)
 
 
 def init_schema():
@@ -81,7 +90,7 @@ class PaymentMethodPrice(storage.Base):
 def method_prices(db, method):
     if not method or not method.instructions.strip():
         return {}
-    route = next((v for v in CARD_TRANSFERS.values() if v['name'] == method.name), None)
+    route = method_route(method.name)
     if not route or method.currency not in route['currencies']:
         return {}
     if method.currency == 'RUB':
@@ -93,7 +102,7 @@ def method_prices(db, method):
 def card_methods(db, include_disabled=False):
     result = {}
     for key, route in CARD_TRANSFERS.items():
-        method = db.scalar(select(PaymentMethod).where(PaymentMethod.name == route['name']).order_by(PaymentMethod.id.desc()).limit(1))
+        method = db.scalar(select(PaymentMethod).where(PaymentMethod.name.in_(route_names(route))).order_by(PaymentMethod.id.desc()).limit(1))
         prices = method_prices(db, method)
         if method and (include_disabled or (method.enabled and prices)):
             result[key] = {'method': method, 'prices': prices}
@@ -118,7 +127,7 @@ def save_card_method(route_key, currency, instructions, amounts):
         # Serialize settings changes. Existing orders keep their own receiving details and price.
         if db.bind.dialect.name == 'postgresql':
             db.execute(sql_text('SELECT pg_advisory_xact_lock(:key)'), {'key': 728190424})
-        db.execute(update(PaymentMethod).where(PaymentMethod.name == route['name']).values(enabled=False))
+        db.execute(update(PaymentMethod).where(PaymentMethod.name.in_(route_names(route))).values(enabled=False))
         method = PaymentMethod(name=route['name'], currency=currency, instructions=instructions)
         db.add(method)
         db.flush()

@@ -143,12 +143,11 @@ async def ask_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
     history[:] = history[-MAX_MESSAGES:]
 
     instructions = SYSTEM_PROMPT + "\n\nДанные активного питомца:\n" + pet_summary(active)
-    response = await asyncio.to_thread(
-        client.responses.create,
-        model="gpt-5.6-sol",
-        instructions=instructions,
-        input=history,
-    )
+    from telegram_billing import generate
+    response = await generate(update, client,
+        model="gpt-5.6-sol", instructions=instructions, input=history)
+    if response is None:
+        return
     answer = (response.output_text or "").strip()
     if not answer:
         raise ValueError("empty AI response")

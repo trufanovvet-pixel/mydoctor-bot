@@ -1,4 +1,4 @@
-<p class="page-lead">{{t('Пакеты для AI-помощника на сайте и в веб-приложении. Консультации врача оплачиваются отдельно.')}}</p>
+<p class="page-lead">{{t('Пакеты для AI-помощника. Консультации врача оплачиваются отдельно.')}}</p>
 <div class="billing-stats">
   <div class="panel"><span>{{t('Доступно баллов')}}</span><strong>{{info.balance if info.metered else '—'}}</strong><small>{{t('Тестовый доступ без списаний') if not info.metered else t('Общий доступный остаток')}}</small>{% if info.reserved %}<small>{{t('Обрабатывается:')}} {{info.reserved}}</small>{% endif %}</div>
   <div class="panel"><span>{{t('Выполнено AI-запросов')}}</span><strong>{{info.requests}}</strong><small>{{t('С момента включения учёта')}}</small></div>
@@ -8,14 +8,14 @@
 <h2>{{t('Как вам удобно перевести?')}}</h2>
 <nav class="billing-transfers" aria-label="{{t('Способ оплаты')}}">{% for key,route in card_transfers.items() %}
   <a class="billing-transfer {{'selected' if selected_transfer==key}}" href="{{url_for('billing_page',transfer=key)}}" {% if selected_transfer==key %}aria-current="true"{% endif %}>
-    <span class="billing-card-mark {{key}}" aria-hidden="true">{{'МИР' if key=='mir' else 'Mastercard'}}</span>
+    <span class="billing-card-mark {{key}}" aria-hidden="true">{{t(route.mark)}}</span>
     <strong>{{t(route.name)}}</strong><small>{{methods[key].method.currency if key in methods else t('Скоро')}}</small>
   </a>
 {% endfor %}</nav>
 <p class="muted">{{t('Перевод выполняется в приложении вашего банка. После перевода нажмите «Я оплатил».')}}</p>
 {% set selected=methods.get(selected_transfer) %}
 <div class="billing-plans">{% for key,plan in plans.items() %}<article class="panel billing-plan">
-  <h2>{{t(plan.name)}}</h2><p class="billing-price">{% if selected %}{{money(selected.prices[key],selected.method.currency)}}{% elif selected_transfer=='mir' %}{{money(plan.RUB,'RUB')}}{% else %}—{% endif %}</p><p><strong>{{plan.credits}} {{t('баллов на 30 дней')}}</strong></p>
+  <h2>{{t(plan.name)}}</h2><p class="billing-price">{% if selected %}{{money(selected.prices[key],selected.method.currency)}}{% elif selected_transfer in ('mir','sbp') %}{{money(plan.RUB,'RUB')}}{% else %}—{% endif %}</p><p><strong>{{plan.credits}} {{t('баллов на 30 дней')}}</strong></p>
   <p class="muted">{{t('Вопрос помощнику — 1 балл. Разбор фото или PDF до 5 страниц — 5 баллов.')}}</p>
   {% if sales and selected %}<form action="/billing/orders" method="post">
     <input type="hidden" name="billing_csrf" value="{{billing_csrf}}"><input type="hidden" name="request_key" value="{{request_key}}-{{key}}"><input type="hidden" name="plan" value="{{key}}">
@@ -24,7 +24,7 @@
   </form>{% else %}<span class="badge">{{t('Скоро')}}</span>{% endif %}
 </article>{% endfor %}</div>
 <p class="muted">{{t('Срок каждого пакета начинается после подтверждения оплаты. Неиспользованные баллы этого пакета истекают через 30 дней. Автоматических списаний денег нет.')}}</p>
-<p class="muted">{{t('Telegram пока работает отдельно в тестовом режиме. Его обращения не расходуют баллы сайта.')}}</p>
+<p class="muted">{{t('При входе по ссылке из бота баланс общий с Telegram. Аккаунт, созданный отдельно по почте, имеет свой баланс.')}}</p>
 {% if info.grants %}<h2>{{t('Мои пакеты')}}</h2><div class="record-list">{% for grant in info.grants %}<div class="record-row"><div><strong>{{t('Пробные баллы') if grant.origin.startswith('trial:') else t('Оплаченный пакет')}}</strong><small>{{grant.created_at.strftime('%d.%m.%Y')}}{% if grant.expires_at %} · {{t('До')}} {{grant.expires_at.strftime('%d.%m.%Y %H:%M')}} UTC{% endif %}</small></div><span>{{t('Срок истёк') if grant.expires_at and grant.expires_at<=now else (grant.remaining|string)+' / '+(grant.total|string)}}</span></div>{% endfor %}</div>{% endif %}
 <h2>{{t('Мои оплаты')}}</h2><div class="record-list">{% for order in orders %}<a class="record-row" href="{{url_for('billing_order',oid=order.id)}}"><div><strong>{{t(plans[order.plan].name)}} · {{money(order.amount_minor,order.currency)}}</strong><small>{{order.created_at.strftime('%d.%m.%Y %H:%M')}} UTC · {{t(order.method_name)}}</small></div><span>{{t(order_states[order.status])}} →</span></a>{% else %}<div class="empty">{{t('Платежей пока нет.')}}</div>{% endfor %}</div>
 <h2>{{t('История расхода баллов')}}</h2><div class="record-list">{% for item in usage %}<div class="record-row"><div><strong>{{t('Вопрос помощнику') if item.kind=='chat' else t('Разбор документа')}}</strong><small>{{item.created_at.strftime('%d.%m.%Y %H:%M')}} UTC</small></div><span>{% if item.status=='success' %}{{item.credits}} {{t('баллов')}}{% elif item.status=='pending' %}{{t('Обрабатывается')}}{% else %}{{t('Не списано: ошибка')}}{% endif %}</span></div>{% else %}<div class="empty">{{t('Здесь будут видны ваши обращения и списания.')}}</div>{% endfor %}</div>

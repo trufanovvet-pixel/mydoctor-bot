@@ -290,12 +290,14 @@ def install_features(bot):
         instructions = bot.SYSTEM_PROMPT + "\n\nДанные активного питомца:\n" + bot.pet_summary(pet)
 
         try:
-            response = await asyncio.to_thread(
-                bot.client.responses.create,
+            from telegram_billing import generate
+            response = await generate(update, bot.client,
                 model="gpt-5.6-sol",
                 instructions=instructions,
                 input=history,
             )
+            if response is None:
+                return
             answer = response.output_text.strip()
             if not answer:
                 answer = "Не удалось сформировать ответ. Пожалуйста, повторите сообщение."

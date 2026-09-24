@@ -12,6 +12,7 @@ from patient_records import plain_text, CATEGORIES, DocumentLabel, classify_docu
 from web_i18n import t, ai_language
 import math
 import billing
+import telegram_billing
 
 app=Flask(__name__,template_folder="web_templates",static_folder="web_static",static_url_path="/static")
 app.secret_key=os.getenv("FLASK_SECRET_KEY",secrets.token_hex(32))
@@ -330,6 +331,8 @@ import doctor_portal
 doctor_portal.install(app, WebDocument)
 import web_billing
 web_billing.install(app, WebAccount)
+import web_auth
+web_auth.install(app)
 import consultation_chat
 consultation_chat.install(app)
 
