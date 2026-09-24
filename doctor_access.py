@@ -16,7 +16,7 @@ REMEMBER_SECONDS = 30 * 24 * 60 * 60
 
 def doctor_destination(value):
     """Only supported doctor pages may be used as a login return address."""
-    return value if isinstance(value,str) and re.fullmatch(r'/doctor(?:/|/dashboard|/account|/requests/[1-9]\d*|/clients(?:/[1-9]\d*)?|/payments(?:/[a-f0-9]{32})?|/install)?',value) else '/doctor'
+    return value if isinstance(value,str) and re.fullmatch(r'/doctor(?:/|/dashboard|/account|/ai|/requests/[1-9]\d*|/clients(?:/[1-9]\d*)?|/payments(?:/[a-f0-9]{32})?|/install)?',value) else '/doctor'
 
 
 class DoctorWebAccount(storage.Base):
