@@ -98,7 +98,10 @@ def pet_context(db,user,text):
     return f"Пользователь явно спрашивает об этом питомце. Имя: {pet.name}; вид: {pet.species}; порода: {pet.breed or 'не указана'}; возраст: {pet.age or 'не указан'}; пол: {pet.sex or 'не указан'}; вес: {pet.weight_kg if pet.weight_kg is not None else 'не указан'} кг."
 
 @app.get("/")
-def home(): return render_template("index.html",logged=bool(session.get("uid")))
+def home():
+    if app.extensions['doctor_identity']():
+        return redirect('/doctor')
+    return render_template("index.html",logged=bool(session.get("uid")))
 
 @app.route("/register",methods=["GET","POST"])
 def register():
@@ -126,14 +129,25 @@ def login():
     if request.method=='GET' and web_account(): return redirect(login_destination())
     if request.method=="POST":
         email=(request.form.get("email") or "").strip().lower();password=request.form.get("password") or ""
+        from doctor_access import allow_doctor_password_attempt
+        if not allow_doctor_password_attempt(email):
+            flash('Слишком много попыток. Повторите через 15 минут.')
+            return render_template('auth.html', mode='login'), 429
         with storage.SessionLocal() as db:
             acc=db.scalar(select(WebAccount).where(WebAccount.email==email))
             if acc and check_password_hash(acc.password_hash,password):
                 from web_push import revoke_browser_subscriptions
                 revoke_browser_subscriptions('owner')
+                from doctor_access import revoke_current_doctor_session, DOCTOR_COOKIE
+                revoke_current_doctor_session()
                 session["uid"]=acc.user_id
                 session.permanent=request.form.get('remember')=='1'
-                return redirect(login_destination())
+                from doctor_access import establish_doctor_session
+                if establish_doctor_session(acc.user_id, session.permanent):
+                    return redirect('/doctor')
+                response = redirect(login_destination())
+                response.delete_cookie(DOCTOR_COOKIE, secure=True, httponly=True, samesite='Lax', path='/')
+                return response
         flash("Неверный email или пароль.")
     return render_template("auth.html",mode="login")
 

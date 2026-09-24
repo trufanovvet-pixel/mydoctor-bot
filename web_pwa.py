@@ -10,7 +10,7 @@ from web_i18n import t
 
 
 @lru_cache(maxsize=8)
-def icon_png(size, badge=False):
+def icon_png(size, badge=False, doctor=False):
     # Reuse the site's paw mark, drawn at 4x resolution for crisp launcher icons.
     scale = size * 4
     canvas = Image.new('RGBA', (scale, scale), (0, 0, 0, 0) if badge else '#008486')
@@ -21,6 +21,10 @@ def icon_png(size, badge=False):
     for box in ((.24, .35, .37, .52), (.38, .24, .49, .44),
                 (.53, .24, .64, .44), (.68, .35, .79, .52)):
         ellipse(box)
+    if doctor:
+        draw.ellipse((scale*.62, scale*.62, scale*.96, scale*.96), fill='#07585b')
+        draw.rectangle((scale*.76, scale*.67, scale*.82, scale*.91), fill='white')
+        draw.rectangle((scale*.67, scale*.76, scale*.91, scale*.82), fill='white')
     canvas = canvas.resize((size, size), Image.Resampling.LANCZOS)
     output = io.BytesIO(); canvas.save(output, 'PNG')
     return output.getvalue()
@@ -33,26 +37,31 @@ def install(app):
         doctor = request.path == '/doctor.webmanifest'
         english = request.args.get('lang') == 'en'
         name = 'MyDoctor' if english else 'МойДоктор'
-        if doctor: name += ' · ' + ('Doctor' if english else 'Врач')
+        if doctor: name = 'MyDoctor Doctor' if english else 'Мой доктор Врач'
         response = jsonify(
             id='/doctor' if doctor else '/', name=name, short_name=name,
-            lang='en' if english else 'ru', start_url='/doctor' if doctor else '/dashboard',
-            scope='/', display='standalone', background_color='#f2f8fb', theme_color='#008486',
+            lang='en' if english else 'ru', start_url='/doctor/dashboard' if doctor else '/dashboard',
+            scope='/doctor' if doctor else '/', display='standalone', background_color='#f2f8fb', theme_color='#008486',
             description=('Your veterinary practice' if doctor else 'Your pet’s health in one place') if english
                         else ('Кабинет ветеринарного врача' if doctor else 'Здоровье питомца в одном месте'),
-            icons=[dict(src=f'/app-icon/{size}.png', sizes=f'{size}x{size}', type='image/png', purpose='any maskable')
+            icons=[dict(src=f'/app-icon/{"doctor/" if doctor else ""}{size}.png', sizes=f'{size}x{size}', type='image/png', purpose='any maskable')
                    for size in (192, 512)],
             shortcuts=[dict(name=('Owner records' if english else 'Картотека владельцев') if doctor
                             else ('Messages' if english else 'Переписка с врачом'),
                             url='/doctor/clients' if doctor else '/messages')])
         response.mimetype = 'application/manifest+json'
-        response.headers['Cache-Control'] = 'public, max-age=3600'
+        response.headers['Cache-Control'] = 'no-cache'
         return response
 
     @app.get('/app-icon/<int:size>.png')
     def app_icon(size):
         if size not in (96, 180, 192, 512): abort(404)
         return send_file(io.BytesIO(icon_png(size, badge=size == 96)), mimetype='image/png', max_age=86400)
+
+    @app.get('/app-icon/doctor/<int:size>.png')
+    def doctor_app_icon(size):
+        if size not in (180, 192, 512): abort(404)
+        return send_file(io.BytesIO(icon_png(size, doctor=True)), mimetype='image/png', max_age=86400)
 
     @app.get('/service-worker.js')
     def service_worker():
@@ -65,8 +74,6 @@ def install(app):
     @app.get('/doctor/install')
     def install_app_page():
         doctor = request.path.startswith('/doctor/')
-        if doctor and not app.extensions['doctor_identity']():
-            return redirect(url_for('doctor_login', next='/doctor/install'))
         if doctor:
             import secrets
             session.setdefault('doctor_csrf', secrets.token_urlsafe(32))

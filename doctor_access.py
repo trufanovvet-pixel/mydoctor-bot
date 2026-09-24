@@ -6,7 +6,7 @@ import re
 import secrets
 from urllib.parse import urlencode
 from datetime import datetime, timedelta
-from sqlalchemy import BigInteger, DateTime, String, select, update
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Integer, String, delete, func, select, update
 from sqlalchemy.orm import Mapped, mapped_column
 import storage
 
@@ -16,7 +16,75 @@ REMEMBER_SECONDS = 30 * 24 * 60 * 60
 
 def doctor_destination(value):
     """Only supported doctor pages may be used as a login return address."""
-    return value if isinstance(value,str) and re.fullmatch(r'/doctor(?:/requests/[1-9]\d*|/clients(?:/[1-9]\d*)?|/payments(?:/[a-f0-9]{32})?|/install)?',value) else '/doctor'
+    return value if isinstance(value,str) and re.fullmatch(r'/doctor(?:/|/dashboard|/account|/requests/[1-9]\d*|/clients(?:/[1-9]\d*)?|/payments(?:/[a-f0-9]{32})?|/install)?',value) else '/doctor'
+
+
+class DoctorWebAccount(storage.Base):
+    """An existing web account explicitly linked after administrator authentication."""
+    __tablename__ = 'doctor_web_accounts'
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), primary_key=True)
+    telegram_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class DoctorLoginAttempt(storage.Base):
+    __tablename__ = 'doctor_login_attempts'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    subject: Mapped[str] = mapped_column(String(64), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+
+def allow_doctor_password_attempt(email):
+    """Shared by workers, independent of cookies; never store passwords or raw email."""
+    cutoff = datetime.utcnow() - timedelta(minutes=15)
+    subject = hashed(email.strip().lower())
+    with storage.SessionLocal() as db:
+        db.execute(delete(DoctorLoginAttempt).where(DoctorLoginAttempt.created_at < cutoff))
+        count = db.scalar(select(func.count()).select_from(DoctorLoginAttempt).where(DoctorLoginAttempt.subject == subject))
+        if count >= 10:
+            db.commit()
+            return False
+        db.add(DoctorLoginAttempt(subject=subject))
+        db.commit()
+        return True
+
+
+def revoke_current_doctor_session():
+    from flask import request, session
+    grants = {value for value in (request.cookies.get(DOCTOR_COOKIE), session.get('doctor_grant')) if value}
+    if grants:
+        with storage.SessionLocal() as db:
+            db.execute(update(DoctorAccess).where(DoctorAccess.session_digest.in_([hashed(value) for value in grants]))
+                       .values(session_expires_at=datetime.utcnow()))
+            db.commit()
+    session.pop('doctor_grant', None)
+    session.pop('doctor_csrf', None)
+
+
+def account_doctor_identity(uid):
+    if not uid:
+        return None
+    from notification_patch import _admin_user_id
+    admin = _admin_user_id()
+    with storage.SessionLocal() as db:
+        user = db.get(storage.User, uid)
+        binding = db.get(DoctorWebAccount, uid)
+        # Telegram IDs are server-owned; email/name/phone are never sufficient proof.
+        if user and (user.telegram_id == admin or (binding and binding.telegram_id == admin)):
+            return admin
+    return None
+
+
+def establish_doctor_session(uid, remember=False):
+    """Issue the same revocable grant as Telegram, only after password verification."""
+    from flask import session
+    actor = account_doctor_identity(uid)
+    if not actor:
+        return False
+    token = create_doctor_link(actor)
+    session['doctor_grant'] = consume_doctor_link(token, remember=remember)
+    session['doctor_csrf'] = secrets.token_urlsafe(32)
+    return True
 
 
 def telegram_login_url(target):

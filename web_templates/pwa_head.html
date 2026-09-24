@@ -1,10 +1,10 @@
 <meta name="theme-color" content="#008486">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="{{t('МойДоктор')}}">
+<meta name="apple-mobile-web-app-title" content="{{t('Мой доктор Врач') if request.path.startswith('/doctor') else t('МойДоктор')}}">
 <meta name="mydoctor-push-role" content="{{'doctor' if request.path.startswith('/doctor') and is_doctor else 'owner' if session.get('uid') else ''}}">
 <link rel="manifest" href="{{'/doctor.webmanifest' if request.path.startswith('/doctor') else '/manifest.webmanifest'}}?lang={{language}}">
-<link rel="apple-touch-icon" sizes="180x180" href="/app-icon/180.png">
+<link rel="apple-touch-icon" sizes="180x180" href="{{'/app-icon/doctor/180.png' if request.path.startswith('/doctor') else '/app-icon/180.png'}}">
 <link rel="icon" type="image/png" sizes="192x192" href="/app-icon/192.png">
 <link rel="stylesheet" href="/static/pwa.css?v=20260923-app1">
-<script src="/static/pwa.js?v=20260923-app1" defer></script>
+<script src="/static/pwa.js?v=20260924-doctor2" defer></script>

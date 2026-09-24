@@ -2,6 +2,10 @@
   'use strict';
   const t = text => window.uiText ? window.uiText(text) : text;
   const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  // iOS may remember the page used for Add to Home Screen, not manifest.start_url.
+  if (standalone() && location.pathname === '/doctor/install') {
+    location.replace('/doctor/dashboard'); return;
+  }
   let installPrompt = null;
   const installButton = document.querySelector('[data-install-button]');
   const installStatus = document.querySelector('[data-install-status]');
@@ -46,7 +50,10 @@
     status('Этот браузер не поддерживает установку и уведомления. Откройте сайт в обновлённом браузере.'); return;
   }
   const ready = navigator.serviceWorker.register('/service-worker.js', {scope: '/', updateViaCache: 'none'})
-    .then(() => Promise.race([navigator.serviceWorker.ready, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 15000))]));
+    .then(registration => {
+      registration.update().catch(() => {});
+      return Promise.race([navigator.serviceWorker.ready, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 15000))]);
+    });
   // Registration errors must not affect the rest of the site.
   ready.catch(() => status('Не удалось подготовить приложение. Проверьте интернет и обновите страницу.'));
   if (!setup || !pushButton) {

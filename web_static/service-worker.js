@@ -1,5 +1,5 @@
 'use strict';
-const CACHE = 'mydoctor-public-app-v1';
+const CACHE = 'mydoctor-public-app-v2';
 const OFFLINE = '/static/offline.html';
 const PUBLIC_ASSETS = new Set([OFFLINE, '/app-icon/192.png', '/app-icon/512.png', '/app-icon/96.png']);
 self.addEventListener('install', event => {

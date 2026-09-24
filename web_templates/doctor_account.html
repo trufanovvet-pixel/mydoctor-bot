@@ -1,0 +1,10 @@
+<section class="panel doctor-login">
+<h2>{{t('Привязать существующий аккаунт')}}</h2>
+<p>{{t('Telegram уже подтвердил ваш доступ врача. Укажите email и пароль вашего существующего аккаунта МойДоктор. После привязки вы сможете входить прямо в приложении врача, без перехода в Telegram. Данные и питомцы сохранятся.')}}</p>
+{% if error %}<p class="notice" role="alert">{{t(error)}}</p>{% endif %}
+<form method="post">
+<input type="hidden" name="doctor_csrf" value="{{doctor_csrf}}">
+<label>Email<input type="email" name="email" autocomplete="username" required></label>
+<label>{{t('Пароль')}}<input type="password" name="password" autocomplete="current-password" required></label>
+<button>{{t('Подтвердить мой аккаунт врача')}}</button>
+</form></section>

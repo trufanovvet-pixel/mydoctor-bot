@@ -44,11 +44,12 @@ def enable(client, role='owner', value=None):
 def test_installation_entrypoints_icons_and_private_cache_policy():
     reset_db(); anon = web_app.app.test_client()
     assert anon.get('/install').status_code == 200
-    assert anon.get('/doctor/install').status_code == 302
+    assert anon.get('/doctor/install').status_code == 200
     owner_manifest = anon.get('/manifest.webmanifest').json
     doctor_manifest = anon.get('/doctor.webmanifest').json
     assert owner_manifest['display'] == 'standalone'
-    assert owner_manifest['start_url'] == '/dashboard' and doctor_manifest['start_url'] == '/doctor'
+    assert owner_manifest['start_url'] == '/dashboard' and doctor_manifest['start_url'] == '/doctor/dashboard'
+    assert doctor_manifest['scope'] == '/doctor'
     assert owner_manifest['id'] != doctor_manifest['id']
     assert anon.get('/manifest.webmanifest?lang=en').json['name'] == 'MyDoctor'
     for icon in owner_manifest['icons']:

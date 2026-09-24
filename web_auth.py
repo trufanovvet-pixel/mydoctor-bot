@@ -74,10 +74,15 @@ def install(app):
                     abort(410)
                 from web_push import revoke_browser_subscriptions
                 revoke_browser_subscriptions('owner')
+                from doctor_access import revoke_current_doctor_session, establish_doctor_session, DOCTOR_COOKIE
+                revoke_current_doctor_session()
                 session.clear()
                 session['uid'] = uid
                 session.permanent = request.form.get('remember') == '1'
+                if establish_doctor_session(uid, session.permanent) and target == '/dashboard':
+                    destination = '/doctor'
                 response = redirect(destination, code=303)
+                response.delete_cookie(DOCTOR_COOKIE, secure=True, httponly=True, samesite='Lax', path='/')
             elif session.get('uid') == uid:
                 response = redirect(destination, code=303)
             else:

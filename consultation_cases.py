@@ -7,7 +7,8 @@ from patient_records import OperationAttachment, OperationRecord
 
 TYPES={'primary':'Первичная консультация','followup':'Повторная консультация'}
 STATUSES={'new':'Новая','contacting':'Согласовываем время','awaiting_payment':'Ожидает оплаты',
-          'confirmed':'Запись подтверждена','completed':'Завершена','cancelled':'Отменена'}
+          'confirmed':'Запись подтверждена','accepted':'Принята','in_progress':'В работе',
+          'waiting_client':'Ожидает ответа клиента','completed':'Завершена','cancelled':'Отменена'}
 
 
 class ConsultationCase(storage.Base):

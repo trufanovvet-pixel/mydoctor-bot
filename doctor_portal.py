@@ -7,7 +7,7 @@ from sqlalchemy import select,func,or_,update
 import storage
 from consultation_cases import ConsultationCase,RequestStatusEvent,RequestAttachment,STATUSES,TYPES,request_files,attachment_content
 from owner_profile import ConsultationContact
-from doctor_access import DoctorAccess,consume_doctor_link,doctor_identity,hashed,doctor_destination,telegram_login_url,DOCTOR_COOKIE,REMEMBER_SECONDS
+from doctor_access import DoctorAccess,DoctorWebAccount,consume_doctor_link,doctor_identity,hashed,doctor_destination,telegram_login_url,DOCTOR_COOKIE,REMEMBER_SECONDS,establish_doctor_session
 from web_i18n import t
 from consultation_chat import ConsultationMessage, MessageFile, thread_context, unread_counts
 
@@ -56,12 +56,54 @@ def install(app,WebDocument):
         response.headers['Referrer-Policy']='no-referrer'
         return response
 
-    @app.get('/doctor/login')
+    @app.route('/doctor/login', methods=['GET', 'POST'])
     def doctor_login():
         if request.args.get('next'):
             session['doctor_next']=doctor_destination(request.args['next'])
         if identity():return redirect(doctor_destination(session.pop('doctor_next',None)))
+        if request.method == 'POST':
+            check_csrf()
+            from web_app import WebAccount
+            from werkzeug.security import check_password_hash
+            email = request.form.get('email', '').strip().lower()
+            from doctor_access import allow_doctor_password_attempt
+            if not allow_doctor_password_attempt(email):
+                return render('doctor_login', 'Вход для врача', error='Слишком много попыток. Повторите через 15 минут.'), 429
+            with storage.SessionLocal() as db:
+                account = db.scalar(select(WebAccount).where(WebAccount.email == email))
+                valid = account and check_password_hash(account.password_hash, request.form.get('password', ''))
+                if valid and establish_doctor_session(account.user_id, request.form.get('remember') == '1'):
+                    from web_push import revoke_browser_subscriptions
+                    revoke_browser_subscriptions('owner')
+                    session['uid'] = account.user_id
+                    session.permanent = request.form.get('remember') == '1'
+                    return redirect(doctor_destination(session.pop('doctor_next', None)), code=303)
+            return render('doctor_login', 'Вход для врача', error='Не удалось войти. Проверьте данные и доступ врача. Для первого входа используйте Telegram.'), 403
         return render('doctor_login','Вход для врача')
+
+    @app.route('/doctor/account', methods=['GET', 'POST'])
+    @require_doctor
+    def doctor_account():
+        if request.method == 'POST':
+            check_csrf()
+            from web_app import WebAccount
+            from werkzeug.security import check_password_hash
+            from doctor_access import allow_doctor_password_attempt
+            if not allow_doctor_password_attempt(request.form.get('email', '')):
+                return render('doctor_account', 'Вход врача по email', error='Слишком много попыток. Повторите через 15 минут.'), 429
+            with storage.SessionLocal() as db:
+                account = db.scalar(select(WebAccount).where(WebAccount.email == request.form.get('email', '').strip().lower()))
+                if not account or not check_password_hash(account.password_hash, request.form.get('password', '')):
+                    return render('doctor_account', 'Вход врача по email', error='Неверный email или пароль существующего аккаунта.'), 400
+                binding = db.get(DoctorWebAccount, account.user_id)
+                if not binding:
+                    db.add(DoctorWebAccount(user_id=account.user_id, telegram_id=identity()))
+                else:
+                    binding.telegram_id = identity()
+                db.commit()
+            flash('Аккаунт подтверждён. В приложении врача теперь можно войти с этим email и паролем.')
+            return redirect('/doctor', code=303)
+        return render('doctor_account', 'Вход врача по email')
 
     @app.get('/doctor/access/<token>')
     def doctor_access_preview(token):
@@ -102,6 +144,8 @@ def install(app,WebDocument):
         response.delete_cookie(DOCTOR_COOKIE,secure=True,httponly=True,samesite='Lax',path='/')
         return response
 
+    @app.get('/doctor/dashboard')
+    @app.get('/doctor/')
     @app.get('/doctor')
     @require_doctor
     def doctor_dashboard():
@@ -140,7 +184,7 @@ def install(app,WebDocument):
                 notes=request.form.get('doctor_notes','').strip()
                 error=None;code=400
                 if status not in STATUSES:error='Выберите статус заявки.'
-                elif status in ('confirmed','completed') and not paid:error='Сначала подтвердите получение оплаты.'
+                elif status in ('confirmed','in_progress','completed') and not paid:error='Сначала подтвердите получение оплаты.'
                 elif len(notes)>10000:error='Заметка должна быть не длиннее 10000 символов.'
                 elif request.form.get('version',type=int)!=(case.version if case else 0):error='Заявка уже изменена. Обновите страницу перед сохранением.';code=409
                 if error:

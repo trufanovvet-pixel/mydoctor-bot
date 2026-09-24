@@ -1,6 +1,14 @@
 <div class="panel doctor-login">
 <h2>{{t('Заявки и документы ваших пациентов')}}</h2>
 {% if error %}<div class="notice" role="alert">{{t(error)}}</div>{% endif %}
+<form method="post" action="/doctor/login">
+<input type="hidden" name="doctor_csrf" value="{{doctor_csrf}}">
+<label>Email<input type="email" name="email" autocomplete="username" required></label>
+<label>{{t('Пароль')}}<input type="password" name="password" autocomplete="current-password" required></label>
+<label class="check-row"><input type="checkbox" name="remember" value="1" checked><span>{{t('Запомнить это устройство на 30 дней')}}</span></label>
+<button>{{t('Войти в кабинет врача')}}</button></form>
+<p class="muted">{{t('Вход по email доступен после привязки существующего аккаунта в кабинете врача. Для первого входа подтвердите Telegram.')}}</p>
+<a href="/doctor/install">{{t('Установить приложение врача')}}</a>
 <p>{{t('Подтвердите вход через свой Telegram. Вводить команды не нужно.')}}</p>
 {% if telegram_url %}<a class="btn" href="{{telegram_url}}">{{t('Войти через Telegram')}}</a>{% else %}<p class="notice">{{t('Подключение входа через Telegram. Обновите страницу через минуту.')}}</p>{% endif %}
 <p class="muted">{{t('В Telegram нажмите «Запустить», если появится эта кнопка, затем откройте ссылку от бота. Она вернёт вас к выбранной заявке.')}}</p>
