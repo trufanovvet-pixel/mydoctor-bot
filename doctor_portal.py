@@ -1,4 +1,5 @@
 import io
+import os
 import secrets
 from datetime import datetime
 from functools import wraps
@@ -14,6 +15,21 @@ from consultation_chat import ConsultationMessage, MessageFile, thread_context, 
 
 def install(app,WebDocument):
     storage.Base.metadata.create_all(storage.engine)
+
+    @app.before_request
+    def canonical_doctor_origin():
+        # Only the two known aliases of THIS service; never trust Host as a target.
+        canonical = os.getenv('MYDOCTOR_CANONICAL_ORIGIN', '').rstrip('/')
+        aliases = {'mydoctor-web-production.up.railway.app', 'mydoctor-web-production-a7e2.up.railway.app'}
+        if canonical == 'https://mydoctor.vet' and request.host in aliases and request.path.startswith('/doctor'):
+            if request.method in ('GET', 'HEAD'):
+                response = redirect(canonical + request.full_path.rstrip('?'), code=302)
+            else:
+                # Never forward credentials or mutations across origins.
+                response = redirect(canonical + '/doctor/login', code=303)
+            response.headers['Cache-Control'] = 'private, no-store'
+            response.headers['Referrer-Policy'] = 'no-referrer'
+            return response
 
     def identity():
         if not hasattr(g,'doctor_identity'):
@@ -47,6 +63,10 @@ def install(app,WebDocument):
     def check_csrf():
         if not secrets.compare_digest(request.form.get('doctor_csrf',''),csrf()):abort(400)
 
+    def login_csrf_valid():
+        return bool(session.get('doctor_csrf')) and secrets.compare_digest(
+            request.form.get('doctor_csrf', ''), session['doctor_csrf'])
+
     def render(page,title,**kw):
         if page=='doctor_login':
             target=doctor_destination(session.get('doctor_next'))
@@ -62,7 +82,8 @@ def install(app,WebDocument):
             session['doctor_next']=doctor_destination(request.args['next'])
         if identity():return redirect(doctor_destination(session.pop('doctor_next',None)))
         if request.method == 'POST':
-            check_csrf()
+            if not login_csrf_valid():
+                return render('doctor_login', 'Вход для врача', error='Форма входа обновлена после смены сеанса. Введите email и пароль ещё раз.'), 400
             from web_app import WebAccount
             from werkzeug.security import check_password_hash
             email = request.form.get('email', '').strip().lower()
@@ -78,6 +99,10 @@ def install(app,WebDocument):
                     session['uid'] = account.user_id
                     session.permanent = request.form.get('remember') == '1'
                     return redirect(doctor_destination(session.pop('doctor_next', None)), code=303)
+                if valid:
+                    return render('doctor_login', 'Вход для врача',
+                        needs_link=True, telegram_url=telegram_login_url('/doctor/account'),
+                        error='Email и пароль верны. Этот аккаунт ещё не связан с кабинетом врача. Подтвердите Telegram, затем привяжите этот же email на следующем экране.'), 403
             return render('doctor_login', 'Вход для врача', error='Не удалось войти. Проверьте данные и доступ врача. Для первого входа используйте Telegram.'), 403
         return render('doctor_login','Вход для врача')
 
@@ -109,14 +134,21 @@ def install(app,WebDocument):
     def doctor_access_preview(token):
         # GET does not consume links, so Telegram previews cannot log a doctor out.
         target=doctor_destination(request.args.get('next',session.get('doctor_next')))
-        if identity():return redirect(target)
+        if identity():
+            with storage.SessionLocal() as db:
+                linked = db.scalar(select(DoctorWebAccount.user_id).where(DoctorWebAccount.telegram_id == identity()))
+            return redirect(target if linked else '/doctor/account')
         session['doctor_next']=target
         return render('doctor_access','Вход для врача',access_token=token,next_target=target)
 
     @app.post('/doctor/access')
     def doctor_access_accept():
-        check_csrf()
         target=doctor_destination(request.form.get('next') or session.get('doctor_next'))
+        if not login_csrf_valid():
+            # Do not consume a one-time link until a fresh, cookie-bound form is submitted.
+            return render('doctor_access', 'Вход для врача',
+                access_token=request.form.get('access_token', ''), next_target=target,
+                error='Сеанс изменился. Форма обновлена — нажмите кнопку входа ещё раз.'), 400
         session['doctor_next']=target
         remember=request.form.get('remember')=='1'
         grant=consume_doctor_link(request.form.get('access_token',''),remember=remember)
@@ -124,6 +156,12 @@ def install(app,WebDocument):
             return render('doctor_login','Вход для врача',error='Ссылка истекла или уже использована. Нажмите «Войти через Telegram», чтобы получить новую.'),400
         session['doctor_grant']=grant;session['doctor_csrf']=secrets.token_urlsafe(32)
         session.pop('doctor_next',None)
+        if request.form.get('setup_email') == '1':
+            actor = doctor_identity(grant)
+            with storage.SessionLocal() as db:
+                linked = db.scalar(select(DoctorWebAccount.user_id).where(DoctorWebAccount.telegram_id == actor)) if actor else None
+            if not linked:
+                target = '/doctor/account'
         response=redirect(target,code=303)
         response.set_cookie(DOCTOR_COOKIE,grant,max_age=REMEMBER_SECONDS if remember else None,secure=True,httponly=True,samesite='Lax',path='/')
         response.headers['Cache-Control']='private, no-store'

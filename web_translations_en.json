@@ -1,4 +1,8 @@
 {
+  "Форма входа обновлена после смены сеанса. Введите email и пароль ещё раз.": "The sign-in form was refreshed after a session change. Enter your email and password again.",
+  "Email и пароль верны. Этот аккаунт ещё не связан с кабинетом врача. Подтвердите Telegram, затем привяжите этот же email на следующем экране.": "Your email and password are correct. This account is not yet linked to the doctor portal. Verify through Telegram, then link this same email on the next screen.",
+  "Сеанс изменился. Форма обновлена — нажмите кнопку входа ещё раз.": "Your session changed. The form has been refreshed. Press the sign-in button again.",
+  "При первом входе следующим шагом подтвердите email и пароль существующего аккаунта. После этого Telegram для входа в приложение не понадобится.": "On your first sign-in, the next step is to confirm the email and password of your existing account. After that, you will not need Telegram to sign in to the app.",
   "Мой доктор Врач": "MyDoctor Doctor",
   "Принята": "Accepted",
   "В работе": "In progress",

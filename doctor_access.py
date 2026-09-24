@@ -58,7 +58,8 @@ def revoke_current_doctor_session():
                        .values(session_expires_at=datetime.utcnow()))
             db.commit()
     session.pop('doctor_grant', None)
-    session.pop('doctor_csrf', None)
+    # Keep this browser's CSRF token: switching the owner account must revoke
+    # doctor authority, but must not break an already open doctor login form.
 
 
 def account_doctor_identity(uid):
@@ -93,6 +94,7 @@ def telegram_login_url(target):
     target=doctor_destination(target)
     payload='doctor_'+target.rsplit('/',1)[1] if target.startswith('/doctor/requests/') else 'doctor_install' if target=='/doctor/install' else 'doctor'
     if target=='/doctor/payments':payload='doctor_payments'
+    elif target=='/doctor/account':payload='doctor_account'
     elif target.startswith('/doctor/payments/'):payload='doctor_payment_'+target.rsplit('/',1)[1]
     return f'https://t.me/{username}?start={payload}'
 
@@ -154,7 +156,7 @@ async def doctor_command(update,context,target='/doctor'):
             await update.message.reply_text('Заявка не найдена. Откройте кабинет врача командой /doctor.')
             return
     token=await asyncio.to_thread(create_doctor_link,update.effective_user.id)
-    base=os.getenv('MYDOCTOR_WEB_URL','https://mydoctor-web-production.up.railway.app').rstrip('/')
+    base=os.getenv('MYDOCTOR_WEB_URL','https://mydoctor.vet').rstrip('/')
     from telegram import InlineKeyboardButton,InlineKeyboardMarkup
     label='Установить приложение' if target=='/doctor/install' else 'Открыть заявку №'+target.rsplit('/',1)[1] if target.startswith('/doctor/requests/') else 'Открыть кабинет врача'
     await update.message.reply_text('Вход подтверждён через ваш Telegram. Нажмите кнопку ниже.\nНа сайте можно запомнить это устройство на 30 дней. Ссылка действует 10 минут; не пересылайте её.',
@@ -169,6 +171,8 @@ def doctor_start_handler(normal_start):
             return await doctor_command(update,context)
         if payload=='doctor_install':
             return await doctor_command(update,context,'/doctor/install')
+        if payload=='doctor_account':
+            return await doctor_command(update,context,'/doctor/account')
         if payload=='doctor_payments':
             return await doctor_command(update,context,'/doctor/payments')
         payment=re.fullmatch(r'doctor_payment_([a-f0-9]{32})',payload)
