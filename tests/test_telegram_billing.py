@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from pypdf import PdfWriter
+from PIL import Image
 from sqlalchemy import select
 
 import billing as b
@@ -171,6 +172,31 @@ async def test_insufficient_balance_blocks_provider_and_pdf_limits_do_not_charge
     pdf.write(data)
     with pytest.raises(b.BillingError): tb.validate_paid_pdf(100, data.getvalue())
     with storage.SessionLocal() as db: assert b.summary(db, tb.account_id(100))['balance'] == 0
+
+
+@pytest.mark.asyncio
+async def test_telegram_photo_analysis_uses_document_paywall_and_cannot_bypass_zero_balance(bot, update, ctx, raw):
+    setup_sbp()
+    image = Image.new('RGB', (40, 40), 'white')
+    buf = io.BytesIO(); image.save(buf, format='JPEG'); payload = buf.getvalue()
+    ctx.bot.get_file = AsyncMock(return_value=SimpleNamespace(
+        download_as_bytearray=AsyncMock(return_value=bytearray(payload))))
+
+    first = update(photo=[SimpleNamespace(file_id='photo-1', file_size=len(payload))])
+    first.message.message_id = 601
+    await bot.media(first, ctx)
+    uid = tb.account_id(100)
+    with storage.SessionLocal() as db:
+        usages = db.scalars(select(b.CreditUsage).where(b.CreditUsage.user_id == uid)).all()
+        assert len(usages) == 1 and usages[0].kind == 'document' and usages[0].credits == 5
+        assert b.summary(db, uid)['balance'] == 0
+
+    second = update(photo=[SimpleNamespace(file_id='photo-2', file_size=len(payload))])
+    second.message.message_id = 602
+    await bot.media(second, ctx)
+    assert any('Недостаточно баллов' in str(call.args[0]) for call in second.message.reply_text.call_args_list)
+    with storage.SessionLocal() as db:
+        assert len(db.scalars(select(b.CreditUsage).where(b.CreditUsage.user_id == uid)).all()) == 1
 
 
 @pytest.mark.asyncio
