@@ -34,7 +34,7 @@ def test_report_enqueues_once_and_delivery_retries():
         'action': 'report', 'reference': 'repeat'}).status_code == 303
     with storage.SessionLocal() as db:
         assert len(db.scalars(select(pn.PaymentNotice)).all()) == 1
-    app = SimpleNamespace(bot=SimpleNamespace(send_document=AsyncMock(), send_message=AsyncMock(side_effect=RuntimeError('offline'))))
+    app = SimpleNamespace(bot=SimpleNamespace(send_document=AsyncMock(side_effect=RuntimeError('offline')), send_message=AsyncMock()))
     with patch('notification_patch._admin_chat_id', return_value=123):
         asyncio.run(pn.deliver_payment_notifications(app))
     with storage.SessionLocal() as db:
@@ -49,11 +49,9 @@ def test_report_enqueues_once_and_delivery_retries():
         asyncio.run(pn.deliver_payment_notifications(app))
     app.bot.send_document.assert_awaited_once()
     document = app.bot.send_document.call_args.kwargs
-    assert document['chat_id'] == 123 and oid in document['caption']
-    app.bot.send_message.assert_awaited_once()
-    sent = app.bot.send_message.call_args.kwargs
-    assert sent['chat_id'] == 123 and '499' in sent['text'] and 'TEST payment 12:00' in sent['text']
-    assert sent['reply_markup'].inline_keyboard[0][0].callback_data == 'pay:yes:' + oid
+    assert document['chat_id'] == 123 and '499' in document['caption'] and 'TEST payment 12:00' in document['caption']
+    assert document['reply_markup'].inline_keyboard[0][0].callback_data == 'pay:yes:' + oid
+    app.bot.send_message.assert_not_awaited()
 
 
 def test_decision_admin_only_and_concurrent_confirm_exactly_once():
