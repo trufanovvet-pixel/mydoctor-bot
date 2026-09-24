@@ -205,3 +205,14 @@ async def test_navigation_and_pet_details_remain_free_after_payments_enabled(bot
     await bot.message(update('🐾 Мои питомцы'), ctx)
     assert not raw.responses.calls
     with storage.SessionLocal() as db: assert not db.scalar(select(b.CreditUsage))
+
+
+@pytest.mark.asyncio
+async def test_free_telegram_text_limit(update, ctx):
+    reset_db()
+    item=update('x'*3001)
+    client=MagicMock()
+    result=await tb.generate(item,client,kind='chat',model='gpt-5.6-sol',input=[])
+    assert result is None
+    assert '3000' in item.effective_message.reply_text.call_args.args[0]
+    client.responses.create.assert_not_called()
