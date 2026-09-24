@@ -1,8 +1,9 @@
 """Owner billing pages and doctor-only manual payment review."""
+import io
 import secrets
 from functools import wraps
 from datetime import datetime
-from flask import abort, flash, redirect, render_template, request, session, url_for
+from flask import abort, flash, redirect, render_template, request, send_file, session, url_for
 from sqlalchemy import func, select, text as sql_text
 import storage
 import billing as b
@@ -104,12 +105,29 @@ def install(app, WebAccount):
             order = db.scalar(select(b.PaymentOrder).where(b.PaymentOrder.id == oid, b.PaymentOrder.user_id == session['uid']))
             if not order:
                 abort(404)
+            receipt = db.get(b.PaymentReceipt, oid)
             if request.method == 'POST':
                 action = request.form.get('action')
                 if action == 'report' and order.status == 'awaiting':
                     reference = request.form.get('reference', '').strip()
                     if not 3 <= len(reference) <= 200:
                         flash('Укажите время перевода и имя отправителя или идентификатор транзакции.')
+                        return redirect(url_for('billing_order', oid=oid), code=303)
+                    upload = request.files.get('receipt')
+                    if upload and upload.filename:
+                        mime = (upload.mimetype or '').lower()
+                        if mime not in {'image/jpeg', 'image/png', 'image/webp', 'application/pdf'}:
+                            flash('Чек можно прикрепить как JPG, PNG, WEBP или PDF.')
+                            return redirect(url_for('billing_order', oid=oid), code=303)
+                        data = upload.read(8 * 1024 * 1024 + 1)
+                        if not data or len(data) > 8 * 1024 * 1024:
+                            flash('Файл чека должен быть не больше 8 МБ.')
+                            return redirect(url_for('billing_order', oid=oid), code=303)
+                        filename = upload.filename.replace('\\', '/').split('/')[-1][:255] or 'receipt'
+                        receipt = b.PaymentReceipt(order_id=oid, filename=filename, mime_type=mime, data=data)
+                        db.merge(receipt)
+                    elif receipt is None:
+                        flash('Прикрепите чек или скриншот перевода.')
                         return redirect(url_for('billing_order', oid=oid), code=303)
                     order.payment_reference = reference
                     order.status = 'review'
@@ -125,7 +143,22 @@ def install(app, WebAccount):
                 db.commit()
                 return redirect(url_for('billing_order', oid=oid), code=303)
             grant = db.scalar(select(b.CreditGrant).where(b.CreditGrant.origin == 'payment:' + oid))
-            return render('billing_order', 'Заявка на оплату', order=order, grant=grant)
+            return render('billing_order', 'Заявка на оплату', order=order, grant=grant, receipt=receipt)
+
+    @app.get('/billing/orders/<oid>/receipt')
+    def billing_receipt(oid):
+        doctor_id = app.extensions['doctor_identity']()
+        with storage.SessionLocal() as db:
+            order = db.get(b.PaymentOrder, oid)
+            if not order:
+                abort(404)
+            if session.get('uid') != order.user_id and not doctor_id:
+                abort(403)
+            receipt = db.get(b.PaymentReceipt, oid)
+            if not receipt:
+                abort(404)
+            return send_file(io.BytesIO(receipt.data), mimetype=receipt.mime_type,
+                             download_name=receipt.filename, as_attachment=False)
 
     @app.route('/doctor/payments', methods=['GET', 'POST'])
     @doctor
@@ -201,7 +234,8 @@ def install(app, WebAccount):
             account = db.scalar(select(WebAccount).where(WebAccount.user_id == uid))
             if request.method == 'GET':
                 grant = db.scalar(select(b.CreditGrant).where(b.CreditGrant.origin == 'payment:' + oid))
-                return render('doctor_payment', 'Проверка оплаты', order=order, owner=user, account=account, grant=grant)
+                receipt = db.get(b.PaymentReceipt, oid)
+                return render('doctor_payment', 'Проверка оплаты', order=order, owner=user, account=account, grant=grant, receipt=receipt)
         check_csrf()
         action = request.form.get('action')
         if action == 'confirm':
