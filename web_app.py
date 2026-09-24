@@ -54,6 +54,38 @@ SYSTEM="""Ты — МойДоктор, ветеринарный AI-помощн�
 Для изображений и документов сначала описывай, что действительно видно/прочитано, затем интерпретируй в контексте.
 Это помощник, а не замена физикальному осмотру и процедурам, которые невозможно выполнить онлайн."""
 
+SIMPLE_MODEL=os.getenv("MYDOCTOR_SIMPLE_MODEL","gpt-5.6-luna")
+STANDARD_MODEL=os.getenv("MYDOCTOR_STANDARD_MODEL","gpt-5.6-sol")
+MASTER_MODEL=os.getenv("MYDOCTOR_MASTER_MODEL","gpt-5.6-sol")
+
+_MASTER_TERMS=(
+    "невролог", "паралич", "парез", "судорог", "эпилеп", "мрт", "кт ", "томограф", "операц", "хирург",
+    "анастомоз", "резекц", "непроходим", "онколог", "химиотерап", "глауком", "увеит", "отслойк", "перфорац",
+    "сепсис", "шок", "политравм", "реанимац", "перелом", "тпло", "tplo", "ivdd", "межпозвон", "несколько диагноз",
+    "противореч", "не помогает лечение", "ухудш", "лекарственн взаимодейств", "взаимодействие препарат",
+)
+_STANDARD_TERMS=(
+    "рвот", "диаре", "понос", "температур", "каш", "хром", "боль", "анализ", "биохим", "оак", "оам", "узи",
+    "рентген", "назнач", "доз", "препарат", "лекарств", "симптом", "диагноз", "кров", "моч", "аппетит", "вял",
+)
+
+def ai_complexity(text):
+    value=(text or "").lower().replace("ё","е")
+    if any(term in value for term in _MASTER_TERMS) or len(value)>1800:
+        return "master"
+    if any(term in value for term in _STANDARD_TERMS) or len(value)>500:
+        return "standard"
+    return "simple"
+
+
+def routed_model(text, paid_access=False, owner=False):
+    level=ai_complexity(text)
+    if level=="master" and (paid_access or owner):
+        return MASTER_MODEL, level
+    if level=="master":
+        return STANDARD_MODEL, "standard"
+    return (STANDARD_MODEL if level=="standard" else SIMPLE_MODEL), level
+
 def current():
     uid=session.get("uid")
     if not uid:return None
@@ -205,7 +237,8 @@ def chat():
     if not text:return jsonify({"error":"empty"}),400
     with storage.SessionLocal() as db:
         user=db.get(storage.User,session["uid"])
-        paid_access=billing.has_paid_access(db,user.id)
+        owner_access=billing.is_owner_account(db,user.id)
+        paid_access=billing.has_paid_access(db,user.id) or owner_access
         max_chars=12000 if paid_access else 3000
         if len(text)>max_chars:
             message=("Сообщение слишком длинное. Бесплатный запрос — до 3000 символов. "
@@ -236,7 +269,11 @@ def chat():
             if not saved:return jsonify({'error':t('Сохранённый ответ не найден.')}),409
             return jsonify({'answer':saved.assistant_text})
         try:
-            response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM+ai_language(),input=history+[{"role":"user","content":prompt}],max_output_tokens=3000 if paid_access else 1600)
+            selected_model,complexity=routed_model(text,paid_access=paid_access,owner=owner_access)
+            routing_note=""
+            if ai_complexity(text)=="master" and not (paid_access or owner_access):
+                routing_note="\nЭтот случай относится к сложным. Не выполняй углублённый Master-разбор. Дай безопасный ограниченный ответ: срочность, красные флаги, что подготовить для врача и какие данные нужны. Не делай вид, что проведён полный клинический разбор. В конце кратко сообщи, что расширенный разбор доступен после пополнения пакета."
+            response=client.responses.create(model=selected_model,instructions=SYSTEM+ai_language()+routing_note,input=history+[{"role":"user","content":prompt}],max_output_tokens=3000 if paid_access else 1600)
             answer=_plain(response.output_text)
             if not answer:raise ValueError('Empty AI output')
             billing.lock_user(db,user.id)
