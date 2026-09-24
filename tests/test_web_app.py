@@ -100,3 +100,15 @@ def test_new_conversation_resets_model_context_but_preserves_archive():
     assert 'Старый вопрос' in c.get('/history').get_data(as_text=True)
     with storage.SessionLocal() as db:
         assert db.query(storage.Consultation).filter_by(user_id=uid).count()==2
+
+
+def test_free_chat_limit_and_social_links():
+    reset_db(); c=web_app.app.test_client(); register(c)
+    too_long=c.post('/api/chat',json={'message':'x'*3001})
+    assert too_long.status_code==413
+    assert too_long.json['max_chars']==3000 and too_long.json['billing_url']=='/billing'
+    home=c.get('/').get_data(as_text=True)
+    assert 'Мы в соцсетях' in home
+    assert 'https://t.me/my1doctor_bot' in home
+    assert 'https://www.instagram.com/mydoctor.vet/' in home
+    assert 'https://www.facebook.com/profile.php?id=61594867434549' in home
