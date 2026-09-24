@@ -10,6 +10,7 @@ _TEST_DIRECTORY = tempfile.TemporaryDirectory(prefix='mydoctor-test-')
 os.environ['DATABASE_URL'] = 'sqlite:///' + _TEST_DIRECTORY.name + '/tests.db'
 os.environ.pop('OPENAI_API_KEY', None)
 os.environ.pop('TELEGRAM_BOT_TOKEN', None)
+os.environ.pop('MYDOCTOR_PAYMENT_SETUP', None)
 
 import storage
 import launcher

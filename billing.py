@@ -109,7 +109,7 @@ def card_methods(db, include_disabled=False):
     return result
 
 
-def save_card_method(route_key, currency, instructions, amounts):
+def validate_card_method(route_key, currency, instructions, amounts):
     route = CARD_TRANSFERS.get(route_key)
     if not route or currency not in route['currencies'] or not 10 <= len(instructions) <= 2000:
         raise BillingError('Проверьте валюту и реквизиты получателя.')
@@ -123,18 +123,28 @@ def save_card_method(route_key, currency, instructions, amounts):
             if not 0 < amount <= 100_000_000:
                 raise BillingError('Укажите цену каждого пакета в валюте получателя: больше нуля, не более двух знаков после запятой.')
             prices[key] = amount
+    return route, prices
+
+
+def write_card_method(db, route, currency, instructions, prices):
+    db.execute(update(PaymentMethod).where(PaymentMethod.name.in_(route_names(route))).values(enabled=False))
+    method = PaymentMethod(name=route['name'], currency=currency, instructions=instructions)
+    db.add(method)
+    db.flush()
+    for key, amount in prices.items():
+        db.add(PaymentMethodPrice(method_id=method.id, plan=key, amount_minor=amount))
+    return method.id
+
+
+def save_card_method(route_key, currency, instructions, amounts):
+    route, prices = validate_card_method(route_key, currency, instructions, amounts)
     with storage.SessionLocal() as db:
         # Serialize settings changes. Existing orders keep their own receiving details and price.
         if db.bind.dialect.name == 'postgresql':
             db.execute(sql_text('SELECT pg_advisory_xact_lock(:key)'), {'key': 728190424})
-        db.execute(update(PaymentMethod).where(PaymentMethod.name.in_(route_names(route))).values(enabled=False))
-        method = PaymentMethod(name=route['name'], currency=currency, instructions=instructions)
-        db.add(method)
-        db.flush()
-        for key, amount in prices.items():
-            db.add(PaymentMethodPrice(method_id=method.id, plan=key, amount_minor=amount))
+        method_id = write_card_method(db, route, currency, instructions, prices)
         db.commit()
-        return method.id
+        return method_id
 
 
 class CreditGrant(storage.Base):

@@ -40,6 +40,8 @@ class WebDocument(storage.Base):
     created_at: Mapped[datetime]=mapped_column(DateTime,default=datetime.utcnow,index=True,nullable=False)
 
 billing.init_schema()
+from payment_setup import apply_configuration
+apply_configuration()
 import web_i18n
 web_i18n.install(app)
 
