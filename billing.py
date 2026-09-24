@@ -15,7 +15,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 import storage
 
 PLANS = {
-    'start': {'name': 'Старт', 'credits': 20, 'RUB': 49900, 'USD': 700, 'USDT': 700},
+    'start': {'name': 'Старт', 'credits': 20, 'RUB': 50000, 'USD': 700, 'USDT': 700},
     'care': {'name': 'Забота', 'credits': 60, 'RUB': 99000, 'USD': 1400, 'USDT': 1400},
     'family': {'name': 'Семья', 'credits': 150, 'RUB': 199000, 'USD': 2900, 'USDT': 2900},
 }
@@ -250,6 +250,16 @@ def release_stale(db, uid):
 
 def metered(db, uid):
     return live() or bool(db.scalar(select(CreditGrant.id).where(CreditGrant.user_id == uid, CreditGrant.origin.like('payment:%')).limit(1)))
+
+
+def has_paid_access(db, uid):
+    now = datetime.utcnow()
+    return bool(db.scalar(select(CreditGrant.id).where(
+        CreditGrant.user_id == uid,
+        CreditGrant.origin.like('payment:%'),
+        CreditGrant.remaining > 0,
+        (CreditGrant.expires_at.is_(None)) | (CreditGrant.expires_at > now),
+    ).limit(1)))
 
 
 def reserve(uid, kind, key, content):
