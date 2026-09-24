@@ -1,5 +1,6 @@
 """Durable Telegram payment notices and administrator-only decisions."""
 import asyncio
+import io
 import logging
 import re
 from datetime import datetime, timedelta
@@ -47,9 +48,13 @@ def claim():
                 f'Данные от владельца: {order.payment_reference or "—"}\n\n'
                 'Сначала проверьте поступление денег в банковском приложении. '
                 'Кнопка «Деньги получены» сразу начислит пакет. Сообщение владельца не подтверждает перевод.')
+        receipt = db.get(b.PaymentReceipt, order.id)
+        receipt_payload = None
+        if receipt:
+            receipt_payload = (receipt.filename, receipt.mime_type, bytes(receipt.data))
         oid = order.id
         db.commit()
-        return oid, body
+        return oid, body, receipt_payload
 
 
 def mark(oid, success):
@@ -66,12 +71,22 @@ async def deliver_payment_notifications(application):
         item = await asyncio.to_thread(claim)
         if item is None:
             break
-        oid, body = item
+        oid, body, receipt = item
         buttons = InlineKeyboardMarkup([[
             InlineKeyboardButton('Деньги получены — подтвердить', callback_data='pay:yes:' + oid)], [
             InlineKeyboardButton('Не поступило', callback_data='pay:no:' + oid)]])
         try:
             target = await asyncio.to_thread(_admin_chat_id)
+            if receipt:
+                filename, mime_type, data = receipt
+                file_obj = io.BytesIO(data)
+                file_obj.name = filename
+                await application.bot.send_document(
+                    chat_id=target,
+                    document=file_obj,
+                    caption='Чек / скриншот к оплате №' + oid,
+                    read_timeout=20, write_timeout=20, connect_timeout=10,
+                )
             await application.bot.send_message(chat_id=target, text=body, reply_markup=buttons,
                 parse_mode=None, read_timeout=20, write_timeout=20, connect_timeout=10)
         except Exception as exc:
