@@ -34,7 +34,7 @@ def test_report_enqueues_once_and_delivery_retries():
         'action': 'report', 'reference': 'repeat'}).status_code == 303
     with storage.SessionLocal() as db:
         assert len(db.scalars(select(pn.PaymentNotice)).all()) == 1
-    app = SimpleNamespace(bot=SimpleNamespace(send_message=AsyncMock(side_effect=RuntimeError('offline'))))
+    app = SimpleNamespace(bot=SimpleNamespace(send_document=AsyncMock(), send_message=AsyncMock(side_effect=RuntimeError('offline'))))
     with patch('notification_patch._admin_chat_id', return_value=123):
         asyncio.run(pn.deliver_payment_notifications(app))
     with storage.SessionLocal() as db:
@@ -42,10 +42,14 @@ def test_report_enqueues_once_and_delivery_retries():
         assert notice.state == 'retry'
         notice.next_attempt = datetime.utcnow() - timedelta(seconds=1)
         db.commit()
+    app.bot.send_document = AsyncMock()
     app.bot.send_message = AsyncMock()
     with patch('notification_patch._admin_chat_id', return_value=123):
         asyncio.run(pn.deliver_payment_notifications(app))
         asyncio.run(pn.deliver_payment_notifications(app))
+    app.bot.send_document.assert_awaited_once()
+    document = app.bot.send_document.call_args.kwargs
+    assert document['chat_id'] == 123 and oid in document['caption']
     app.bot.send_message.assert_awaited_once()
     sent = app.bot.send_message.call_args.kwargs
     assert sent['chat_id'] == 123 and '499' in sent['text'] and 'TEST payment 12:00' in sent['text']
