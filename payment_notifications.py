@@ -84,11 +84,14 @@ async def deliver_payment_notifications(application):
                 await application.bot.send_document(
                     chat_id=target,
                     document=file_obj,
-                    caption='Чек / скриншот к оплате №' + oid,
+                    caption=body,
+                    reply_markup=buttons,
+                    parse_mode=None,
                     read_timeout=20, write_timeout=20, connect_timeout=10,
                 )
-            await application.bot.send_message(chat_id=target, text=body, reply_markup=buttons,
-                parse_mode=None, read_timeout=20, write_timeout=20, connect_timeout=10)
+            else:
+                await application.bot.send_message(chat_id=target, text=body, reply_markup=buttons,
+                    parse_mode=None, read_timeout=20, write_timeout=20, connect_timeout=10)
         except Exception as exc:
             logging.getLogger(__name__).warning('Payment notice delivery failed: %s', type(exc).__name__)
             await asyncio.to_thread(mark, oid, False)
