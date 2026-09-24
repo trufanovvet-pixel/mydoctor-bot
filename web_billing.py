@@ -3,7 +3,7 @@ import secrets
 from functools import wraps
 from datetime import datetime
 from flask import abort, flash, redirect, render_template, request, session, url_for
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text as sql_text
 import storage
 import billing as b
 from consultation_cases import STATUSES
@@ -54,7 +54,7 @@ def install(app, WebAccount):
     def render(page, title, **kwargs):
         session.setdefault('doctor_csrf', secrets.token_urlsafe(32))
         response = app.make_response(render_template('section.html', page=page, title=t(title),
-                    plans=b.PLANS, order_states=b.ORDER_STATES, money=b.money, billing_csrf=csrf(),
+                    plans=b.PLANS, card_transfers=b.CARD_TRANSFERS, order_states=b.ORDER_STATES, money=b.money, billing_csrf=csrf(),
                     statuses=STATUSES, doctor_csrf=session['doctor_csrf'], now=datetime.utcnow(), **kwargs))
         response.headers['Cache-Control'] = 'private, no-store'
         response.headers['Referrer-Policy'] = 'no-referrer'
@@ -71,14 +71,17 @@ def install(app, WebAccount):
                 b.trial(db, uid)
             db.commit()
             info = b.summary(db, uid)
-            methods = db.scalars(select(b.PaymentMethod).where(b.PaymentMethod.enabled.is_(True)).order_by(b.PaymentMethod.id)).all()
+            methods = b.card_methods(db)
+            selected_transfer = request.args.get('transfer', next(iter(methods), 'mir'))
+            if selected_transfer not in b.CARD_TRANSFERS:
+                abort(400)
             orders = db.scalars(select(b.PaymentOrder).where(b.PaymentOrder.user_id == uid).order_by(b.PaymentOrder.created_at.desc()).limit(50)).all()
             page = max(1, request.args.get('page', 1, type=int))
             usage = db.scalars(select(b.CreditUsage).where(b.CreditUsage.user_id == uid)
                     .order_by(b.CreditUsage.created_at.desc()).offset((page - 1) * 30).limit(31)).all()
             return render('billing', 'Тариф и оплаты', info=info, methods=methods, orders=orders,
                           usage=usage[:30], has_more=len(usage) > 30, page_number=page,
-                          sales=b.live(), request_key=secrets.token_hex(16))
+                          sales=b.live(), selected_transfer=selected_transfer, request_key=secrets.token_hex(16))
 
     @app.post('/billing/orders')
     @owner
@@ -129,7 +132,7 @@ def install(app, WebAccount):
             check_csrf()
             enabled = request.form.get('enabled') == '1'
             with storage.SessionLocal() as db:
-                if enabled and not db.scalar(select(b.PaymentMethod.id).where(b.PaymentMethod.enabled.is_(True)).limit(1)):
+                if enabled and not b.card_methods(db):
                     flash('Сначала добавьте реквизиты для оплаты.')
                     return redirect(url_for('doctor_payments'), code=303)
             storage.set_bot_setting('billing_live', '1' if enabled else '0')
@@ -146,27 +149,22 @@ def install(app, WebAccount):
             rows = db.execute(query.order_by(b.PaymentOrder.created_at.desc()).offset((page - 1) * 30).limit(31)).all()
             count = db.scalar(select(func.count(b.PaymentOrder.id)).where(b.PaymentOrder.status == 'review'))
             totals = db.execute(select(b.PaymentOrder.currency, func.sum(b.PaymentOrder.amount_minor)).where(b.PaymentOrder.status == 'paid').group_by(b.PaymentOrder.currency)).all()
-            methods = db.scalars(select(b.PaymentMethod).order_by(b.PaymentMethod.id)).all()
             return render('doctor_payments', 'Оплаты и пакеты', rows=rows[:30], has_more=len(rows) > 30,
-                          page_number=page, status=status, review_count=count, totals=totals, methods=methods, sales=b.live())
+                          page_number=page, status=status, review_count=count, totals=totals,
+                          configured=b.card_methods(db, include_disabled=True), sales=b.live())
 
     @app.post('/doctor/payments/methods')
     @doctor
     def payment_method_add():
         check_csrf()
-        name = request.form.get('name', '').strip()
-        currency = request.form.get('currency')
-        network = request.form.get('network', '').strip()
-        instructions = request.form.get('instructions', '').strip()
-        if not 2 <= len(name) <= 80 or currency not in ('RUB', 'USD', 'USDT') or not 10 <= len(instructions) <= 2000 or len(network) > 80 or (currency == 'USDT' and not network):
-            flash('Проверьте название, валюту и реквизиты. Для USDT обязательно укажите сеть.')
+        try:
+            b.save_card_method(request.form.get('transfer'), request.form.get('currency'),
+                               request.form.get('instructions', '').strip(),
+                               {key: request.form.get('price_' + key, '') for key in b.PLANS})
+        except b.BillingError as error:
+            flash(str(error))
             return redirect(url_for('doctor_payments'), code=303)
-        with storage.SessionLocal() as db:
-            if db.scalar(select(func.count(b.PaymentMethod.id))) >= 20:
-                abort(409)
-            db.add(b.PaymentMethod(name=name, currency=currency, network=network if currency == 'USDT' else None, instructions=instructions))
-            db.commit()
-        flash('Способ оплаты добавлен.')
+        flash('Реквизиты сохранены. Новые заявки будут использовать эти данные.')
         return redirect(url_for('doctor_payments'), code=303)
 
     @app.post('/doctor/payments/methods/<int:mid>/toggle')
@@ -174,10 +172,16 @@ def install(app, WebAccount):
     def payment_method_toggle(mid):
         check_csrf()
         with storage.SessionLocal() as db:
-            method = db.get(b.PaymentMethod, mid)
+            if db.bind.dialect.name == 'postgresql':
+                db.execute(sql_text('SELECT pg_advisory_xact_lock(:key)'), {'key': 728190424})
+            method = db.get(b.PaymentMethod, mid, with_for_update=True)
             if not method:
                 abort(404)
-            method.enabled = request.form.get('enabled') == '1'
+            enabled = request.form.get('enabled') == '1'
+            latest = db.scalar(select(b.PaymentMethod.id).where(b.PaymentMethod.name == method.name).order_by(b.PaymentMethod.id.desc()).limit(1))
+            if enabled and (mid != latest or not b.method_prices(db, method)):
+                abort(409)
+            method.enabled = enabled
             db.commit()
         return redirect(url_for('doctor_payments'), code=303)
 

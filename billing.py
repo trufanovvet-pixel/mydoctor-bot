@@ -6,6 +6,8 @@ enables sales. No bank credentials or exchange API keys are needed or stored.
 import hashlib
 import json
 import secrets
+import re
+from decimal import Decimal
 from datetime import datetime, timedelta
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func, select, update, text as sql_text
@@ -20,6 +22,10 @@ PLANS = {
 ORDER_STATES = {'awaiting': 'Ожидает перевода', 'review': 'Проверяем оплату', 'paid': 'Оплата подтверждена',
                 'rejected': 'Оплата не подтверждена', 'cancelled': 'Отменено'}
 TRIAL_CREDITS = 5
+CARD_TRANSFERS = {
+    'mir': {'name': 'Перевод на карту Мир', 'currencies': ('RUB',), 'default_currency': 'RUB'},
+    'mastercard': {'name': 'Перевод на Mastercard', 'currencies': ('BYN', 'KZT', 'USD', 'RUB', 'EUR'), 'default_currency': 'BYN'},
+}
 
 
 def init_schema():
@@ -63,6 +69,63 @@ class PaymentOrder(storage.Base):
     reported_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     paid_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     checked_by: Mapped[str | None] = mapped_column(String(40), nullable=True)
+
+
+class PaymentMethodPrice(storage.Base):
+    __tablename__ = 'billing_payment_method_prices'
+    method_id: Mapped[int] = mapped_column(ForeignKey('billing_payment_methods.id'), primary_key=True)
+    plan: Mapped[str] = mapped_column(String(32), primary_key=True)
+    amount_minor: Mapped[int] = mapped_column(Integer)
+
+
+def method_prices(db, method):
+    if not method or not method.instructions.strip():
+        return {}
+    route = next((v for v in CARD_TRANSFERS.values() if v['name'] == method.name), None)
+    if not route or method.currency not in route['currencies']:
+        return {}
+    if method.currency == 'RUB':
+        return {key: value['RUB'] for key, value in PLANS.items()}
+    prices = {p.plan: p.amount_minor for p in db.scalars(select(PaymentMethodPrice).where(PaymentMethodPrice.method_id == method.id))}
+    return prices if all(isinstance(prices.get(key), int) and 0 < prices[key] <= 100_000_000 for key in PLANS) else {}
+
+
+def card_methods(db, include_disabled=False):
+    result = {}
+    for key, route in CARD_TRANSFERS.items():
+        method = db.scalar(select(PaymentMethod).where(PaymentMethod.name == route['name']).order_by(PaymentMethod.id.desc()).limit(1))
+        prices = method_prices(db, method)
+        if method and (include_disabled or (method.enabled and prices)):
+            result[key] = {'method': method, 'prices': prices}
+    return result
+
+
+def save_card_method(route_key, currency, instructions, amounts):
+    route = CARD_TRANSFERS.get(route_key)
+    if not route or currency not in route['currencies'] or not 10 <= len(instructions) <= 2000:
+        raise BillingError('Проверьте валюту и реквизиты получателя.')
+    prices = {}
+    if currency != 'RUB':
+        for key in PLANS:
+            value = str(amounts.get(key, '')).strip().replace(',', '.')
+            if not re.fullmatch(r'\d{1,7}(?:\.\d{1,2})?', value):
+                raise BillingError('Укажите цену каждого пакета в валюте получателя: больше нуля, не более двух знаков после запятой.')
+            amount = int(Decimal(value) * 100)
+            if not 0 < amount <= 100_000_000:
+                raise BillingError('Укажите цену каждого пакета в валюте получателя: больше нуля, не более двух знаков после запятой.')
+            prices[key] = amount
+    with storage.SessionLocal() as db:
+        # Serialize settings changes. Existing orders keep their own receiving details and price.
+        if db.bind.dialect.name == 'postgresql':
+            db.execute(sql_text('SELECT pg_advisory_xact_lock(:key)'), {'key': 728190424})
+        db.execute(update(PaymentMethod).where(PaymentMethod.name == route['name']).values(enabled=False))
+        method = PaymentMethod(name=route['name'], currency=currency, instructions=instructions)
+        db.add(method)
+        db.flush()
+        for key, amount in prices.items():
+            db.add(PaymentMethodPrice(method_id=method.id, plan=key, amount_minor=amount))
+        db.commit()
+        return method.id
 
 
 class CreditGrant(storage.Base):
@@ -243,8 +306,9 @@ def create_order(uid, plan_id, method_id, key):
             return previous.id
         if not live():
             raise BillingError('Приём оплат пока не открыт.', 409)
-        method = db.get(PaymentMethod, method_id)
-        if not method or not method.enabled:
+        method = db.get(PaymentMethod, method_id, with_for_update=True)
+        prices = method_prices(db, method)
+        if not method or not method.enabled or not prices:
             raise BillingError('Этот способ оплаты недоступен.', 409)
         pending = db.scalar(select(func.count(PaymentOrder.id)).where(PaymentOrder.user_id == uid,
                          PaymentOrder.status.in_(['awaiting', 'review'])))
@@ -252,7 +316,7 @@ def create_order(uid, plan_id, method_id, key):
             raise BillingError('У вас уже есть незавершённые заявки на оплату. Откройте их в истории.', 429)
         plan = PLANS[plan_id]
         order = PaymentOrder(id=secrets.token_hex(16), user_id=uid, request_key=key, plan=plan_id, credits=plan['credits'],
-                    amount_minor=plan[method.currency], currency=method.currency, method_id=method.id,
+                    amount_minor=prices[plan_id], currency=method.currency, method_id=method.id,
                     method_name=method.name, instructions=method.instructions, network=method.network)
         db.add(order)
         db.commit()

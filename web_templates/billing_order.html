@@ -1,7 +1,7 @@
 <a class="back-link" href="/billing">{{t('← Тариф и оплаты')}}</a>
 <div class="panel"><h2>{{t(plans[order.plan].name)}} · {{money(order.amount_minor,order.currency)}}</h2><p>{{order.credits}} {{t('баллов на 30 дней')}}</p><p class="badge">{{t(order_states[order.status])}}</p><p class="muted">{{t('Номер заявки:')}} {{order.id}}</p>
 {% if order.status=='awaiting' %}
-  <h3>{{order.method_name}}</h3>{% if order.network %}<p><strong>{{t('Сеть:')}} {{order.network}}</strong></p>{% endif %}
+  <h3>{{t(order.method_name)}}</h3>{% if order.network %}<p><strong>{{t('Сеть:')}} {{order.network}}</strong></p>{% endif %}
   <div class="plain-content billing-details">{{order.instructions}}</div>
   <p>{{t('Переведите указанную сумму. Затем сообщите об оплате. Пакет появится после проверки поступления.')}}</p>
   {% if order.currency=='USDT' %}<p class="muted">{{t('Используйте только указанную сеть. Учтите комиссию: получателю должна поступить полная сумма.')}}</p>{% endif %}

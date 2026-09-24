@@ -2,6 +2,22 @@
 from web_i18n import EN
 
 EN.update({
+    'Перевод на карту Мир': 'Transfer to a Mir card',
+    'Перевод на Mastercard': 'Transfer to a Mastercard',
+    'Как вам удобно перевести?': 'Choose a transfer method',
+    'Перевод выполняется в приложении вашего банка. После перевода нажмите «Я оплатил».': 'Make the transfer in your banking app, then select “I have paid”.',
+    'Заполните реквизиты для двух вариантов перевода. Владельцы увидят только подготовленные способы оплаты.': 'Enter receiving details for the two transfer options. Only configured methods can accept orders.',
+    'Не настроен': 'Not configured',
+    'Реквизиты получателя': 'Recipient details',
+    'Банк, номер карты для перевода и имя получателя': 'Bank, receiving card number and recipient name',
+    'Укажите только данные для получения перевода. CVV, срок действия и коды из SMS не нужны.': 'Enter receiving details only. Do not include CVV, expiry dates or SMS codes.',
+    'Цены пакетов в выбранной валюте': 'Package prices in the selected currency',
+    'Укажите точную сумму к зачислению. Автоматического пересчёта по курсу нет. Для RUB действуют рублёвые цены пакетов.': 'Enter the exact amount to be received. There is no automatic currency conversion. RUB uses the standard ruble package prices.',
+    'Цены в рублях: Старт — 499 ₽, Забота — 990 ₽, Семья — 1 990 ₽.': 'Ruble prices: Starter — ₽499, Care — ₽990, Family — ₽1,990.',
+    'Сохранить реквизиты': 'Save receiving details',
+    'Проверьте валюту и реквизиты получателя.': 'Check the currency and recipient details.',
+    'Укажите цену каждого пакета в валюте получателя: больше нуля, не более двух знаков после запятой.': 'Enter every package price in the receiving currency: a positive amount with up to two decimal places.',
+    'Реквизиты сохранены. Новые заявки будут использовать эти данные.': 'Receiving details saved. New orders will use these details.',
     'Вопрос помощнику — 1 балл.': 'An AI question costs 1 credit.',
     'Разбор файла — 5 баллов. PDF: не более 5 страниц.': 'Reviewing a file costs 5 credits. PDF: up to 5 pages.',
     'Тариф и оплаты': 'Plan & payments',

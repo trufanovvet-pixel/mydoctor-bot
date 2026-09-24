@@ -31,7 +31,7 @@ def owner(email='billing@example.com'):
 def enable():
     storage.set_bot_setting('billing_live', '1')
     with storage.SessionLocal() as db:
-        method = b.PaymentMethod(name='Test bank', currency='RUB', instructions='TEST ONLY: receiving details')
+        method = b.PaymentMethod(name=b.CARD_TRANSFERS['mir']['name'], currency='RUB', instructions='TEST ONLY: receiving details')
         db.add(method)
         db.commit()
         return method.id
@@ -203,18 +203,77 @@ def test_paid_pdf_page_limit_rejects_before_charging_and_document_errors_refund(
         assert db.scalar(select(web_app.WebDocument)).analysis
 
 
-def test_usdt_configuration_requires_network_and_is_doctor_only():
+def test_card_configuration_is_doctor_only_and_cannot_enable_without_receiving_details():
     c, _ = owner(); staff = doctor()
     assert c.post('/doctor/payments/methods', data={}).status_code == 403
     html = staff.get('/doctor/payments').text
-    data = {'billing_csrf': field(html, 'billing_csrf'), 'name': 'USDT test', 'currency': 'USDT', 'instructions': 'TEST wallet address only'}
+    data = {'billing_csrf': field(html, 'billing_csrf'), 'transfer': 'mir', 'currency': 'USDT', 'instructions': 'TEST ONLY: receiving details'}
     staff.post('/doctor/payments/methods', data=data)
     with storage.SessionLocal() as db: assert not db.scalar(select(b.PaymentMethod.id))
-    staff.post('/doctor/payments/methods', data={**data, 'network': 'TEST network'})
-    with storage.SessionLocal() as db: assert db.scalar(select(b.PaymentMethod)).network == 'TEST network'
+    staff.post('/doctor/payments', data={'billing_csrf': data['billing_csrf'], 'enabled': '1'})
+    assert not b.live()
+    staff.post('/doctor/payments/methods', data={**data, 'currency': 'RUB', 'billing_csrf': 'forged'})
+    with storage.SessionLocal() as db: assert not db.scalar(select(b.PaymentMethod.id))
+    staff.post('/doctor/payments/methods', data={**data, 'currency': 'RUB'})
+    with storage.SessionLocal() as db: assert db.scalar(select(b.PaymentMethod)).name == b.CARD_TRANSFERS['mir']['name']
     assert not b.live()
     staff.post('/doctor/payments', data={'billing_csrf': data['billing_csrf'], 'enabled': '1'})
     assert b.live()
+
+
+def test_mastercard_prices_are_exact_and_old_orders_keep_currency_recipient_and_price():
+    c, uid = owner(); enable()
+    mid = b.save_card_method('mastercard', 'BYN', 'TEST ONLY: first recipient', {'start': '19,90', 'care': '40', 'family': '80.01'})
+    html = c.get('/billing?transfer=mastercard').text
+    assert '19.90 BYN' in html and '80.01 BYN' in html
+    oid, _ = order_for(c, mid)
+    replacement = b.save_card_method('mastercard', 'KZT', 'TEST ONLY: second recipient', {'start': '3000', 'care': '6000', 'family': '12000'})
+    with storage.SessionLocal() as db:
+        order = db.get(b.PaymentOrder, oid)
+        assert (order.amount_minor, order.currency, order.instructions) == (1990, 'BYN', 'TEST ONLY: first recipient')
+        assert not db.get(b.PaymentMethod, mid).enabled
+        assert b.card_methods(db)['mastercard']['method'].id == replacement
+    with pytest.raises(b.BillingError): b.create_order(uid, 'start', mid, secrets.token_hex(16))
+    assert report(c, oid).status_code == 303
+    b.confirm_order(uid, oid, 123)
+    with storage.SessionLocal() as db:
+        assert db.scalar(select(b.CreditGrant).where(b.CreditGrant.origin == 'payment:' + oid)).total == 20
+
+
+@pytest.mark.parametrize('value', ['', '0', '-1', 'nan', 'inf', '1e2', '1.001', '1000000.01'])
+def test_invalid_mastercard_price_does_not_replace_active_method(value):
+    original = b.save_card_method('mastercard', 'BYN', 'TEST ONLY: original recipient', {'start': '20', 'care': '40', 'family': '80'})
+    with pytest.raises(b.BillingError):
+        b.save_card_method('mastercard', 'BYN', 'TEST ONLY: replacement recipient', {'start': value, 'care': '40', 'family': '80'})
+    with storage.SessionLocal() as db:
+        assert b.card_methods(db)['mastercard']['method'].id == original
+
+
+def test_incomplete_and_legacy_methods_cannot_create_new_orders():
+    c, uid = owner(); enable()
+    with storage.SessionLocal() as db:
+        incomplete = b.PaymentMethod(name=b.CARD_TRANSFERS['mastercard']['name'], currency='BYN', instructions='TEST ONLY: recipient')
+        legacy = b.PaymentMethod(name='USDT test', currency='USDT', instructions='TEST ONLY: wallet', network='TEST')
+        db.add_all([incomplete, legacy]); db.commit()
+        ids = [incomplete.id, legacy.id]
+    for mid in ids:
+        with pytest.raises(b.BillingError): b.create_order(uid, 'start', mid, secrets.token_hex(16))
+    html = c.get('/billing?transfer=mastercard').text
+    assert 'name="method_id"' not in html and 'USDT' not in html
+    assert 'Перевод на карту Мир' in html and 'Перевод на Mastercard' in html
+
+
+def test_only_latest_transfer_details_can_be_reenabled_and_are_translated():
+    staff = doctor()
+    old = b.save_card_method('mir', 'RUB', 'TEST ONLY: first recipient', {})
+    latest = b.save_card_method('mir', 'RUB', 'TEST ONLY: new recipient', {})
+    csrf = field(staff.get('/doctor/payments').text, 'billing_csrf')
+    assert staff.post(f'/doctor/payments/methods/{old}/toggle', data={'billing_csrf': csrf, 'enabled': '1'}).status_code == 409
+    assert staff.post(f'/doctor/payments/methods/{latest}/toggle', data={'billing_csrf': csrf, 'enabled': '0'}).status_code == 303
+    c, _ = owner(); c.set_cookie('language', 'en')
+    html = c.get('/billing').text
+    assert 'Transfer to a Mir card' in html and 'Transfer to a Mastercard' in html
+    assert 'Перевод на' not in html
 
 
 def test_document_success_costs_five_and_retry_does_not_repeat_analysis():
