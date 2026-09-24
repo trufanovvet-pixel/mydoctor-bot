@@ -48,7 +48,34 @@ def order_for(client, method_id, plan='start'):
 def report(client, oid):
     html = client.get('/billing/orders/' + oid).get_data(as_text=True)
     return client.post('/billing/orders/' + oid, data={'billing_csrf': field(html, 'billing_csrf'),
-                       'action': 'report', 'reference': 'TEST payment 12:00'})
+                       'action': 'report', 'reference': 'TEST payment 12:00',
+                       'receipt': (io.BytesIO(b'TEST RECEIPT'), 'receipt.jpg', 'image/jpeg')},
+                       content_type='multipart/form-data')
+
+
+def test_payment_report_requires_receipt_and_receipt_is_private_to_owner_or_doctor():
+    c, uid = owner(); mid = enable(); oid, _ = order_for(c, mid)
+    html = c.get('/billing/orders/' + oid).text
+    csrf = field(html, 'billing_csrf')
+    result = c.post('/billing/orders/' + oid, data={'billing_csrf': csrf, 'action': 'report',
+                    'reference': 'TEST payment 12:00'})
+    assert result.status_code == 303
+    with storage.SessionLocal() as db:
+        assert db.get(b.PaymentOrder, oid).status == 'awaiting'
+        assert db.get(b.PaymentReceipt, oid) is None
+    page = c.get('/billing/orders/' + oid).text
+    assert 'Прикрепите чек' in page
+
+    assert report(c, oid).status_code == 303
+    with storage.SessionLocal() as db:
+        receipt = db.get(b.PaymentReceipt, oid)
+        assert receipt and receipt.filename == 'receipt.jpg' and receipt.data == b'TEST RECEIPT'
+        assert db.get(b.PaymentOrder, oid).status == 'review'
+    assert c.get('/billing/orders/' + oid + '/receipt').data == b'TEST RECEIPT'
+    assert web_app.app.test_client().get('/billing/orders/' + oid + '/receipt').status_code == 403
+    staff = doctor()
+    assert staff.get('/billing/orders/' + oid + '/receipt').data == b'TEST RECEIPT'
+    assert 'Открыть чек / скриншот' in staff.get('/doctor/payments/' + oid).text
 
 
 def test_draft_does_not_open_payments_or_charge_existing_users():
