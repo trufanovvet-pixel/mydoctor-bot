@@ -204,9 +204,18 @@ def install(bot):
             text == "💉 Вакцинация"
             or ("вакцинац" in value and any(x in value for x in ("схем", "когда", "щен", "котен", "взросл")))
         )
-        if vaccination_query:
-            await update.message.reply_text(VACCINATION_GUIDE, reply_markup=prevention_patch.PREVENTION_MENU)
-            return
+        if vaccination_query or text in {"🪱 Глисты", "🪲 Блохи и клещи"}:
+            from exotic_medicine import resolve_species, detect_species, EXOTICS
+            pet = _find_pet(bot, update.effective_user.id, text)
+            species = resolve_species(text, pet_species=(pet or {}).get('species', ''))
+            if species & EXOTICS:
+                history = context.user_data.setdefault('history', [])
+                history.append({'role': 'user', 'content': text + ('\nВид: ' + pet['species'] if pet and not detect_species(text) else '')})
+                await bot.ask_ai(update, context)
+                return
+            if vaccination_query:
+                await update.message.reply_text(VACCINATION_GUIDE, reply_markup=prevention_patch.PREVENTION_MENU)
+                return
 
         return await original_message(update, context)
 

@@ -37,8 +37,11 @@ MENU = ReplyKeyboardMarkup(
     resize_keyboard=True,
 )
 
+from exotic_medicine import SPECIES_OPTIONS
+SPECIES_LABELS = {"🐶 Собака": "собака", "🐱 Кошка": "кошка", **{x: x.lower() for x in SPECIES_OPTIONS}}
+
 SPECIES_MENU = ReplyKeyboardMarkup(
-    [["🐶 Собака", "🐱 Кошка"], ["❌ Отмена"]],
+    [["🐶 Собака", "🐱 Кошка"]] + [list(SPECIES_OPTIONS[i:i+2]) for i in range(2, len(SPECIES_OPTIONS), 2)] + [["❌ Отмена"]],
     resize_keyboard=True,
     one_time_keyboard=True,
 )
@@ -200,12 +203,12 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("Кто это?", reply_markup=SPECIES_MENU)
             return
         if step == "species":
-            if text not in {"🐶 Собака", "🐱 Кошка"}:
+            if text not in SPECIES_LABELS:
                 await update.message.reply_text("Выберите вид кнопкой ниже.", reply_markup=SPECIES_MENU)
                 return
-            adding["species"] = "собака" if "Собака" in text else "кошка"
+            adding["species"] = SPECIES_LABELS[text]
             adding["step"] = "breed"
-            await update.message.reply_text("Порода? Если метис — так и напишите.")
+            await update.message.reply_text("Порода или точный вид? Например: метис, корелла, бородатая агама.")
             return
         if step == "breed":
             adding["breed"] = text
@@ -223,7 +226,7 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 return
             adding["sex"] = text.lower()
             adding["step"] = "weight"
-            await update.message.reply_text("Вес в кг? Например: 8.8")
+            await update.message.reply_text("Вес в кг? Например: 8.8. Для маленьких животных: 40 г = 0.04 кг.")
             return
         if step == "weight":
             try:

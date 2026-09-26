@@ -526,5 +526,21 @@
   "и": "and",
   "Их можно поменять переменными окружения без правки кода.": "They can be changed with environment variables without editing code.",
   "Месячный контрольный бюджет": "Monthly monitoring budget",
-  "Это индикатор в MyDoctor; фактический лимит и автопополнение настраиваются отдельно в OpenAI Platform.": "This is a MyDoctor indicator; the actual limit and auto-recharge are configured separately in OpenAI Platform."
+  "Это индикатор в MyDoctor; фактический лимит и автопополнение настраиваются отдельно в OpenAI Platform.": "This is a MyDoctor indicator; the actual limit and auto-recharge are configured separately in OpenAI Platform.",
+  "Птица": "Bird",
+  "Кролик": "Rabbit",
+  "Морская свинка": "Guinea pig",
+  "Крыса": "Rat",
+  "Мышь": "Mouse",
+  "Хомяк": "Hamster",
+  "Шиншилла": "Chinchilla",
+  "Дегу": "Degu",
+  "Песчанка": "Gerbil",
+  "Хорёк": "Ferret",
+  "Черепаха": "Turtle / tortoise",
+  "Ящерица": "Lizard",
+  "Змея": "Snake",
+  "Другая рептилия": "Other reptile",
+  "Другой грызун": "Other rodent",
+  "Другое": "Other"
 }

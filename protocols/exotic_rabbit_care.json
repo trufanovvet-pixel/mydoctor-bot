@@ -1,0 +1,44 @@
+{
+  "id": "exotic_rabbit_care",
+  "title": "Кролики: содержание, питание и профилактика",
+  "status": "source_grounded_clinician_review_required",
+  "version": 1,
+  "reviewed_at": "2026-09-26",
+  "species": [
+    "rabbit"
+  ],
+  "triggers": [
+    "кролик питание",
+    "кормить кролика",
+    "сено",
+    "вакцина кролику",
+    "голод перед операцией",
+    "rabbit diet"
+  ],
+  "husbandry": [
+    "Нескользкая поверхность, движение и безопасное укрытие; при подъёме поддерживать заднюю часть тела."
+  ],
+  "nutrition": [
+    "Основа рациона взрослого кролика — подходящее сено и вода; состав зелени и гранул согласовать с возрастом и состоянием."
+  ],
+  "prevention": [
+    "План вакцинации против миксоматоза и вирусной геморрагической болезни, включая RHDV2, зависит от страны и инструкции доступного препарата.",
+    "Не переносить длительную предоперационную голодную выдержку собак на кролика; подготовку задаёт анестезиолог."
+  ],
+  "diagnostics": [
+    "Контроль веса, зубов, аппетита и количества фекалий."
+  ],
+  "sources": [
+    {
+      "title": "MSD Veterinary Manual — Management of Rabbits",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/rabbits/management-of-rabbits",
+      "accessed_at": "2026-09-26"
+    },
+    {
+      "title": "University of Illinois College of Veterinary Medicine — Rabbit Gastrointestinal Stasis Syndrome",
+      "url": "https://vetmed.illinois.edu/2024/06/04/rabbit-gi-stasis/",
+      "accessed_at": "2026-09-26"
+    }
+  ],
+  "llm_guidance": "Не переносить схемы между видами. Не назначать новую лекарственную схему без проверенного видоспецифичного источника; дозировок в этом модуле нет. Сначала срочность, затем 2–4 полезных вопроса или обоснованный план."
+}

@@ -7,6 +7,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite:///" + tempfile.gettempdir() + "/m
 os.environ.setdefault("FLASK_SECRET_KEY", "test-secret")
 
 import storage
+from sqlalchemy import select
 with patch("openai.OpenAI"):
     import web_app
 

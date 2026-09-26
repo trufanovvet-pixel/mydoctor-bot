@@ -8,6 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import re
 import storage, knowledge
+from exotic_medicine import MEDIA_SPECIES_RULES, species_hint, detect_species
 from patient_records import plain_text, CATEGORIES, DocumentLabel, classify_document
 from web_i18n import t, ai_language
 import math
@@ -126,7 +127,11 @@ def _pet_requested(text, pet):
 def pet_context(db,user,text):
     if not user.active_pet_id:return ""
     pet=db.scalar(select(storage.Pet).where(storage.Pet.id==user.active_pet_id,storage.Pet.user_id==user.id))
-    if not pet or not _pet_requested(text,pet):return ""
+    if not pet:return ""
+    value=(text or "").lower().replace("ё","е")
+    continuation=(session.get("chat_pet_id")==pet.id and not detect_species(text)
+                  and bool(re.search(r"^(?:сейчас|по-прежнему|все еще|ему|ей|он|она|можно|сколько|что дальше|а если|still|now|he |she |can i|how much)",value)))
+    if not _pet_requested(text,pet) and not continuation:return ""
     return f"Пользователь явно спрашивает об этом питомце. Имя: {pet.name}; вид: {pet.species}; порода: {pet.breed or 'не указана'}; возраст: {pet.age or 'не указан'}; пол: {pet.sex or 'не указан'}; вес: {pet.weight_kg if pet.weight_kg is not None else 'не указан'} кг."
 
 @app.get("/")
@@ -258,8 +263,9 @@ def chat():
         history=[]
         for item in reversed(prev):
             history += [{"role":"user","content":item.user_text},{"role":"assistant","content":item.assistant_text}]
-        extra=knowledge.protocol_context(text)
-        prompt=(pctx+"\n"+extra+"\nВопрос пользователя: "+text).strip()
+        owner_text="\n".join(item["content"] for item in history if item["role"]=="user")
+        extra,species,safety=knowledge.build_clinical_context(text,owner_text,species_hint(pctx))
+        prompt=(pctx+"\nВопрос пользователя: "+text).strip()
         try:
             usage,replay=billing.reserve(user.id,'chat',payload.get('request_key'),(str(scope_pet)+'\n'+text).encode())
         except billing.BillingError as exc:
@@ -273,7 +279,7 @@ def chat():
             routing_note=""
             if ai_complexity(text)=="master" and not (paid_access or owner_access):
                 routing_note="\nЭтот случай относится к сложным. Не выполняй углублённый Master-разбор. Дай безопасный ограниченный ответ: срочность, красные флаги, что подготовить для врача и какие данные нужны. Не делай вид, что проведён полный клинический разбор. В конце кратко сообщи, что расширенный разбор доступен после пополнения пакета."
-            response=client.responses.create(model=selected_model,instructions=SYSTEM+ai_language()+routing_note,input=history+[{"role":"user","content":prompt}],max_output_tokens=3000 if paid_access else 1600)
+            response=client.responses.create(model=selected_model,instructions=SYSTEM+ai_language()+routing_note+extra,input=history+[{"role":"user","content":prompt}],max_output_tokens=3000 if paid_access else 1600)
             answer=_plain(response.output_text)
             if not answer:raise ValueError('Empty AI output')
             billing.lock_user(db,user.id)
@@ -282,6 +288,7 @@ def chat():
             db.add(record);db.flush()
             billing.complete(db,user.id,usage.id,record.id,response)
             db.commit()
+            session["chat_pet_id"]=scope_pet
         except Exception:
             db.rollback()
             billing.fail(user.id,usage.id)
@@ -292,6 +299,7 @@ def chat():
 def clear_chat():
     if not session.get("uid"):return jsonify({"error":"auth"}),401
     session["chat_started_at"]=datetime.utcnow().isoformat()
+    session.pop("chat_pet_id",None)
     return jsonify({"ok":True})
 
 @app.post("/documents")
@@ -313,6 +321,8 @@ def upload_document():
         flash("Проверьте дату исследования.");return redirect(url_for("analyses_page"))
     with storage.SessionLocal() as db:
         if pet_id and not db.scalar(select(storage.Pet.id).where(storage.Pet.id==pet_id,storage.Pet.user_id==session["uid"])):return "Not found",404
+        document_pet=db.get(storage.Pet,pet_id) if pet_id else None
+        document_context=knowledge.protocol_context("анализ", species=detect_species(document_pet.species+" "+(document_pet.breed or ""))) if document_pet else ""
         paid_mode=billing.metered(db,session['uid'])
     if paid_mode and mime=='application/pdf':
         try:
@@ -337,7 +347,7 @@ def upload_document():
         else:
             uploaded=client.files.create(file=(secure_filename(f.filename) or "document.pdf",io.BytesIO(data),mime),purpose="user_data")
             inp=[{"role":"user","content":[{"type":"input_text","text":"Разбери ветеринарный документ. Извлеки ключевые результаты, интерпретируй их в контексте и укажи ограничения."},{"type":"input_file","file_id":uploaded.id}]}]
-        response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM+ai_language(),input=inp,max_output_tokens=3000);analysis=_plain(response.output_text)
+        response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM+ai_language()+MEDIA_SPECIES_RULES+document_context,input=inp,max_output_tokens=3000);analysis=_plain(response.output_text)
         if not analysis:raise ValueError('Empty AI output')
         ai_response=response
     except Exception:

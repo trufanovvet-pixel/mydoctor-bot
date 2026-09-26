@@ -1,0 +1,58 @@
+{
+  "id": "exotic_reptile_mbd",
+  "title": "Рептилии: метаболическая болезнь костей",
+  "status": "source_grounded_clinician_review_required",
+  "version": 1,
+  "reviewed_at": "2026-09-26",
+  "species": [
+    "lizard",
+    "chelonian",
+    "reptile"
+  ],
+  "triggers": [
+    "мягкий панцирь",
+    "мягкая челюсть",
+    "искривлены лапы",
+    "тремор",
+    "перелом",
+    "нет uvb",
+    "рахит",
+    "metabolic bone",
+    "soft shell"
+  ],
+  "triage_questions": [
+    "Точный вид, возраст, рацион и добавки?",
+    "Лампа UVB, расстояние, преграды, температура, длительность признаков?"
+  ],
+  "emergency_red_flags": [
+    "Судороги, неспособность двигаться, подозрение на перелом."
+  ],
+  "differentials": [
+    "Нутритивный вторичный гиперпаратиреоз",
+    "Почечные/другие метаболические нарушения",
+    "Травма"
+  ],
+  "diagnostics": [
+    "Осмотр, рентген костей и целевые показатели кальция/фосфора и функции органов."
+  ],
+  "management_principles": [
+    "Коррекция среды и рациона вместе с лечением после оценки тяжести; при переломах минимум перемещений."
+  ],
+  "do_not_do": [
+    "Не назначать ударные дозы D3 или кальция наугад.",
+    "Не обещать, что одной новой лампы достаточно для тяжёлого случая."
+  ],
+  "sources": [
+    {
+      "title": "Merck Veterinary Manual — Disorders and Diseases of Reptiles",
+      "url": "https://www.merckvetmanual.com/all-other-pets/reptiles/disorders-and-diseases-of-reptiles",
+      "accessed_at": "2026-09-26"
+    },
+    {
+      "title": "MSD Veterinary Manual — Management and Husbandry of Reptiles",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/reptiles/management-and-husbandry-of-reptiles",
+      "accessed_at": "2026-09-26"
+    }
+  ],
+  "llm_guidance": "Не переносить схемы между видами. Не назначать новую лекарственную схему без проверенного видоспецифичного источника; дозировок в этом модуле нет. Сначала срочность, затем 2–4 полезных вопроса или обоснованный план."
+}

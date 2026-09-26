@@ -1,0 +1,607 @@
+{
+  "date": "2026-09-26",
+  "scope": "Deterministic retrieval, safety floor and prompt assembly; no live LLM answers",
+  "cases": [
+    {
+      "id": "bird_dyspnea",
+      "query": "Волнистый попугай дышит с открытым клювом в покое",
+      "species": [
+        "bird"
+      ],
+      "urgency": "immediate",
+      "matched_protocols": [
+        "exotic_bird_respiratory",
+        "exotic_bird_care"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "fa1d8df83dcea1c68a6de3463fefed637c06aa49963c17cbe277520140b7ec35"
+    },
+    {
+      "id": "bird_dyspnea_en",
+      "query": "My budgie has open-beak breathing at rest",
+      "species": [
+        "bird"
+      ],
+      "urgency": "immediate",
+      "matched_protocols": [
+        "exotic_bird_respiratory"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "fa1d8df83dcea1c68a6de3463fefed637c06aa49963c17cbe277520140b7ec35"
+    },
+    {
+      "id": "bird_nutrition",
+      "query": "Можно кормить попугая только семечками?",
+      "species": [
+        "bird"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_bird_care"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "bb0bf7f48c1f270603093fb189f80dc29b2ccc72d8c2523ba28e3cfa293ce948"
+    },
+    {
+      "id": "bird_eggbound",
+      "query": "Корелла не может снести яйцо и сидит на дне",
+      "species": [
+        "bird"
+      ],
+      "urgency": "immediate",
+      "matched_protocols": [
+        "exotic_bird_reproductive",
+        "exotic_bird_respiratory"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "122a6e1f864148bc4436d3eacdfdc8863d8218f8d8c08f86c7af08416701df25"
+    },
+    {
+      "id": "bird_psittacosis",
+      "query": "У жако подозрение на орнитоз, какую ПЦР сдать?",
+      "species": [
+        "bird"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_bird_psittacosis"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "394f77c68701799f7a97dad496bb05a141e4fa388a28b079091b3a896bc5ae10"
+    },
+    {
+      "id": "bird_labs",
+      "query": "Биохимия попугая: повышен AST, что проверить?",
+      "species": [
+        "bird"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_bird_care",
+        "exotic_bird_drugs"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "bb0bf7f48c1f270603093fb189f80dc29b2ccc72d8c2523ba28e3cfa293ce948"
+    },
+    {
+      "id": "rabbit_anorexia",
+      "query": "Кролик не ест и не какает с утра",
+      "species": [
+        "rabbit"
+      ],
+      "urgency": "same_day",
+      "matched_protocols": [
+        "exotic_rabbit_gi"
+      ],
+      "restrictions": [
+        "При выраженном вздутии или подозрении на обструкцию не докармливать насильно и не давать прокинетик до исключения непроходимости."
+      ],
+      "passed": true,
+      "context_sha256": "a1d32800e62fdb4de0936bbfbe7a00907a3a7e9df1f1b39d48a5a80b665318fb"
+    },
+    {
+      "id": "rabbit_obstruction",
+      "query": "Кролик не ест, живот вздут. Дать церукал и докорм?",
+      "species": [
+        "rabbit"
+      ],
+      "urgency": "immediate",
+      "matched_protocols": [
+        "exotic_rabbit_gi"
+      ],
+      "restrictions": [
+        "При выраженном вздутии или подозрении на обструкцию не докармливать насильно и не давать прокинетик до исключения непроходимости."
+      ],
+      "passed": true,
+      "context_sha256": "0e4f90fb5c07fdcd0847b434b8ab1649e3a0dec060fa701864ec213dd98ba9c4"
+    },
+    {
+      "id": "rabbit_amox",
+      "query": "Кролику назначили амоксициллин внутрь, сколько дать?",
+      "species": [
+        "rabbit"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_rabbit_drugs"
+      ],
+      "restrictions": [
+        "У кролика эти антибиотики противопоказаны при пероральном применении. Уточнить действующее вещество и путь; не вычислять следующую дозу внутрь. Не распространять запрет автоматически на все парентеральные пенициллины."
+      ],
+      "passed": true,
+      "context_sha256": "7445d598c92d0129baf0165bb1bd9fc586e5b409aa048479712565187cb8de2a"
+    },
+    {
+      "id": "rabbit_frontline",
+      "query": "Кролику можно Фронтлайн от блох?",
+      "species": [
+        "rabbit"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_rabbit_drugs"
+      ],
+      "restrictions": [
+        "Фипронил противопоказан кроликам. Не применять и не рассчитывать дозу; если уже применён — немедленно связаться с врачом."
+      ],
+      "passed": true,
+      "context_sha256": "ca7ceb8e238b93127f772309c0adf59c9ca20c9e0b6a4be39dcdc92cc9e88725"
+    },
+    {
+      "id": "rabbit_headtilt",
+      "query": "У кролика наклон головы, это энцефалитозооноз?",
+      "species": [
+        "rabbit"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_rabbit_neuro"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "626aff4234799cf08e806209d599ea0978ed4d65cd89f8e7443c27844bc9668a"
+    },
+    {
+      "id": "rabbit_diet",
+      "query": "Чем кормить кролика, какое сено?",
+      "species": [
+        "rabbit"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_rabbit_care"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "10c48faa401efdae259401759d6d313735764675fa2fceceeaa15ec492afcafd"
+    },
+    {
+      "id": "rabbit_anorexia_en",
+      "query": "My rabbit is not eating and has no droppings",
+      "species": [
+        "rabbit"
+      ],
+      "urgency": "same_day",
+      "matched_protocols": [
+        "exotic_rabbit_gi"
+      ],
+      "restrictions": [
+        "При выраженном вздутии или подозрении на обструкцию не докармливать насильно и не давать прокинетик до исключения непроходимости."
+      ],
+      "passed": true,
+      "context_sha256": "a1d32800e62fdb4de0936bbfbe7a00907a3a7e9df1f1b39d48a5a80b665318fb"
+    },
+    {
+      "id": "guinea_anorexia",
+      "query": "Морская свинка не ест и похудела",
+      "species": [
+        "guinea_pig"
+      ],
+      "urgency": "same_day",
+      "matched_protocols": [
+        "exotic_guinea_anorexia"
+      ],
+      "restrictions": [
+        "При выраженном вздутии или подозрении на обструкцию не докармливать насильно и не давать прокинетик до исключения непроходимости."
+      ],
+      "passed": true,
+      "context_sha256": "b0f1ac1a63db75fd51e099dd860ff4f60075518e48cbafcddb27dda818ddecbe"
+    },
+    {
+      "id": "guinea_amox",
+      "query": "Морской свинке прописали Синулокс",
+      "species": [
+        "guinea_pig"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_guinea_drugs"
+      ],
+      "restrictions": [
+        "У морской свинки высокий риск антибиотик-ассоциированной энтеротоксемии: не рекомендовать этот препарат самостоятельно и не рассчитывать следующую дозу. Смена пути не гарантирует безопасность."
+      ],
+      "passed": true,
+      "context_sha256": "0da84ab59bd6cda0bb1d2872e68a45108a1c12e67bca2ff0102cf0153e1e1c5b"
+    },
+    {
+      "id": "guinea_diet",
+      "query": "Морская свинка: питание и витамин C",
+      "species": [
+        "guinea_pig"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_guinea_anorexia",
+        "exotic_rodent_care"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "da6df498e8cdcf2688618c881211fbf4b0ff0dfb190127fd08c187b19e663034"
+    },
+    {
+      "id": "rat_crd",
+      "query": "Крыса чихает, красные слезы и порфирин",
+      "species": [
+        "rat"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_rat_respiratory"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "4ccf380503ca14a2e1114a5223dfc815790952454f729bed66b13abdc7140f57"
+    },
+    {
+      "id": "rat_dyspnea",
+      "query": "Крыса тяжело дышит и хрипит",
+      "species": [
+        "rat"
+      ],
+      "urgency": "immediate",
+      "matched_protocols": [
+        "exotic_rat_respiratory"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "159890bdd1642d006cfb21ba1cf5e4b3fec0ad890a7eebdefa14d4bf101fae09"
+    },
+    {
+      "id": "mouse_respiratory",
+      "query": "Мышь чихает и хрипит",
+      "species": [
+        "mouse"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_rat_respiratory"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "d96f277f10cad68527d3c31e087faa5e2535eecbdadf6807ba4f6bff39d2e8b5"
+    },
+    {
+      "id": "hamster_wettail",
+      "query": "Хомяк, мокрый хвост и понос",
+      "species": [
+        "hamster"
+      ],
+      "urgency": "same_day",
+      "matched_protocols": [
+        "exotic_hamster_diarrhea"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "8474cac3ce48e2bef41ccea203468c8ff58bf550b836a789d7805cc1974afa1c"
+    },
+    {
+      "id": "hamster_debilitated",
+      "query": "Хомяк, диарея, лежит вялый",
+      "species": [
+        "hamster"
+      ],
+      "urgency": "immediate",
+      "matched_protocols": [
+        "exotic_hamster_diarrhea"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "8e011680ef322ffc2632216bfbbc0b492104029f4c04372561d1933622ce79aa"
+    },
+    {
+      "id": "chinchilla_dental",
+      "query": "Шиншилла не ест, слюни, мокрый подбородок",
+      "species": [
+        "chinchilla"
+      ],
+      "urgency": "same_day",
+      "matched_protocols": [
+        "exotic_chinchilla_dental"
+      ],
+      "restrictions": [
+        "При выраженном вздутии или подозрении на обструкцию не докармливать насильно и не давать прокинетик до исключения непроходимости."
+      ],
+      "passed": true,
+      "context_sha256": "f611a5cd58045ad5e2494e346a6eb9c7ba36b5f13b5c498bea6d721a721ead12"
+    },
+    {
+      "id": "ferret_hypo",
+      "query": "Хорёк шатается, слюни, подозрение на инсулиному",
+      "species": [
+        "ferret"
+      ],
+      "urgency": "immediate",
+      "matched_protocols": [
+        "exotic_ferret_hypoglycemia"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "99ae0fb8e16c05c5f88f04297c541ce6ce0fccb6dd149767be4629d9c6b92cb1"
+    },
+    {
+      "id": "ferret_seizure",
+      "query": "My ferret has seizures",
+      "species": [
+        "ferret"
+      ],
+      "urgency": "immediate",
+      "matched_protocols": [
+        "exotic_ferret_hypoglycemia"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "b1573c0efc57701afdcfc8e80553fd07db5a8ea4e04af5cc761e1eca4f024170"
+    },
+    {
+      "id": "ferret_obstruction",
+      "query": "Хорёк съел резину, рвота",
+      "species": [
+        "ferret"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_ferret_obstruction"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "5e11ac2645cfb9e39676d175340ec8a45ff09182b4d8c8b56a25a46410398475"
+    },
+    {
+      "id": "ferret_urinary",
+      "query": "Хорек тужится, не мочится",
+      "species": [
+        "ferret"
+      ],
+      "urgency": "immediate",
+      "matched_protocols": [
+        "exotic_ferret_adrenal"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "777263856f0509192858464bbf88e5614209a32a0cfa2421eb659b1808994a51"
+    },
+    {
+      "id": "ferret_care",
+      "query": "Хорек питание и вакцина",
+      "species": [
+        "ferret"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_ferret_care"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "2abb4e57358e95f6e66a20a98f0a88602a347e86f9398faa69481d4759f87308"
+    },
+    {
+      "id": "turtle_ivermectin",
+      "query": "Красноухой черепахе ивермек сколько колоть?",
+      "species": [
+        "chelonian"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_reptile_drugs"
+      ],
+      "restrictions": [
+        "Ивермектин противопоказан черепахам; мильбемицина также избегать. Дозу не рассчитывать. При уже состоявшемся применении немедленно связаться с врачом по рептилиям."
+      ],
+      "passed": true,
+      "context_sha256": "9b17c10faff52379116ff9254a6bf3805d33d42643222b8c2ccf223bd7ab80f3"
+    },
+    {
+      "id": "turtle_ivermectin_en",
+      "query": "Ivermectin dosage for my tortoise?",
+      "species": [
+        "chelonian"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_reptile_drugs"
+      ],
+      "restrictions": [
+        "Ивермектин противопоказан черепахам; мильбемицина также избегать. Дозу не рассчитывать. При уже состоявшемся применении немедленно связаться с врачом по рептилиям."
+      ],
+      "passed": true,
+      "context_sha256": "9b17c10faff52379116ff9254a6bf3805d33d42643222b8c2ccf223bd7ab80f3"
+    },
+    {
+      "id": "turtle_respiratory",
+      "query": "Черепаха плавает боком и дышит ртом",
+      "species": [
+        "chelonian"
+      ],
+      "urgency": "immediate",
+      "matched_protocols": [
+        "exotic_reptile_respiratory"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "8541a9384a5cb9110e9c95e9368c1671c344a110f1cae18251b5f692499d0241"
+    },
+    {
+      "id": "lizard_mbd",
+      "query": "У агамы мягкая челюсть, нет UVB",
+      "species": [
+        "lizard"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_reptile_mbd"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "a6c705401bcb5f071a9c7bbbce21ed3a51489ef1679c99e10ad7687ab3a9409e"
+    },
+    {
+      "id": "gecko_shed",
+      "query": "Эублефар: застряла линька на пальцах",
+      "species": [
+        "lizard"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_reptile_skin"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "5bd1ca0c80941a99b6c6730f510862a20ccde345091b97b0a5a7d40294d4bd7b"
+    },
+    {
+      "id": "snake_anorexia",
+      "query": "Взрослый питон не ест 3 недели, вес стабилен",
+      "species": [
+        "snake"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_reptile_anorexia"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "8a572377624bde1be44c125512881048ffbccbbf0a3155e675a60ad7049f8ed7"
+    },
+    {
+      "id": "snake_microclimate",
+      "query": "Полоз: террариум, температура и влажность",
+      "species": [
+        "snake"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_reptile_care"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "021f773e0eab3e4bc9bb199c4ee962a1b9c0bc4a1a03bd4dbf9ef1a945e7212d"
+    },
+    {
+      "id": "reference_seizure",
+      "query": "Что такое судороги у хорька?",
+      "species": [
+        "ferret"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_ferret_hypoglycemia"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "a4cd44d3d4c70b1a118b859f2f39a8e00832e1c4a68dfff4aa98a9e9b4926edf"
+    },
+    {
+      "id": "negated_seizure",
+      "query": "Хорек, судорог нет, хочу узнать про питание",
+      "species": [
+        "ferret"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_ferret_care",
+        "exotic_ferret_hypoglycemia"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "294bbe90fff27f6e8f781183df8e0f9eb597d8e212ac08058bced151aeaae944"
+    },
+    {
+      "id": "gerbil_care",
+      "query": "Песчанка, грызун, уход и питание",
+      "species": [
+        "gerbil"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_rodent_care"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "6d10ba4144a77b56914f269f1bfe391ab030e685060804b47f99fe43c8aceddb"
+    },
+    {
+      "id": "degu_care",
+      "query": "Дегу питание и профилактика",
+      "species": [
+        "degu"
+      ],
+      "urgency": "unclassified",
+      "matched_protocols": [
+        "exotic_rodent_care"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "41fea1763fd8a8dd0ef344b88ac1294970c9824c8bdc39033710c82bd5cc61aa"
+    },
+    {
+      "id": "bird_ptfe",
+      "query": "Попугай рядом, перегрелась антипригарная сковорода",
+      "species": [
+        "bird"
+      ],
+      "urgency": "immediate",
+      "matched_protocols": [
+        "exotic_bird_toxins",
+        "exotic_bird_care"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "dbc5c9dac446e30016a231ec97a001c52bd7cc35af96d53a37978e67e8a59ef9"
+    },
+    {
+      "id": "bird_unable_perch",
+      "query": "Попугай не держится на жердочке",
+      "species": [
+        "bird"
+      ],
+      "urgency": "immediate",
+      "matched_protocols": [
+        "exotic_bird_respiratory",
+        "exotic_bird_care"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "424bd400dd7145a1630d4e56ab98e879febf5918ef6a037a9eb867a14bd0231d"
+    },
+    {
+      "id": "rabbit_no_feces",
+      "query": "Кролик не какает, ест меньше",
+      "species": [
+        "rabbit"
+      ],
+      "urgency": "same_day",
+      "matched_protocols": [
+        "exotic_rabbit_gi"
+      ],
+      "restrictions": [],
+      "passed": true,
+      "context_sha256": "f0c43e53c48a39afca59a2cf3f4e60c393cb9739fb82561a8267bab9f32fa48c"
+    }
+  ]
+}

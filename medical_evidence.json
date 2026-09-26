@@ -162,6 +162,156 @@
       "doi": null,
       "access": "full_text_read",
       "accessed_at": "2026-09-20"
+    },
+    "exotic_bird_care": {
+      "title": "MSD Veterinary Manual — Management of Pet Birds",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/pet-birds/management-of-pet-birds",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_bird_nutrition": {
+      "title": "MSD Veterinary Manual — Nutritional Diseases of Pet Birds",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/pet-birds/nutritional-diseases-of-pet-birds",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_bird_infection": {
+      "title": "MSD Veterinary Manual — Bacterial Diseases of Pet Birds",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/pet-birds/bacterial-diseases-of-pet-birds",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_bird_reproduction": {
+      "title": "Merck Veterinary Manual — Reproductive Disorders of Pet Birds",
+      "url": "https://www.merckvetmanual.com/bird-owners/disorders-and-diseases-of-birds/reproductive-disorders-of-pet-birds",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_aav": {
+      "title": "Association of Avian Veterinarians — Bird Owner Resources",
+      "url": "https://www.aav.org/page/birdowners",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_rabbit_care": {
+      "title": "MSD Veterinary Manual — Management of Rabbits",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/rabbits/management-of-rabbits",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_rabbit_gi": {
+      "title": "University of Illinois College of Veterinary Medicine — Rabbit Gastrointestinal Stasis Syndrome",
+      "url": "https://vetmed.illinois.edu/2024/06/04/rabbit-gi-stasis/",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_rabbit_neuro": {
+      "title": "Merck Veterinary Manual — Parasitic Diseases of Rabbits",
+      "url": "https://www.merckvetmanual.com/exotic-and-laboratory-animals/rabbits/parasitic-diseases-of-rabbits",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_guinea_care": {
+      "title": "Merck Veterinary Manual — Housing and Nutrition of Guinea Pigs",
+      "url": "https://www.merckvetmanual.com/exotic-and-laboratory-animals/guinea-pigs/housing-and-nutrition-of-guinea-pigs",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_guinea_safety": {
+      "title": "MSD Veterinary Manual — Routine Care of Guinea Pigs",
+      "url": "https://www.msdvetmanual.com/all-other-pets/guinea-pigs/routine-care-of-guinea-pigs",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_guinea_disease": {
+      "title": "Merck Veterinary Manual — Disorders and Diseases of Guinea Pigs",
+      "url": "https://www.merckvetmanual.com/all-other-pets/guinea-pigs/disorders-and-diseases-of-guinea-pigs",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_rodents": {
+      "title": "MSD Veterinary Manual — Rodents",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/rodents/rodents",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_rat": {
+      "title": "MSD Veterinary Manual — Mice and Rats as Pets",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/rodents/mice-and-rats-as-pets",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_hamster": {
+      "title": "MSD Veterinary Manual — Hamsters",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/rodents/hamsters",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_chinchilla": {
+      "title": "MSD Veterinary Manual — Chinchillas",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/rodents/chinchillas",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_ferret_care": {
+      "title": "Merck Veterinary Manual — Management of Ferrets",
+      "url": "https://www.merckvetmanual.com/exotic-and-laboratory-animals/ferrets/management-of-ferrets",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_ferret_endocrine": {
+      "title": "MSD Veterinary Manual — Endocrine Disorders of Ferrets",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/ferrets/endocrine-disorders-of-ferrets",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_ferret_disease": {
+      "title": "MSD Veterinary Manual — Noninfectious Diseases of Ferrets",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/ferrets/noninfectious-diseases-of-ferrets",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_reptile_care": {
+      "title": "MSD Veterinary Manual — Management and Husbandry of Reptiles",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/reptiles/management-and-husbandry-of-reptiles",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_reptile_procedures": {
+      "title": "MSD Veterinary Manual — Clinical Procedures for Reptiles",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/reptiles/clinical-procedures-for-reptiles",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_reptile_disease": {
+      "title": "Merck Veterinary Manual — Disorders and Diseases of Reptiles",
+      "url": "https://www.merckvetmanual.com/all-other-pets/reptiles/disorders-and-diseases-of-reptiles",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_reptile_infection": {
+      "title": "MSD Veterinary Manual — Bacterial Diseases of Reptiles",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/reptiles/bacterial-diseases-of-reptiles",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_guinea_techniques": {
+      "title": "Merck Veterinary Manual — Clinical Techniques for Guinea Pigs",
+      "url": "https://www.merckvetmanual.com/exotic-and-laboratory-animals/guinea-pigs/clinical-techniques-for-guinea-pigs",
+      "access": "source_sections_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_guinea_clindamycin": {
+      "title": "Therapeutic efficacy of oral lactobacillus preparation for antibiotic-associated enteritis in guinea pigs",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/11178313/",
+      "access": "abstract_read",
+      "accessed_at": "2026-09-26"
+    },
+    "exotic_bird_toxins": {
+      "title": "MSD Veterinary Manual — Toxicoses of Pet Birds",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/pet-birds/toxicoses-of-pet-birds",
+      "accessed_at": "2026-09-26",
+      "access": "source_sections_read"
     }
   },
   "protocols": {
@@ -2288,6 +2438,278 @@
       ],
       "title": "Потеря веса у собак и кошек",
       "trigger_hash": "206dc695f2dd1c8d2e1715489b8f132596bf97c5f0e0b1a1fd35b59d9c7a7aa6"
+    },
+    "exotic_bird_care": {
+      "title": "Птицы: содержание, питание и профилактика",
+      "trigger_hash": "9128d8f4c77893d8b1c42bc6e4f7a3d09bd3269d87c8ebb928056798d2004a41",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_bird_nutrition",
+        "exotic_aav"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_bird_respiratory": {
+      "title": "Птицы: затруднённое дыхание и слабость",
+      "trigger_hash": "d0b2ba7663f80344b34938263622485e43d5db015c639fb8e4a9ededda73f5c8",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_bird_care",
+        "exotic_bird_infection"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_bird_reproductive": {
+      "title": "Птицы: задержка яйца и репродуктивные нарушения",
+      "trigger_hash": "317c7be62127fa1778975cb171ca91fdada4f40e0e6ea6c5246a61f36b1c3014",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_bird_reproduction"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_bird_psittacosis": {
+      "title": "Птицы: хламидиоз и зоонозный риск",
+      "trigger_hash": "be60dd12f7176489e0d27d77c628cef6f0dce2b9a4b56199debf853e6a0fd963",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_bird_infection"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_bird_drugs": {
+      "title": "Птицы: ограничения препаратов и интерпретации анализов",
+      "trigger_hash": "47e7a7cb7dc6764d452aa3e9065c64fd17d77376ea68b33dd1edcf23bba5ce27",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_bird_care"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_rabbit_care": {
+      "title": "Кролики: содержание, питание и профилактика",
+      "trigger_hash": "9dd23e251c2f474d0deb828d688b8e0dbee1ea783376d3b8d975a167b4a0ccae",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_rabbit_care",
+        "exotic_rabbit_gi"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_rabbit_gi": {
+      "title": "Кролики: анорексия, стаз и исключение непроходимости",
+      "trigger_hash": "aa1553d43ff5486ec0f735d2da58232f5c3b311f0dc47b5f4383cadb1824aa10",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_rabbit_gi"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_rabbit_neuro": {
+      "title": "Кролики: наклон головы и неврологические признаки",
+      "trigger_hash": "ab6d41601c782d87dc83d7b85b56fc85cc03490161898ac598ab91954c865c91",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_rabbit_neuro"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_rabbit_drugs": {
+      "title": "Кролики: антибиотики и противопаразитарные ограничения",
+      "trigger_hash": "855c029872e53eedc9781178b805ce6a88653495e658632633c339a007bd8a5c",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_rabbit_care"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_rodent_care": {
+      "title": "Грызуны: вид, содержание, питание и профилактика",
+      "trigger_hash": "164957178ff34db30ad4d284be5b189840ed3194f828078df255660eb3122d21",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_guinea_care",
+        "exotic_rodents",
+        "exotic_rat",
+        "exotic_hamster",
+        "exotic_chinchilla"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_guinea_anorexia": {
+      "title": "Морские свинки: анорексия и стоматологическая боль",
+      "trigger_hash": "a0d1c8b1a2bf0271052d25069eb717c09d93e67de6c3aec13e02e227cbba80aa",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_guinea_disease",
+        "exotic_guinea_care"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_guinea_drugs": {
+      "title": "Морские свинки: лекарственная энтеротоксемия",
+      "trigger_hash": "d04c0dda2f072df4e3175627e42b3dc9a48992849e47b78f5c4c841a88cd8f0a",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_guinea_techniques",
+        "exotic_guinea_clindamycin"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_rat_respiratory": {
+      "title": "Крысы и мыши: дыхательные заболевания",
+      "trigger_hash": "f9c8d1a019a01d027253813810b814e9342567f73bdfee8bfb988ed4e326473c",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_rat"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_hamster_diarrhea": {
+      "title": "Хомяки: диарея и мокрый хвост",
+      "trigger_hash": "eacd3b26cc0080a5cf49882fb415432ac12376590e267ec0b39a23baae89c230",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_hamster"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_chinchilla_dental": {
+      "title": "Шиншиллы: стоматологические болезни и снижение аппетита",
+      "trigger_hash": "c44f17558d7f31ca50902eb14cbccd6b0f10cf51c3362641fdbc6fb3a3f7a040",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_chinchilla"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_ferret_care": {
+      "title": "Хорьки: содержание, питание и профилактика",
+      "trigger_hash": "7d71f360c6f058544835b5f796e13edbbe92bafeb8aa0fe6b0cdfdfee843dcf5",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_ferret_care"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_ferret_hypoglycemia": {
+      "title": "Хорьки: слабость, гипогликемия и инсулинома",
+      "trigger_hash": "33f17fa1500ed8450bfb1c8917cae727338c4f24ceb46e414742d557243dab7a",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_ferret_endocrine"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_ferret_obstruction": {
+      "title": "Хорьки: рвота, инородное тело и обструкция",
+      "trigger_hash": "d287ddc7c0e4f4fac799005367964b3330a36f4a0aeb9c41c8cb82da18ce0d73",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_ferret_disease"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_ferret_adrenal": {
+      "title": "Хорьки: адренальная болезнь и нарушения мочеиспускания",
+      "trigger_hash": "5509b0d4ec51746cb87db9af6ecc59221fcb559fa11bb608930009b0f9608042",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_ferret_endocrine",
+        "exotic_ferret_disease"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_reptile_care": {
+      "title": "Рептилии: микроклимат, питание и профилактика",
+      "trigger_hash": "0ee5ee5c3030fb3d1cef3b6f3494c81d07d55fbb612fa65ffd9312a630dbeca0",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_reptile_care"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_reptile_mbd": {
+      "title": "Рептилии: метаболическая болезнь костей",
+      "trigger_hash": "dbea18df75d2de0eafbcb25118db13b5dc31a6cd7a801bc145b923528d089b95",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_reptile_disease",
+        "exotic_reptile_care"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_reptile_anorexia": {
+      "title": "Рептилии: отказ от корма и потеря веса",
+      "trigger_hash": "2c007cca2f6e3377da7f1d1420fe148514c72883e5ff3c08932213dbb812659c",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_reptile_disease",
+        "exotic_reptile_care"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_reptile_respiratory": {
+      "title": "Рептилии: дыхательные признаки и инфекции",
+      "trigger_hash": "7418395dc19539e50ad5a9e9da8a02b2834c3bccfafade3071de496e3b5a4e6f",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_reptile_infection"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_reptile_skin": {
+      "title": "Рептилии: нарушение линьки и поражения кожи",
+      "trigger_hash": "8fa622d2117839000f646828ca582b3178d79999fb73cfc614c26e4d3d1cf107",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_reptile_disease",
+        "exotic_reptile_care"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_reptile_drugs": {
+      "title": "Рептилии: видоспецифичные ограничения лекарств",
+      "trigger_hash": "ad05126277a464bb0024ed2342813f473b53f5a0fa441ae4428274a548efd852",
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_reptile_procedures"
+      ],
+      "review_note": "Краткий авторский клинический синтез. Источники разделов прочитаны; дозы не добавлены, полная клиническая валидация не заявляется."
+    },
+    "exotic_bird_toxins": {
+      "status": "source_grounded_clinician_review_required",
+      "claims": {},
+      "source_ids": [
+        "exotic_bird_toxins"
+      ],
+      "title": "Птицы: бытовые токсины, PTFE и тяжёлые металлы",
+      "trigger_hash": "3b15cd85418fb4edd4874e28a7eed44bad7fc3be47d558f135ac3a0d00127e93"
     }
   }
 }

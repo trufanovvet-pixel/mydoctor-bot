@@ -1,0 +1,55 @@
+{
+  "id": "exotic_ferret_adrenal",
+  "title": "Хорьки: адренальная болезнь и нарушения мочеиспускания",
+  "status": "source_grounded_clinician_review_required",
+  "version": 1,
+  "reviewed_at": "2026-09-26",
+  "species": [
+    "ferret"
+  ],
+  "triggers": [
+    "облысение",
+    "выпадает шерсть",
+    "не мочится",
+    "тужится",
+    "адренальная",
+    "adrenal",
+    "hair loss",
+    "cannot urinate"
+  ],
+  "triage_questions": [
+    "Пол, кастрация, характер облысения?",
+    "Есть выделение мочи, натуживание, увеличение вульвы?"
+  ],
+  "emergency_red_flags": [
+    "Безрезультатные попытки мочиться с отсутствием мочи."
+  ],
+  "differentials": [
+    "Адренальная болезнь",
+    "Уролитиаз/обструкция",
+    "Другие причины алопеции"
+  ],
+  "diagnostics": [
+    "Осмотр, УЗИ надпочечников и мочевых путей; гормональные исследования по показаниям."
+  ],
+  "management_principles": [
+    "Отсутствие мочи требует немедленной оценки; изолированное облысение — плановое обследование."
+  ],
+  "do_not_do": [
+    "Не подменять адренальную болезнь хорька собачьим синдромом Кушинга.",
+    "Не назначать человеческие гормональные препараты по фото."
+  ],
+  "sources": [
+    {
+      "title": "MSD Veterinary Manual — Endocrine Disorders of Ferrets",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/ferrets/endocrine-disorders-of-ferrets",
+      "accessed_at": "2026-09-26"
+    },
+    {
+      "title": "MSD Veterinary Manual — Noninfectious Diseases of Ferrets",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/ferrets/noninfectious-diseases-of-ferrets",
+      "accessed_at": "2026-09-26"
+    }
+  ],
+  "llm_guidance": "Не переносить схемы между видами. Не назначать новую лекарственную схему без проверенного видоспецифичного источника; дозировок в этом модуле нет. Сначала срочность, затем 2–4 полезных вопроса или обоснованный план."
+}
