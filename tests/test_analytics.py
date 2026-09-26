@@ -245,3 +245,20 @@ def test_telemetry_response_never_overwrites_authentication_cookie():
     assert response.status_code==204
     assert not any(value.startswith(web_app.app.config['SESSION_COOKIE_NAME']+'=') for value in response.headers.getlist('Set-Cookie'))
     with c.session_transaction() as state: assert state['uid']==uid
+
+
+def test_chart_grouping_reuses_selected_bucket_for_postgres_bound_parameters():
+    # Separate identical-looking SQL expressions receive different bind positions
+    # in psycopg. PostgreSQL then rejects SELECT/GROUP BY as different expressions.
+    from sqlalchemy.dialects import postgresql
+    statements=[]
+    def capture(conn, clause, multiparams, params, execution_options):
+        sql=str(clause.compile(dialect=postgresql.dialect()))
+        if ' AS bucket' in sql: statements.append(sql)
+    event.listen(storage.engine,'before_execute',capture)
+    try:
+        a.report('today')
+    finally:
+        event.remove(storage.engine,'before_execute',capture)
+    assert len(statements)==2
+    assert all('GROUP BY bucket' in sql for sql in statements)

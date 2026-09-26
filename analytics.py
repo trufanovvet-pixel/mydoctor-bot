@@ -292,10 +292,10 @@ def report(period='today', source=None, timezone='Asia/Bangkok', now=None):
             offset = end.replace(tzinfo=ZoneInfo('UTC')).astimezone(tz).utcoffset().total_seconds()/3600
             return func.strftime({'hour':'%Y-%m-%d %H:00', 'day':'%Y-%m-%d', 'month':'%Y-%m'}[granularity], col, f'{offset:+g} hours')
         activity = {r.bucket: dict(users=r.users, ai=r.ai) for r in db.execute(select(bucket(E.timestamp).label('bucket'),
-            func.count(func.distinct(E.user_id)).label('users'), func.sum(case((E.event_name == 'ai_question', 1), else_=0)).label('ai')).where(*where()).group_by(bucket(E.timestamp)))}
+            func.count(func.distinct(E.user_id)).label('users'), func.sum(case((E.event_name == 'ai_question', 1), else_=0)).label('ai')).where(*where()).group_by('bucket'))}
         paid_series = {}
         for r in db.execute(select(bucket(payments.c.paid_at).label('bucket'), payments.c.currency,
-                                   func.count().label('count'), func.sum(payments.c.amount_minor).label('amount')).group_by(bucket(payments.c.paid_at), payments.c.currency)):
+                                   func.count().label('count'), func.sum(payments.c.amount_minor).label('amount')).group_by('bucket', payments.c.currency)):
             point = paid_series.setdefault(r.bucket, {'payments':0, 'revenue':{}})
             point['payments'] += r.count
             point['revenue'][r.currency] = int(r.amount or 0)/100
