@@ -1,0 +1,41 @@
+{
+  "id": "exotic_guinea_drugs",
+  "title": "Морские свинки: лекарственная энтеротоксемия",
+  "status": "source_grounded_clinician_review_required",
+  "version": 1,
+  "reviewed_at": "2026-09-26",
+  "species": [
+    "guinea_pig"
+  ],
+  "triggers": [
+    "амоксициллин",
+    "пенициллин",
+    "клиндамицин",
+    "антибиотик",
+    "синулокс",
+    "линкомицин",
+    "amoxicillin",
+    "penicillin",
+    "antibiotic"
+  ],
+  "drug_restrictions": [
+    "Пенициллины, включая амоксициллин, и линкозамиды могут опасно нарушать микрофлору морской свинки; не рекомендовать самостоятельное применение.",
+    "Риск не устраняется автоматически сменой пути введения. Выбор препарата и пути требует врача по этому виду."
+  ],
+  "management_principles": [
+    "Диарея, анорексия или слабость на фоне антибиотика требуют срочной связи с назначившим врачом; не рассчитывать следующую потенциально опасную дозу."
+  ],
+  "sources": [
+    {
+      "title": "Merck Veterinary Manual — Clinical Techniques for Guinea Pigs",
+      "url": "https://www.merckvetmanual.com/exotic-and-laboratory-animals/guinea-pigs/clinical-techniques-for-guinea-pigs",
+      "accessed_at": "2026-09-26"
+    },
+    {
+      "title": "Therapeutic efficacy of oral lactobacillus preparation for antibiotic-associated enteritis in guinea pigs (PMID 11178313)",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/11178313/",
+      "accessed_at": "2026-09-26"
+    }
+  ],
+  "llm_guidance": "Не переносить схемы между видами. Не назначать новую лекарственную схему без проверенного видоспецифичного источника; дозировок в этом модуле нет. Сначала срочность, затем 2–4 полезных вопроса или обоснованный план."
+}

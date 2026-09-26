@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from PIL import Image, ImageOps, UnidentifiedImageError
 import storage
+from exotic_medicine import SPECIES_OPTIONS
 from patient_records import CATEGORIES, DocumentLabel, PetPhoto, OperationRecord, OperationAttachment, classify_document
 from prevention_patch import PreventiveEvent
 from consultation_delivery import WebConsultationDelivery
@@ -47,7 +48,7 @@ def install(app,WebDocument):
         if not op:abort(404)
         return op
     def pets_for(db):return db.scalars(select(storage.Pet).where(storage.Pet.user_id==session['uid']).order_by(storage.Pet.created_at)).all()
-    def render(page,title,**kw):return render_template('section.html',page=page,title=title if page in ('pet','analysis','operation') else t(title),categories=CATEGORIES,kinds=KINDS,**kw)
+    def render(page,title,**kw):return render_template('section.html',page=page,title=title if page in ('pet','analysis','operation') else t(title),categories=CATEGORIES,kinds=KINDS,species_options=SPECIES_OPTIONS,**kw)
     def picked_pet(db):
         pid=request.args.get('pet_id',type=int)
         if pid:owned_pet(db,pid)
@@ -100,7 +101,7 @@ def install(app,WebDocument):
             if request.method=='POST':
                 try:
                     name=request.form.get('name','').strip();species=request.form.get('species','').strip()
-                    if not name or species not in ('Собака','Кошка','собака','кошка'):raise ValueError('Укажите имя и вид питомца.')
+                    if not name or species.lower() not in {x.lower() for x in SPECIES_OPTIONS} and species != pet.species:raise ValueError('Укажите имя и вид питомца.')
                     weight=float(request.form['weight'].replace(',','.')) if request.form.get('weight') else None
                     if weight is not None and (not math.isfinite(weight) or not 0<weight<=300):raise ValueError('Проверьте вес питомца.')
                     pet.name=name[:120];pet.species=species;pet.weight_kg=weight

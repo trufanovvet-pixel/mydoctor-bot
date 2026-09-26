@@ -6,6 +6,8 @@ from functools import lru_cache
 from pathlib import Path
 
 import pymorphy3
+from exotic_medicine import (detect_species, resolve_species, protocol_applies,
+    species_context, assess_safety, EXOTICS)
 
 BASE_DIR = Path(__file__).parent
 PROTOCOL_DIR = BASE_DIR / "protocols"
@@ -76,7 +78,9 @@ def _tokens(text: str) -> tuple[str, ...]:
     return tuple(_lemma(w) for w in re.findall(r"[a-zа-я0-9]+", _normalize(text)))
 
 
-def diagnostics_context() -> str:
+def diagnostics_context(species=None) -> str:
+    if set(species or ()) & (EXOTICS | {"unsupported"}):
+        return species_context(species) + "\nДиагностика: использовать видовые референсы и метод лаборатории; панель собак/кошек автоматически не применять."
     chunks = []
     if DIAGNOSTICS:
         chunks.append("БАЗА ПРОЕКТА (ПОЛНАЯ ПРОВЕРКА ИСТОЧНИКОВ НЕ ЗАВЕРШЕНА): СРАВНЕНИЕ АНАЛИЗОВ И ОБСЛЕДОВАНИЙ:\n" + json.dumps(DIAGNOSTICS, ensure_ascii=False))
@@ -120,10 +124,15 @@ def _protocol_score(protocol: dict, normalized: str) -> int:
     return score
 
 
-def match_protocols(text: str, limit: int = 4) -> list[dict]:
+def match_protocols(text: str, limit: int = 4, species=None) -> list[dict]:
+    if limit <= 0:
+        return []
+    species = detect_species(text) if species is None else species
     normalized = _normalize(text)
     scored = []
     for protocol in PROTOCOLS:
+        if not protocol_applies(protocol, species):
+            continue
         score = _protocol_score(protocol, normalized)
         if score:
             scored.append((score, protocol))
@@ -172,13 +181,19 @@ def _structured_protocol(protocol: dict) -> str:
     return "\n".join(fields)
 
 
-def protocol_context(text: str) -> str:
-    matches = match_protocols(text)
+def protocol_context(text: str, species=None) -> str:
+    species = detect_species(text) if species is None else species
+    matches = match_protocols(text, species=species)
+    prefix = species_context(species)
+    # Critical species restrictions are included even when top-k is occupied by symptoms.
+    for p in PROTOCOLS:
+        if p.get("id", "").startswith("exotic_") and p.get("id", "").endswith(("_drugs", "_care")) and protocol_applies(p, species) and p not in matches:
+            matches.append(p)
     if not matches:
-        return ""
+        return prefix
     chunks = [_structured_protocol(p) for p in matches]
     return (
-        "\n\nМЕДИЦИНСКАЯ БАЗА ПРОЕКТА ДЛЯ ЭТОГО ОБРАЩЕНИЯ:\n"
+        prefix + "\n\nМЕДИЦИНСКАЯ БАЗА ПРОЕКТА ДЛЯ ЭТОГО ОБРАЩЕНИЯ:\n"
         + "\n\n".join(chunks)
         + "\n\nРЕЖИМ ЭКСПЕРТНОГО КЛИНИЧЕСКОГО МЫШЛЕНИЯ:\n"
           "Работай не как справочник, а как сильный клиницист. Сначала сформируй problem representation: вид, возраст, длительность, "
@@ -199,3 +214,28 @@ def protocol_context(text: str) -> str:
           "4) что проверить и зачем; 5) контроль и признаки изменения срочности. Задавай только вопросы, ответы на которые меняют тактику. "
           "Не используй 'обратитесь к ветеринару' как замену клиническому плану."
     )
+
+
+def build_clinical_context(latest, owner_text='', pet_species=''):
+    """Use current owner facts and an explicitly selected patient, not AI claims."""
+    species = resolve_species(latest, owner_text, pet_species)
+    # Stop fallback retrieval at the last explicitly different patient.
+    current = []
+    for line in reversed((owner_text or '').splitlines()):
+        found = detect_species(line)
+        if found and species and found != species:
+            break
+        current.append(line)
+    current_text = '\n'.join(reversed(current))
+    query = latest
+    if not match_protocols(latest, species=species) and current_text:
+        query = current_text + '\n' + latest
+    context = protocol_context(query, species=species)
+    safety = assess_safety(latest, species)
+    # Prior medication names remain relevant to short follow-ups. Old red flags
+    # must not be promoted back to current facts after the owner reports recovery.
+    previous = assess_safety(current_text, species)
+    if previous.restrictions:
+        from dataclasses import replace
+        safety = replace(safety, restrictions=tuple(dict.fromkeys(safety.restrictions + previous.restrictions)))
+    return context + safety.prompt(), species, safety

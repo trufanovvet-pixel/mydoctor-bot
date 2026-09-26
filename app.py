@@ -5,7 +5,8 @@ from importlib.machinery import SourceFileLoader
 from importlib.util import module_from_spec, spec_from_loader
 from pathlib import Path
 
-from knowledge import diagnostics_context, is_diagnostics_query, protocol_context
+from knowledge import diagnostics_context, is_diagnostics_query, protocol_context, build_clinical_context
+from exotic_medicine import species_hint, MEDIA_SPECIES_RULES
 
 
 CLINICAL_REASONING_MODE = """
@@ -280,8 +281,8 @@ class _ResponsesWithKnowledge:
         # Owner statements, not earlier model hypotheses, determine retrieval.
         owner_text = _extract_text([m for m in (kwargs.get("input") or [])
                                    if isinstance(m, dict) and m.get("role") == "user"])
-        protocol = protocol_context(latest_text) or protocol_context(owner_text)
-        diagnostics = diagnostics_context()
+        protocol, species, safety = build_clinical_context(latest_text, owner_text, species_hint(kwargs.get("instructions") or ""))
+        diagnostics = diagnostics_context(species)
         messages = kwargs.get("input") or []
         recent_marker = (len(messages) >= 2 and isinstance(messages[-2], dict)
                          and isinstance(messages[-2].get("content"), str)
@@ -290,7 +291,7 @@ class _ResponsesWithKnowledge:
         instructions = kwargs.get("instructions") or ""
         budget_requested = _budget_requested(latest_text)
 
-        if direct_diagnostics:
+        if direct_diagnostics and safety.urgency == "unclassified" and not safety.restrictions:
             if not _explicit_patient_reference(latest_text, instructions):
                 instructions = _strip_active_pet_context(instructions)
             instructions += DIAGNOSTICS_MODE + diagnostics + protocol
@@ -307,12 +308,19 @@ class _ResponsesWithKnowledge:
             kwargs["instructions"] = instructions
             return self._responses.create(*args, **kwargs)
 
+        if _has_media(kwargs.get("input")):
+            instructions += MEDIA_SPECIES_RULES
         instructions += CLINICAL_REASONING_MODE
         if protocol:
             instructions += protocol
 
         if not _has_media(kwargs.get("input")) and text.strip():
-            decision = self._controller_decision(kwargs, protocol)
+            if safety.urgency == "immediate":
+                decision = {"stage": "EMERGENCY", "questions": [], "note": safety.prompt()}
+            elif safety.urgency == "same_day" or safety.restrictions:
+                decision = {"stage": "ASSESSMENT", "questions": [], "note": safety.prompt()}
+            else:
+                decision = self._controller_decision(kwargs, protocol)
             if decision["stage"] == "ASSESSMENT":
                 instructions += diagnostics
             instructions += _phase_instruction(decision, budget_requested)

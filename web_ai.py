@@ -22,7 +22,7 @@ def pet_context(pet, profile):
 
 def answer(messages, pet, profile):
     latest=messages[-1]["content"] if messages else ""
-    proto=knowledge.protocol_context(latest) or knowledge.protocol_context("\n".join(x["content"] for x in messages if x["role"]=="user"))
+    proto, species, safety=knowledge.build_clinical_context(latest, "\n".join(x["content"] for x in messages if x["role"]=="user"), pet.species+" "+(pet.breed or ""))
     instructions=SYSTEM+"\n\nКАРТОЧКА ВЫБРАННОГО ПИТОМЦА:\n"+pet_context(pet,profile)+proto
     client=OpenAI()
     r=client.responses.create(model="gpt-5.6-sol",instructions=instructions,input=messages[-40:])

@@ -1,0 +1,58 @@
+{
+  "id": "exotic_reptile_anorexia",
+  "title": "Рептилии: отказ от корма и потеря веса",
+  "status": "source_grounded_clinician_review_required",
+  "version": 1,
+  "reviewed_at": "2026-09-26",
+  "species": [
+    "reptile",
+    "chelonian",
+    "snake",
+    "lizard"
+  ],
+  "triggers": [
+    "не ест",
+    "похудела",
+    "спячка",
+    "брумация",
+    "срыгивает",
+    "not eating",
+    "brumation",
+    "regurgitation"
+  ],
+  "triage_questions": [
+    "Точный вид, возраст, сезон, последний корм и динамика веса?",
+    "Измеренный микроклимат, линька, фекалии, беременность, условия кормления?"
+  ],
+  "emergency_red_flags": [
+    "Слабость, обезвоживание, дыхательный дистресс или быстрое падение массы."
+  ],
+  "differentials": [
+    "Неподходящая среда/сезонные изменения",
+    "Паразитарная или другая болезнь",
+    "Обструкция/репродуктивная патология"
+  ],
+  "diagnostics": [
+    "Оценка вида, кондиции и содержания; исследование кала, визуализация и анализы по показаниям."
+  ],
+  "management_principles": [
+    "У стабильной взрослой змеи длительный интервал без корма оценивается иначе, чем у молодого травоядного; срок сам по себе не диагноз."
+  ],
+  "do_not_do": [
+    "Не считать любую анорексию нормальной спячкой.",
+    "Не кормить насильно обезвоженную, охлаждённую или нестабильную рептилию до коррекции и осмотра."
+  ],
+  "sources": [
+    {
+      "title": "Merck Veterinary Manual — Disorders and Diseases of Reptiles",
+      "url": "https://www.merckvetmanual.com/all-other-pets/reptiles/disorders-and-diseases-of-reptiles",
+      "accessed_at": "2026-09-26"
+    },
+    {
+      "title": "MSD Veterinary Manual — Management and Husbandry of Reptiles",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/reptiles/management-and-husbandry-of-reptiles",
+      "accessed_at": "2026-09-26"
+    }
+  ],
+  "llm_guidance": "Не переносить схемы между видами. Не назначать новую лекарственную схему без проверенного видоспецифичного источника; дозировок в этом модуле нет. Сначала срочность, затем 2–4 полезных вопроса или обоснованный план."
+}

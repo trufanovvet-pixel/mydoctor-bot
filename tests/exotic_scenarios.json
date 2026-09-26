@@ -1,0 +1,289 @@
+[
+  [
+    "bird_dyspnea",
+    "Волнистый попугай дышит с открытым клювом в покое",
+    "bird",
+    "immediate",
+    "exotic_bird_respiratory"
+  ],
+  [
+    "bird_dyspnea_en",
+    "My budgie has open-beak breathing at rest",
+    "bird",
+    "immediate",
+    "exotic_bird_respiratory"
+  ],
+  [
+    "bird_nutrition",
+    "Можно кормить попугая только семечками?",
+    "bird",
+    "unclassified",
+    "exotic_bird_care"
+  ],
+  [
+    "bird_eggbound",
+    "Корелла не может снести яйцо и сидит на дне",
+    "bird",
+    "immediate",
+    "exotic_bird_reproductive"
+  ],
+  [
+    "bird_psittacosis",
+    "У жако подозрение на орнитоз, какую ПЦР сдать?",
+    "bird",
+    "unclassified",
+    "exotic_bird_psittacosis"
+  ],
+  [
+    "bird_labs",
+    "Биохимия попугая: повышен AST, что проверить?",
+    "bird",
+    "unclassified",
+    "exotic_bird_drugs"
+  ],
+  [
+    "rabbit_anorexia",
+    "Кролик не ест и не какает с утра",
+    "rabbit",
+    "same_day",
+    "exotic_rabbit_gi"
+  ],
+  [
+    "rabbit_obstruction",
+    "Кролик не ест, живот вздут. Дать церукал и докорм?",
+    "rabbit",
+    "immediate",
+    "exotic_rabbit_gi"
+  ],
+  [
+    "rabbit_amox",
+    "Кролику назначили амоксициллин внутрь, сколько дать?",
+    "rabbit",
+    "unclassified",
+    "exotic_rabbit_drugs"
+  ],
+  [
+    "rabbit_frontline",
+    "Кролику можно Фронтлайн от блох?",
+    "rabbit",
+    "unclassified",
+    "exotic_rabbit_drugs"
+  ],
+  [
+    "rabbit_headtilt",
+    "У кролика наклон головы, это энцефалитозооноз?",
+    "rabbit",
+    "unclassified",
+    "exotic_rabbit_neuro"
+  ],
+  [
+    "rabbit_diet",
+    "Чем кормить кролика, какое сено?",
+    "rabbit",
+    "unclassified",
+    "exotic_rabbit_care"
+  ],
+  [
+    "rabbit_anorexia_en",
+    "My rabbit is not eating and has no droppings",
+    "rabbit",
+    "same_day",
+    "exotic_rabbit_gi"
+  ],
+  [
+    "guinea_anorexia",
+    "Морская свинка не ест и похудела",
+    "guinea_pig",
+    "same_day",
+    "exotic_guinea_anorexia"
+  ],
+  [
+    "guinea_amox",
+    "Морской свинке прописали Синулокс",
+    "guinea_pig",
+    "unclassified",
+    "exotic_guinea_drugs"
+  ],
+  [
+    "guinea_diet",
+    "Морская свинка: питание и витамин C",
+    "guinea_pig",
+    "unclassified",
+    "exotic_rodent_care"
+  ],
+  [
+    "rat_crd",
+    "Крыса чихает, красные слезы и порфирин",
+    "rat",
+    "unclassified",
+    "exotic_rat_respiratory"
+  ],
+  [
+    "rat_dyspnea",
+    "Крыса тяжело дышит и хрипит",
+    "rat",
+    "immediate",
+    "exotic_rat_respiratory"
+  ],
+  [
+    "mouse_respiratory",
+    "Мышь чихает и хрипит",
+    "mouse",
+    "unclassified",
+    "exotic_rat_respiratory"
+  ],
+  [
+    "hamster_wettail",
+    "Хомяк, мокрый хвост и понос",
+    "hamster",
+    "same_day",
+    "exotic_hamster_diarrhea"
+  ],
+  [
+    "hamster_debilitated",
+    "Хомяк, диарея, лежит вялый",
+    "hamster",
+    "immediate",
+    "exotic_hamster_diarrhea"
+  ],
+  [
+    "chinchilla_dental",
+    "Шиншилла не ест, слюни, мокрый подбородок",
+    "chinchilla",
+    "same_day",
+    "exotic_chinchilla_dental"
+  ],
+  [
+    "ferret_hypo",
+    "Хорёк шатается, слюни, подозрение на инсулиному",
+    "ferret",
+    "immediate",
+    "exotic_ferret_hypoglycemia"
+  ],
+  [
+    "ferret_seizure",
+    "My ferret has seizures",
+    "ferret",
+    "immediate",
+    "exotic_ferret_hypoglycemia"
+  ],
+  [
+    "ferret_obstruction",
+    "Хорёк съел резину, рвота",
+    "ferret",
+    "unclassified",
+    "exotic_ferret_obstruction"
+  ],
+  [
+    "ferret_urinary",
+    "Хорек тужится, не мочится",
+    "ferret",
+    "immediate",
+    "exotic_ferret_adrenal"
+  ],
+  [
+    "ferret_care",
+    "Хорек питание и вакцина",
+    "ferret",
+    "unclassified",
+    "exotic_ferret_care"
+  ],
+  [
+    "turtle_ivermectin",
+    "Красноухой черепахе ивермек сколько колоть?",
+    "chelonian",
+    "unclassified",
+    "exotic_reptile_drugs"
+  ],
+  [
+    "turtle_ivermectin_en",
+    "Ivermectin dosage for my tortoise?",
+    "chelonian",
+    "unclassified",
+    "exotic_reptile_drugs"
+  ],
+  [
+    "turtle_respiratory",
+    "Черепаха плавает боком и дышит ртом",
+    "chelonian",
+    "immediate",
+    "exotic_reptile_respiratory"
+  ],
+  [
+    "lizard_mbd",
+    "У агамы мягкая челюсть, нет UVB",
+    "lizard",
+    "unclassified",
+    "exotic_reptile_mbd"
+  ],
+  [
+    "gecko_shed",
+    "Эублефар: застряла линька на пальцах",
+    "lizard",
+    "unclassified",
+    "exotic_reptile_skin"
+  ],
+  [
+    "snake_anorexia",
+    "Взрослый питон не ест 3 недели, вес стабилен",
+    "snake",
+    "unclassified",
+    "exotic_reptile_anorexia"
+  ],
+  [
+    "snake_microclimate",
+    "Полоз: террариум, температура и влажность",
+    "snake",
+    "unclassified",
+    "exotic_reptile_care"
+  ],
+  [
+    "reference_seizure",
+    "Что такое судороги у хорька?",
+    "ferret",
+    "unclassified",
+    "exotic_ferret_hypoglycemia"
+  ],
+  [
+    "negated_seizure",
+    "Хорек, судорог нет, хочу узнать про питание",
+    "ferret",
+    "unclassified",
+    "exotic_ferret_care"
+  ],
+  [
+    "gerbil_care",
+    "Песчанка, грызун, уход и питание",
+    "gerbil",
+    "unclassified",
+    "exotic_rodent_care"
+  ],
+  [
+    "degu_care",
+    "Дегу питание и профилактика",
+    "degu",
+    "unclassified",
+    "exotic_rodent_care"
+  ],
+  [
+    "bird_ptfe",
+    "Попугай рядом, перегрелась антипригарная сковорода",
+    "bird",
+    "immediate",
+    "exotic_bird_toxins"
+  ],
+  [
+    "bird_unable_perch",
+    "Попугай не держится на жердочке",
+    "bird",
+    "immediate",
+    "exotic_bird_respiratory"
+  ],
+  [
+    "rabbit_no_feces",
+    "Кролик не какает, ест меньше",
+    "rabbit",
+    "same_day",
+    "exotic_rabbit_gi"
+  ]
+]

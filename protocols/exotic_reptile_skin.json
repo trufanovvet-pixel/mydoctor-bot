@@ -1,0 +1,58 @@
+{
+  "id": "exotic_reptile_skin",
+  "title": "Рептилии: нарушение линьки и поражения кожи",
+  "status": "source_grounded_clinician_review_required",
+  "version": 1,
+  "reviewed_at": "2026-09-26",
+  "species": [
+    "reptile",
+    "chelonian",
+    "snake",
+    "lizard"
+  ],
+  "triggers": [
+    "не линяет",
+    "застряла линька",
+    "ожог",
+    "рана панциря",
+    "клещи",
+    "dysecdysis",
+    "burn",
+    "mites"
+  ],
+  "triage_questions": [
+    "Вид, влажность, сроки линьки и температура источника тепла?",
+    "Есть повреждение глаз, перетяжки пальцев/хвоста, глубокие раны?"
+  ],
+  "emergency_red_flags": [
+    "Глубокий ожог, некроз/перетяжка, открытая травма панциря."
+  ],
+  "differentials": [
+    "Нарушение линьки",
+    "Термический ожог",
+    "Инфекция или паразиты"
+  ],
+  "diagnostics": [
+    "Осмотр и оценка среды; цитология/посев/паразитология по поражению."
+  ],
+  "management_principles": [
+    "Исправить условия, исключить контакт с нагревателем; повреждение глаз и глубокие раны требуют осмотра."
+  ],
+  "do_not_do": [
+    "Не отрывать силой линьку или глазные щитки.",
+    "Не использовать бытовые инсектициды и прижигание."
+  ],
+  "sources": [
+    {
+      "title": "Merck Veterinary Manual — Disorders and Diseases of Reptiles",
+      "url": "https://www.merckvetmanual.com/all-other-pets/reptiles/disorders-and-diseases-of-reptiles",
+      "accessed_at": "2026-09-26"
+    },
+    {
+      "title": "MSD Veterinary Manual — Management and Husbandry of Reptiles",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/reptiles/management-and-husbandry-of-reptiles",
+      "accessed_at": "2026-09-26"
+    }
+  ],
+  "llm_guidance": "Не переносить схемы между видами. Не назначать новую лекарственную схему без проверенного видоспецифичного источника; дозировок в этом модуле нет. Сначала срочность, затем 2–4 полезных вопроса или обоснованный план."
+}

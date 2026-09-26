@@ -1,0 +1,56 @@
+{
+  "id": "exotic_bird_respiratory",
+  "title": "Птицы: затруднённое дыхание и слабость",
+  "status": "source_grounded_clinician_review_required",
+  "version": 1,
+  "reviewed_at": "2026-09-26",
+  "species": [
+    "bird"
+  ],
+  "triggers": [
+    "дышит с открытым клювом",
+    "тяжело дышит",
+    "качается хвост",
+    "сидит на дне",
+    "не держится на жердочке",
+    "open beak",
+    "tail bobbing"
+  ],
+  "triage_questions": [
+    "Какой вид, когда началось, дыхание в покое?",
+    "Были дым, аэрозоли, перегретая антипригарная посуда, новые птицы?"
+  ],
+  "emergency_red_flags": [
+    "Открытый клюв при дыхании в покое, выраженное усилие, коллапс."
+  ],
+  "differentials": [
+    "Респираторная инфекция",
+    "Ингаляционное повреждение",
+    "Объёмный процесс или репродуктивное заболевание"
+  ],
+  "diagnostics": [
+    "Наблюдение без фиксации; кислород и стабилизация до манипуляций.",
+    "После стабилизации — визуализация и целевые исследования по вероятной причине."
+  ],
+  "management_principles": [
+    "Минимум стресса, спокойная проветриваемая переноска; при дыхательном дистрессе немедленная помощь."
+  ],
+  "do_not_do": [
+    "Не сдавливать грудную клетку.",
+    "Не вливать корм, воду или лекарства в клюв при одышке.",
+    "Не перегревать."
+  ],
+  "sources": [
+    {
+      "title": "MSD Veterinary Manual — Management of Pet Birds",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/pet-birds/management-of-pet-birds",
+      "accessed_at": "2026-09-26"
+    },
+    {
+      "title": "MSD Veterinary Manual — Bacterial Diseases of Pet Birds",
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/pet-birds/bacterial-diseases-of-pet-birds",
+      "accessed_at": "2026-09-26"
+    }
+  ],
+  "llm_guidance": "Не переносить схемы между видами. Не назначать новую лекарственную схему без проверенного видоспецифичного источника; дозировок в этом модуле нет. Сначала срочность, затем 2–4 полезных вопроса или обоснованный план."
+}

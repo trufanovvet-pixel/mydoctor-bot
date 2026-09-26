@@ -6,7 +6,7 @@ from telegram.ext import Application, CallbackQueryHandler, CommandHandler, Mess
 
 import app as base_app
 import enhanced_app as enhanced
-from knowledge import protocol_context, diagnostics_context, is_diagnostics_query
+from knowledge import protocol_context, diagnostics_context, is_diagnostics_query, build_clinical_context
 
 
 REFERENCE_MODE = """
@@ -102,9 +102,10 @@ class _ReferenceAwareResponses:
             return self._base_client.responses.create(*args, **kwargs)
 
         instructions = _strip_pet_context(kwargs.get("instructions") or "") + REFERENCE_MODE
-        instructions += protocol_context(latest_text)
+        medical, species, safety = build_clinical_context(latest_text)
+        instructions += medical
         if is_diagnostics_query(latest_text):
-            instructions += diagnostics_context()
+            instructions += diagnostics_context(species)
         kwargs["instructions"] = instructions
         kwargs["input"] = [{"role": "user", "content": latest_text}]
 
