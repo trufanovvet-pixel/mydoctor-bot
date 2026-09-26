@@ -19,7 +19,7 @@
     box.querySelector('.chat-empty')?.remove(); bubble(text, 'user'); message.value = '';
     const answer = bubble(window.uiText('Формирую ответ…'), 'bot');
     try {
-      const response = await fetch('/api/chat', {method: 'POST', headers: {'Content-Type': 'application/json'},
+      const response = await fetch('/api/chat', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-MyDoctor-Source': (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) ? 'app' : 'web'},
         body: JSON.stringify({message: text, request_key: pendingKey})});
       const data = await response.json();
       answer.textContent = response.status === 401 ? window.uiText('Сессия завершена. Войдите в кабинет заново.') :
