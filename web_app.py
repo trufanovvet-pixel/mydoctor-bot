@@ -13,6 +13,7 @@ from patient_records import plain_text, CATEGORIES, DocumentLabel, classify_docu
 from web_i18n import t, ai_language
 import math
 import billing
+import analytics
 import telegram_billing
 import payment_notifications
 
@@ -450,3 +451,6 @@ import web_pwa
 web_pwa.install(app)
 import web_push
 web_push.install(app)
+
+import web_analytics
+web_analytics.install(app)
