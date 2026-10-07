@@ -27,8 +27,8 @@ def install_features(bot):
         await bot.ensure_current_user(update)
         await update.message.reply_text(
             "Онлайн-консультация с Иваном Труфановым.\n\n"
-            "Первичная — 3000 ₽ / $35.\n"
-            "Повторная — 1500 ₽ / $20.\n\n"
+            "Первичная: 4 000 ₽ / $50.\n"
+            "Повторная: 2 500 ₽ / $30.\n\n"
             "Запись доступна без привязки к определённым дням недели. "
             "Нажмите «Записаться» — я открою короткую анкету.",
             reply_markup=InlineKeyboardMarkup(
@@ -131,8 +131,8 @@ def install_features(bot):
                 "Выберите тип консультации:",
                 reply_markup=InlineKeyboardMarkup(
                     [
-                        [InlineKeyboardButton("Первичная — 3000 ₽ / $35", callback_data="consult:type:primary")],
-                        [InlineKeyboardButton("Повторная — 1500 ₽ / $20", callback_data="consult:type:repeat")],
+                        [InlineKeyboardButton("Первичная: 4 000 ₽ / $50", callback_data="consult:type:primary")],
+                        [InlineKeyboardButton("Повторная: 2 500 ₽ / $30", callback_data="consult:type:repeat")],
                         [InlineKeyboardButton("❌ Отмена", callback_data="consult:cancel")],
                     ]
                 ),
@@ -148,10 +148,10 @@ def install_features(bot):
             selected = data.rsplit(":", 1)[1]
             if selected == "primary":
                 flow["data"]["kind"] = "primary"
-                flow["data"]["kind_label"] = "Первичная — 3000 ₽ / $35"
+                flow["data"]["kind_label"] = "Первичная: 4 000 ₽ / $50"
             else:
                 flow["data"]["kind"] = "repeat"
-                flow["data"]["kind_label"] = "Повторная — 1500 ₽ / $20"
+                flow["data"]["kind_label"] = "Повторная: 2 500 ₽ / $30"
             flow["step"] = "owner_name"
             await query.edit_message_text(flow["data"]["kind_label"])
             await query.message.reply_text(
