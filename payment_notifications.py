@@ -110,21 +110,44 @@ def decide(oid, action, actor):
         if not order:
             raise b.BillingError('Заявка не найдена.', 404)
         uid = order.user_id
+        user = db.get(storage.User, uid)
+        name = (user.first_name or user.username or 'Владелец')[:255]
+        details = (f'Владелец: {name} (ID {uid})\n'
+                   f'Пакет: {b.PLANS[order.plan]["name"]}, {order.credits} баллов\n'
+                   f'Сумма: {b.money(order.amount_minor, order.currency)}')
     if action == 'yes':
         b.confirm_order(uid, oid, actor)
-        return 'Оплата подтверждена. Пакет начислен один раз.'
+        return ('✅ Оплата подтверждена.\n'
+                'Владельцу предоставлен доступ к оплаченному пакету.\n'
+                'Пакет начислен один раз.\n\n' + details)
     with storage.SessionLocal() as db:
         b.lock_user(db, uid)
         order = db.get(b.PaymentOrder, oid)
         if order.status == 'rejected':
-            return 'Оплата уже отмечена как не поступившая.'
+            return '❌ Оплата уже отмечена как не поступившая.\n\n' + details
         if order.status != 'review':
             raise b.BillingError('Заявка уже обработана. Статус: ' + b.ORDER_STATES[order.status], 409)
         order.status = 'rejected'
         order.decision_note = 'Поступление денег не найдено. Проверьте перевод и свяжитесь с поддержкой.'
         order.checked_by = str(actor)
         db.commit()
-    return 'Оплата не подтверждена. Пакет не начислен; владелец видит статус на сайте.'
+    return ('❌ Оплата не подтверждена.\n'
+            'Пакет не начислен; владелец видит статус на сайте.\n\n' + details)
+
+
+async def send_decision_feedback(query, text):
+    # A separate message gives the administrator a lasting, visible result in
+    # the same chat/topic, even when the original receipt cannot be edited.
+    try:
+        await query.message.reply_text(text, parse_mode=None, do_quote=True,
+                                       disable_notification=False)
+    except Exception as exc:
+        logging.getLogger(__name__).warning('Payment decision reply failed: %s', type(exc).__name__)
+        try:
+            await query.answer('Не удалось отправить сообщение в чат. ' + text.split('\n')[0],
+                               show_alert=True)
+        except Exception as alert_exc:
+            logging.getLogger(__name__).warning('Payment decision alert failed: %s', type(alert_exc).__name__)
 
 
 async def payment_callback(update, context):
@@ -137,13 +160,35 @@ async def payment_callback(update, context):
     if not match:
         await query.answer('Некорректная заявка.', show_alert=True)
         return
-    await query.answer()
+    try:
+        await query.answer('⏳ Проверяю заявку…')
+    except Exception as exc:
+        # An expired callback acknowledgement must not prevent a valid decision.
+        logging.getLogger(__name__).warning('Payment acknowledgement failed: %s', type(exc).__name__)
     try:
         result = await asyncio.to_thread(decide, match[2], match[1], update.effective_user.id)
     except b.BillingError as exc:
-        result = str(exc)
-    # Commit before editing Telegram: delivery failures cannot duplicate credits.
+        await send_decision_feedback(query, f'⚠️ {exc}\n\nЗаявка №{match[2]}')
+        return
+    except Exception as exc:
+        logging.getLogger(__name__).exception('Payment decision failed: %s', type(exc).__name__)
+        await send_decision_feedback(query,
+            '⚠️ Не удалось проверить результат операции.\n'
+            'Проверьте статус в кабинете врача или нажмите кнопку повторно. '
+            'Повторное нажатие не начислит пакет дважды.\n\n'
+            f'Заявка №{match[2]}')
+        return
+    # Commit before notifying Telegram: delivery failures cannot duplicate credits.
+    text = f'{result}\n\nЗаявка №{match[2]}'
+    await send_decision_feedback(query, text)
     try:
-        await query.edit_message_text(f'Оплата №{match[2]}\n{result}', parse_mode=None)
+        if getattr(query.message, 'text', None) is not None:
+            await query.edit_message_text(text, parse_mode=None, reply_markup=None)
+        else:
+            await query.edit_message_caption(caption=text, parse_mode=None, reply_markup=None)
     except Exception as exc:
         logging.getLogger(__name__).warning('Payment decision message update failed: %s', type(exc).__name__)
+        try:
+            await query.edit_message_reply_markup(reply_markup=None)
+        except Exception as markup_exc:
+            logging.getLogger(__name__).warning('Payment decision button removal failed: %s', type(markup_exc).__name__)
