@@ -75,14 +75,16 @@ def test_negative_inability_is_retained_and_unrelated_negative_not_joined():
 @pytest.mark.parametrize('text,expected', [(URINARY, 'немедленно'), (EYE, 'сегодня'),
     ('Кот мочи не видим, не писает с утра', 'немедленно'),
     ('Кошка задыхается', 'сейчас'), ('Кролик не ест и вздулся', 'немедлен'),
-    ('My cat cannot urinate', 'now')])
+    ('My cat cannot urinate', 'now'),
+    ('Расскажи, что делать: мой кот не может помочиться', 'немедленно'),
+    ('Explain what to do, my cat cannot urinate', 'now')])
 def test_free_warning_covers_specific_red_flags(text, expected):
     assert expected in free_safety_notice(text).lower()
 
 
 @pytest.mark.parametrize('text', [
     ITCH, 'Кот писает нормально. Рвоты нет', 'Собака не щурит глаз и не задыхается',
-    'Что такое уретральная обструкция?', 'Расскажи, почему кот не может помочиться',
+    'Что такое уретральная обструкция?', 'Объясни понятие: уретральная обструкция',
     'Год назад кот не писает — так было записано в карте. Сейчас здоров',
 ])
 def test_free_warning_does_not_assert_a_current_emergency_for_benign_or_educational_text(text):

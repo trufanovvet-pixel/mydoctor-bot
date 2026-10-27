@@ -20,7 +20,7 @@ def free_safety_notice(text, language=None):
     # Educational or resolved-history clauses must not become a current diagnosis.
     active = []
     for part in clauses(value):
-        if re.search(r'\b(?:что такое|расскажи|объясни|для учебы|what is|explain)\b', part):
+        if re.search(r'\b(?:что такое|объясни понятие|для учебы|what is|explain the term)\b', part):
             continue
         if re.search(r'\b(?:раньше|в прошлом|год назад|месяц назад|used to|last year)\b', part) and not re.search(r'\b(?:сейчас|снова|now|again)\b', part):
             continue
