@@ -126,10 +126,12 @@ async def start_delivery_worker(application):
     await asyncio.to_thread(storage.set_bot_setting,'doctor_bot_username',application.bot.username)
     application.bot_data['web_request_delivery'] = asyncio.create_task(delivery_loop(application))
     application.bot_data['web_push_delivery'] = asyncio.create_task(push_delivery_loop())
+    from care_notifications import care_loop
+    application.bot_data['care_delivery'] = asyncio.create_task(care_loop(application))
 
 
 async def stop_delivery_worker(application):
-    for name in ('web_request_delivery', 'web_push_delivery'):
+    for name in ('web_request_delivery', 'web_push_delivery', 'care_delivery'):
         task = application.bot_data.pop(name, None)
         if task:
             task.cancel()

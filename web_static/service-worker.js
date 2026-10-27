@@ -25,7 +25,7 @@ self.addEventListener('push', event => {
   const english = data.language === 'en';
   // The server and worker both use generic wording; no clinical message previews.
   event.waitUntil(self.registration.showNotification(english ? 'MyDoctor' : 'МойДоктор', {
-    body: english ? 'You have a new message. Open your conversation.' : 'У вас новое сообщение. Откройте переписку.',
+    body: data.kind === 'care' ? (english ? 'A medicine is scheduled. Check the care diary before giving it.' : 'Запланирован приём лекарства. Сначала проверьте дневник ухода.') : (english ? 'You have a new message. Open your conversation.' : 'У вас новое сообщение. Откройте переписку.'),
     icon: '/app-icon/192.png', badge: '/app-icon/96.png', tag: data.tag || 'mydoctor-message',
     data: {url: data.url || '/messages'}
   }));
@@ -33,7 +33,7 @@ self.addEventListener('push', event => {
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   const path = event.notification.data && event.notification.data.url;
-  const safe = typeof path === 'string' && /^\/(?:doctor|consultation)\/requests\/[1-9]\d*#conversation$/.test(path);
+  const safe = typeof path === 'string' && (/^\/(?:doctor|consultation)\/requests\/[1-9]\d*#conversation$/.test(path) || /^\/care\/pets\/[1-9]\d*#medications$/.test(path));
   const target = new URL(safe ? path : '/messages', self.location.origin).href;
   event.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(async windows => {
     // Do not navigate an unrelated open form and discard its unsent draft.

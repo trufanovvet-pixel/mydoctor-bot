@@ -233,6 +233,8 @@ def main():
     application.add_handler(CommandHandler("myid", bot.myid_command))
     from telegram_billing import last_answer
     application.add_handler(CommandHandler("lastanswer", last_answer))
+    from care_notifications import care_command
+    application.add_handler(CommandHandler("care", care_command))
     application.add_handler(CommandHandler("doctor", doctor_command))
     if hasattr(bot, 'payment_command'):
         application.add_handler(CommandHandler(['pay', 'balance'], bot.payment_command))

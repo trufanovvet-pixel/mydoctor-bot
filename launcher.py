@@ -21,6 +21,7 @@ import media_direct_client_patch
 import medical_memory_patch
 import feedback_patch
 import web_login_patch
+import care_notifications
 
 
 _original_install = enhanced_app2.enhanced.install_features
@@ -61,6 +62,7 @@ def _install_clean_menu_with_onboarding(bot):
     telegram_billing.install(bot)
     import telegram_analytics
     telegram_analytics.install(bot)
+    care_notifications.install(bot)
 
 
 enhanced_app2.enhanced.install_features = _install_with_patches

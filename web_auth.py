@@ -60,7 +60,7 @@ def install(app):
                     abort(410)
                 uid, name = user.id, user.first_name or user.username or 'Telegram'
             target = request.values.get('next', '/dashboard')
-            if target not in ('/billing', '/dashboard'):
+            if target not in ('/billing', '/dashboard', '/care'):
                 abort(400)
             transfer = request.values.get('transfer', 'mir')
             if transfer not in billing.CARD_TRANSFERS:

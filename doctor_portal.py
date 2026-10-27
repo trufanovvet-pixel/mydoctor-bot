@@ -7,6 +7,7 @@ from flask import g,request,session,redirect,url_for,render_template,abort,flash
 from sqlalchemy import select,func,or_,update
 import storage
 import billing
+from care_models import CareSharing
 from consultation_cases import ConsultationCase,RequestStatusEvent,RequestAttachment,STATUSES,TYPES,request_files,attachment_content
 from owner_profile import ConsultationContact
 from doctor_access import DoctorAccess,DoctorWebAccount,consume_doctor_link,doctor_identity,hashed,doctor_destination,telegram_login_url,DOCTOR_COOKIE,REMEMBER_SECONDS,establish_doctor_session
@@ -300,6 +301,7 @@ def install(app,WebDocument):
                     MessageFile.message_id==ConsultationMessage.id).where(ConsultationMessage.consultation_id.in_(ids))):
                 documents.append(dict(filename=file.filename,url=url_for('message_file',fid=file.id),rid=rid))
             return render('doctor_client','Карточка владельца',owner=owner,latest_case=latest[1],rows=rows[:limit],
+                care_pets=db.scalars(select(storage.Pet).join(CareSharing, CareSharing.pet_id==storage.Pet.id).where(storage.Pet.user_id==uid, CareSharing.doctor_enabled.is_(True))).all(),
                 documents=documents,unread=unread_counts(db,'doctor',ids=ids),page_number=page,has_more=len(rows)>limit)
 
     @app.get('/consultation/files/<int:fid>')

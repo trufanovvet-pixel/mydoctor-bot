@@ -16,6 +16,7 @@ import billing
 import analytics
 import telegram_billing
 import payment_notifications
+import care_models
 
 app=Flask(__name__,template_folder="web_templates",static_folder="web_static",static_url_path="/static")
 app.secret_key=os.getenv("FLASK_SECRET_KEY",secrets.token_hex(32))
@@ -406,6 +407,8 @@ def health():return {"ok":True,"service":"mydoctor-web"}
 
 import web_sections
 web_sections.install(app, WebDocument)
+import web_care
+web_care.install(app, WebDocument)
 import doctor_portal
 doctor_portal.install(app, WebDocument)
 

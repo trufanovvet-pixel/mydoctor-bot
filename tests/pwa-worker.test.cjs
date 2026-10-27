@@ -56,3 +56,14 @@ test('notification opens the right case without replacing a different unsent con
   await w.run('notificationclick', {notification: {close() {}, data: {url:'/doctor/requests/114#conversation'}}});
   assert.equal(focused, true); assert.equal(w.opened.length, 1);
 });
+
+test('care notifications stay generic and open only an authenticated pet diary path', async () => {
+  const w = worker();
+  await w.run('push', {data:{json:()=>({kind:'care', language:'en', body:'Private medicine dose', url:'/care/pets/12#medications'})}});
+  assert(w.shown[0].options.body.includes('Check the care diary'));
+  assert(!JSON.stringify(w.shown[0]).includes('Private medicine'));
+  await w.run('notificationclick', {notification:{close(){},data:{url:'/care/pets/12#medications'}}});
+  assert.equal(w.opened[0], 'https://mydoctor.test/care/pets/12#medications');
+  await w.run('notificationclick', {notification:{close(){},data:{url:'/care/join/secret'}}});
+  assert.equal(w.opened[1], 'https://mydoctor.test/messages');
+});
