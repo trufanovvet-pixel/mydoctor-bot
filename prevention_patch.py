@@ -8,6 +8,7 @@ from telegram import ReplyKeyboardMarkup
 from telegram.ext import Application
 
 from storage import Base, Pet, SessionLocal, User
+from telegram_reliability import claim_reminder, finish_reminder, log_error
 
 
 class PreventiveEvent(Base):
@@ -165,7 +166,7 @@ def _due_notifications():
                 field = "reminded_1"
             elif days == 0 and not event.reminded_0:
                 field = "reminded_0"
-            if not field:
+            if not field or user.telegram_id <= 0:
                 continue
             labels = {
                 "vaccination": "вакцинация",
@@ -194,21 +195,27 @@ def _mark_reminded(event_id, field):
 
 async def _send_due_notifications(application):
     for event_id, field, chat_id, text in await asyncio.to_thread(_due_notifications):
-        try:
-            await application.bot.send_message(chat_id=chat_id, text=text)
-        except Exception as exc:
-            print(f"reminder send failed event={event_id} error={type(exc).__name__}", flush=True)
+        if not isinstance(chat_id, int) or chat_id <= 0:
+            continue  # Website-only accounts have synthetic negative IDs, not Telegram chats.
+        if not await asyncio.to_thread(claim_reminder, event_id, field):
             continue
-        await asyncio.to_thread(_mark_reminded, event_id, field)
+        try:
+            await application.bot.send_message(chat_id=chat_id, text=text,
+                connect_timeout=15, read_timeout=30, write_timeout=30)
+        except Exception as exc:
+            log_error(exc, f'reminder:{event_id}:{field}')
+            await asyncio.to_thread(finish_reminder, event_id, field, exc)
+            continue
+        await asyncio.to_thread(finish_reminder, event_id, field)
 
 
 async def _reminder_loop(application):
     while True:
         try:
             await _send_due_notifications(application)
-        except Exception:
-            pass
-        await asyncio.sleep(3600)
+        except Exception as exc:
+            log_error(exc, 'reminder_loop')
+        await asyncio.sleep(60)
 
 
 def _install_run_polling_hook():

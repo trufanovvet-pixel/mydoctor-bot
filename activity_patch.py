@@ -22,12 +22,13 @@ async def _run_with_typing(update, handler, *args, **kwargs):
     try:
         return await handler(update, *args, **kwargs)
     except Exception as exc:
-        print(f"handler error: {exc!r}", flush=True)
+        from telegram_reliability import log_error
+        log_error(exc, 'message_handler')
         message = getattr(update, "effective_message", None)
         if message is not None:
             with suppress(Exception):
                 await message.reply_text(
-                    "Не удалось завершить запрос. Попробуйте отправить его ещё раз через несколько секунд."
+                    "Не удалось завершить запрос. Если ответ уже подготовлен, получите его без нового списания: /lastanswer. Если сохранённого ответа нет, повторите запрос."
                 )
         return None
     finally:

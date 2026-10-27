@@ -212,6 +212,11 @@ async def test_reminders_retry_failed_delivery(bot,ctx,pet,monkeypatch):
     await prevention._send_due_notifications(ctx)
     assert timing._due_notifications_at_ten()
     ctx.bot.send_message.side_effect=None
+    from telegram_reliability import ReminderDelivery
+    with storage.SessionLocal() as db:
+        item = db.scalar(select(ReminderDelivery))
+        item.next_attempt = datetime.utcnow() - __import__('datetime').timedelta(seconds=1)
+        db.commit()
     await prevention._send_due_notifications(ctx)
     assert timing._due_notifications_at_ten()==[]
 

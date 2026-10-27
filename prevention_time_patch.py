@@ -41,7 +41,7 @@ def _due_notifications_at_ten():
                 field = "reminded_1"
             elif days == 0 and not event.reminded_0:
                 field = "reminded_0"
-            if not field:
+            if not field or user.telegram_id <= 0:
                 continue
 
             labels = {

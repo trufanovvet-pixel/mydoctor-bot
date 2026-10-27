@@ -205,10 +205,11 @@ def build_bot():
 
 
 async def handle_error(update, context):
-    logging.getLogger(__name__).error("Telegram handler failure: %s", type(context.error).__name__)
+    from telegram_reliability import log_error
+    log_error(context.error, 'update' if update is not None else 'polling')
     if update is not None and getattr(update, "effective_message", None):
         try:
-            await update.effective_message.reply_text("Не удалось завершить запрос. Попробуйте ещё раз.")
+            await update.effective_message.reply_text("Не удалось завершить запрос. Если ответ уже был подготовлен, его можно получить без нового списания: /lastanswer. Если сохранённого ответа нет, повторите запрос.")
         except Exception:
             logging.getLogger(__name__).warning("Unable to deliver error notice")
 
@@ -222,12 +223,16 @@ def main():
     bot.init_db()
     from consultation_delivery import start_delivery_worker, stop_delivery_worker
     application = (Application.builder().token(bot.TOKEN)
+                   .connect_timeout(15).read_timeout(30).write_timeout(30).pool_timeout(10)
+                   .get_updates_connect_timeout(15).get_updates_read_timeout(40)
                    .post_init(start_delivery_worker).post_stop(stop_delivery_worker).build())
     application.add_error_handler(handle_error)
     from doctor_access import doctor_command,doctor_start_handler
     application.add_handler(CommandHandler("start", doctor_start_handler(bot.start)))
     application.add_handler(CommandHandler("menu", bot.menu_command))
     application.add_handler(CommandHandler("myid", bot.myid_command))
+    from telegram_billing import last_answer
+    application.add_handler(CommandHandler("lastanswer", last_answer))
     application.add_handler(CommandHandler("doctor", doctor_command))
     if hasattr(bot, 'payment_command'):
         application.add_handler(CommandHandler(['pay', 'balance'], bot.payment_command))

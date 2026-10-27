@@ -142,6 +142,33 @@ async def generate(update, client, kind='chat', **kwargs):
         return None
 
 
+def saved_last_answer(telegram_id):
+    with storage.SessionLocal() as db:
+        row = db.execute(select(TelegramBillingReply.answer, b.CreditUsage.finished_at)
+            .join(b.CreditUsage, b.CreditUsage.id == TelegramBillingReply.usage_id)
+            .join(storage.User, storage.User.id == b.CreditUsage.user_id)
+            .where(storage.User.telegram_id == telegram_id, b.CreditUsage.status == 'success')
+            .order_by(b.CreditUsage.finished_at.desc(), b.CreditUsage.id.desc()).limit(1)).first()
+        return tuple(row) if row else None
+
+
+async def last_answer(update, context):
+    if getattr(update.effective_chat, 'type', None) != 'private':
+        await update.effective_message.reply_text('Сохранённый ответ доступен только в личном чате с ботом: /lastanswer')
+        return
+    saved = await asyncio.to_thread(saved_last_answer, update.effective_user.id)
+    if saved is None:
+        await update.effective_message.reply_text('Сохранённого ответа пока нет. Повторите исходный запрос.')
+        return
+    answer, finished_at = saved
+    stamp = finished_at.strftime('%d.%m.%Y %H:%M UTC') if finished_at else ''
+    from long_message_patch import _split_text
+    from patient_records import plain_text
+    text = f'Последний сохранённый ответ ({stamp}). Повторная отправка бесплатна.\n\n{plain_text(answer)}'
+    for chunk in _split_text(text):
+        await update.effective_message.reply_text(chunk)
+
+
 def validate_paid_pdf(telegram_id, data):
     with storage.SessionLocal() as db:
         if not b.metered(db, account_id(telegram_id)):
