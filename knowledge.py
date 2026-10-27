@@ -6,6 +6,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import pymorphy3
+from clinical_text import retrieval_text, clauses
 from exotic_medicine import (detect_species, resolve_species, protocol_applies,
     species_context, assess_safety, EXOTICS)
 
@@ -100,6 +101,7 @@ def _protocol_score(protocol: dict, normalized: str) -> int:
     score = 0
     tokens = _tokens(normalized)
     words = set(tokens)
+    fragments = [_tokens(part) for part in clauses(normalized) if part.strip()]
     # Curated combinations with a verified interaction must survive top-k retrieval.
     for combination in protocol.get('priority_triggers', []):
         required = set(_tokens(combination))
@@ -114,9 +116,12 @@ def _protocol_score(protocol: dict, normalized: str) -> int:
         seen.add(t)
         if t == tokens:
             score += 12
-        elif any(tokens[i:i + len(t)] == t for i in range(len(tokens) - len(t) + 1)):
+        elif any(part[i:i + len(t)] == t for part in fragments for i in range(len(part) - len(t) + 1)):
             score += 6 if len(t) > 1 else 3
-        elif len(t) > 1 and set(t) <= words:
+        # Never assemble "не ест" from "ест нормально ... блох не вижу".
+        # Negative formulations need an actual phrase; other combinations stay
+        # within one sentence so unrelated facts cannot form a trigger.
+        elif len(t) > 1 and not {'не', 'нет', 'без', 'no', 'not'} & set(t) and any(set(t) <= set(part) for part in fragments):
             score += 4
     title = _tokens(str(protocol.get("title", "")))
     if title and title == tokens:
@@ -128,7 +133,7 @@ def match_protocols(text: str, limit: int = 4, species=None) -> list[dict]:
     if limit <= 0:
         return []
     species = detect_species(text) if species is None else species
-    normalized = _normalize(text)
+    normalized = retrieval_text(text)
     scored = []
     for protocol in PROTOCOLS:
         if not protocol_applies(protocol, species):

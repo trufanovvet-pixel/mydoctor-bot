@@ -25,7 +25,7 @@
       answer.textContent = response.status === 401 ? window.uiText('Сессия завершена. Войдите в кабинет заново.') :
         data.answer || data.error || window.uiText('Не удалось получить ответ.');
       if (response.ok) { pendingKey = null; pendingText = null; }
-      if (response.status === 402) {
+      if (response.status === 402 && !data.free_safety_notice) {
         const link = document.createElement('a'); link.href = '/billing'; link.textContent = window.uiText('Тариф и оплаты');
         link.style.display = 'block'; answer.appendChild(link);
       }

@@ -270,6 +270,13 @@ def chat():
         try:
             usage,replay=billing.reserve(user.id,'chat',payload.get('request_key'),(str(scope_pet)+'\n'+text).encode())
         except billing.BillingError as exc:
+            if exc.status == 402:
+                from safety_notice import free_safety_notice
+                from web_i18n import language
+                notice = free_safety_notice(text, language())
+                if notice:
+                    return jsonify({'answer':notice, 'free_safety_notice':True,
+                                    'error':t(str(exc)), 'billing_url':'/billing'}),402
             return jsonify({'error':t(str(exc)),'billing_url':'/billing'}),exc.status
         if replay:
             saved=db.scalar(select(storage.Consultation).where(storage.Consultation.id==usage.source_id,storage.Consultation.user_id==user.id))

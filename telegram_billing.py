@@ -136,6 +136,11 @@ async def generate(update, client, kind='chat', **kwargs):
         return await asyncio.to_thread(create_response, client, uid, kind, key, fingerprint, kwargs)
     except b.BillingError as error:
         if error.status == 402:
+            from safety_notice import free_safety_notice, current_user_text
+            notice = free_safety_notice(current_user_text(update, kwargs.get('input')))
+            if notice:
+                await update.effective_message.reply_text(notice)
+                return None
             await show_payments(update, notice='Недостаточно баллов для этого запроса.')
         else:
             await update.effective_message.reply_text(str(error))
