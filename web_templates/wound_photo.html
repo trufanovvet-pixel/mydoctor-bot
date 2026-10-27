@@ -1,0 +1,28 @@
+{% if entry.kind == 'postop' and entry.photo %}
+{% set review = wound_analyses.get(entry.id) %}
+<section class="care-wound" aria-label="{{t('Разбор фото шва')}}">
+<h4>{{t('Разбор фото шва')}}</h4>
+{% if review and review.state == 'success' %}
+{% set result = review.result %}
+<p class="muted">{{t('Оценка ИИ по снимку на момент записи')}} · {{local_label(review.finished_at, entry.timezone)}}</p>
+{% if not result.assessable %}<p><strong>{{t('По этому снимку шов оценить нельзя.')}}</strong></p><p>{{t(wound_review.RETAKE)}}</p>
+{% else %}<h5>{{t('Что видно на фото')}}</h5><ul>{% for finding in result.findings %}<li>{{finding}}</li>{% endfor %}</ul>
+{% if result.quality == 'limited' %}<p><strong>{{t('Качество фото ограничивает оценку.')}}</strong> {{t(wound_review.RETAKE)}}</p>{% endif %}{% endif %}
+{% if result.limitations %}<h5>{{t('Ограничения снимка')}}</h5><ul>{% for item in result.limitations %}<li>{{item}}</li>{% endfor %}</ul>{% endif %}
+{% if result.comparison %}<h5>{{t('Изменения по предыдущим фото')}}</h5><p>{{result.comparison}}</p>
+{% else %}<p class="muted">{{t('Визуальное сравнение недоступно: нужны сопоставимые снимки этого шва за разные даты.')}}</p>{% endif %}
+{% if review.previous_entry_ids %}<p>{{t('Предыдущие снимки этой операции')}}: {% for previous_id in review.previous_entry_ids %}<a href="{{'/doctor' if readonly else ''}}/care/photos/{{previous_id}}">№{{previous_id}}</a>{{', ' if not loop.last}}{% endfor %}</p>{% endif %}
+{% if result.urgency != 'recorded' %}<div class="care-alert care-{{'urgent' if result.urgency == 'urgent' else 'contact'}}">{{t(urgency_text['urgent'] if result.urgency == 'urgent' else wound_review.CONTACT)}}</div>
+{% elif result.assessable %}<p>{{t(wound_review.MONITOR)}}</p>{% endif %}
+{% if result.questions %}<h5>{{t('Что уточнить')}}</h5><ul>{% for question in result.questions %}<li>{{question}}</li>{% endfor %}</ul>{% endif %}
+<p class="muted">{{t(wound_review.LIMITATION)}}</p>
+{% elif review and review.state == 'pending' and (now-review.started_at).total_seconds() < 600 %}
+<p role="status">{{t(wound_review.PENDING)}}</p>
+{% elif not readonly %}
+<p>{{t('ИИ опишет видимые признаки и сравнит фото с предыдущими снимками этой операции, если они подходят для сравнения.')}}</p>
+<p class="muted">{{t(wound_review.LIMITATION)}}</p>
+<p>{{t('Стоимость разбора, баллов')}}: <strong>{{wound_cost}}</strong>. {{t('Сохранённый результат открывается бесплатно.')}}</p>
+<form method="post" action="/care/photos/{{entry.id}}/analyse" data-wound-analysis>{{token()}}<button type="submit">{{t('Разобрать фото шва')}}</button><span role="status" class="muted" data-wound-status></span></form>
+{% else %}<p class="muted">{{t('Владелец ещё не запускал разбор этого фото.')}}</p>{% endif %}
+</section>
+{% endif %}

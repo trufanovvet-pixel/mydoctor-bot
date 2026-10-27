@@ -44,8 +44,7 @@ selected history page, retain missing-data gaps and do not sum repeated daily
 entries. Filters and pagination keep historical entries available.
 
 Structured warning signs produce immediate escalation wording. This is a limited
-set of prompts, not diagnosis, wound-image interpretation or continuous clinical
-monitoring. Postoperative escalation wording is informed by the
+set of prompts, not diagnosis or continuous clinical monitoring. Postoperative escalation wording is informed by the
 [ACVS owner guidance](https://www.acvs.org/small-animal/postoperative-care-after-surgery-what-animal-owners-should-expect/).
 
 Only the pet owner creates/revokes a 24-hour, single-use family invitation.
@@ -72,3 +71,38 @@ Regression coverage is in `tests/test_pet_care.py` and
 `tests/pwa-worker.test.cjs`: access revocation, single-use/expired invitations,
 CSRF, double dose submission, schedules/DST, OCR review/refunds, private photos,
 doctor consent, notification retries/device rebinding and RU/EN rendering.
+
+## Incision photo review
+
+A postoperative entry with a photo has an explicit review button. It uses the
+existing vision model (no fine-tuning and no claim of validated diagnostic
+accuracy). The normal document tariff applies, with the actual cost shown before
+starting. Saving a diary entry remains free. One result is shared by the family;
+reopening it does not call AI or spend credits. Model/network/format failures
+refund the attempt. Poor or unrelated images produce an unassessable result.
+
+The model receives the current private image and at most two distinct, dated,
+earlier photos belonging to the same pet AND operation. Duplicate images are
+excluded. The result separates visible findings, photo limitations, optional
+comparison and follow-up questions. There are no drug prescriptions or automatic
+changes to treatment. The server validates the JSON, prevents comparison without
+usable prior photos and cannot downgrade owner-reported urgency. Concerning
+features can raise urgency. The saved result describes that observation only,
+not the pet's current condition.
+
+A per-entry lease serializes family submissions. Expired leases can be retried
+after ten minutes. Permission is checked before and after the remote call;
+revocation cancels saving and refunds the attempt. Results stay in the care tables
+and the doctor sees them only with the existing consent/consultation gates.
+
+Telegram photo processing uses the same wound-review rules, including for images
+without captions. Its multiple crops are explicitly one observation, and previous
+text memories are not represented as visual comparisons. Actual dated comparison
+is available in /care. Deterministic zero-credit guidance covers described wound
+bleeding and separated edges in addition to the existing emergency signs.
+
+Clinical background: ACVS postoperative owner guidance linked above and
+[VCA incision care](https://vcahospitals.com/know-your-pet/care-of-surgical-incisions-in-dogs).
+These references inform constraints; they are not a training dataset or evidence
+of model sensitivity/specificity. Clinical validation on consented, labelled
+veterinary cases remains necessary before making diagnostic performance claims.

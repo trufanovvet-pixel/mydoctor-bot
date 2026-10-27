@@ -45,6 +45,23 @@ def free_safety_notice(text, language=None):
                         'Минимизируйте стресс и фиксацию, не вливайте воду, корм или лекарства в рот.') if not english else
                        ('Difficulty breathing or loss of consciousness requires emergency veterinary care now. '
                         'Minimize stress and restraint; do not force food, water, or medication into the mouth.'))
+    wound_context = re.search(r'\b(?:шов|шва|шве|швы|швов|ран\w*|операц\w*|incision|wound|sutur\w*|surgery)\b', current)
+    if wound_context:
+        bleeding = re.search(r'\b(?:(?:сильн\w*|обильн\w*|непрерывн\w*) кровотеч\w*|'
+            r'кровотеч\w* не останавливается|кровь не останавливается|'
+            r'(?:heavy|uncontrolled|continuous) bleeding|bleeding (?:will not|won\W?t|does not) stop)\b', current)
+        opening = re.search(r'\b(?:(?:шов|швы|края (?:раны|шва))\s+(?:разош\w*|расход\w*)|'
+            r'(?:incision|wound|sutures?)\s+(?:(?:has|have)\s+)?(?:opened|split|come apart))\b', current)
+        if bleeding:
+            notices.append(('При сильном продолжающемся кровотечении из раны нужна экстренная ветеринарная помощь сейчас. '
+                            'Свяжитесь с ближайшей клиникой и выезжайте; не ждите разбора фото.') if not english else
+                           'Heavy ongoing wound bleeding needs emergency veterinary care now. Contact the nearest clinic and go; do not wait for photo analysis.')
+        elif opening:
+            notices.append(('Если края послеоперационного шва разошлись, свяжитесь с оперировавшей клиникой сейчас для осмотра сегодня. '
+                            'При глубоком раскрытии раны, видимых внутренних органах, сильном кровотечении или коллапсе выезжайте немедленно. '
+                            'Не раздвигайте края и не пытайтесь закрыть шов самостоятельно.') if not english else
+                           ('An opened surgical incision needs a call to the operating clinic now for assessment today. '
+                            'Go immediately for a deeply open wound, exposed organs, heavy bleeding or collapse. Do not pull the edges apart or close it yourself.'))
     eye_pain = re.search(r'\b(?:щур\w*|болит глаз|боль в глазу|не открывает глаз|squint\w*|painful eye)\b', current)
     if eye_pain:
         notices.append(('Болезненный или прищуренный глаз требует осмотра сегодня, особенно при помутнении или травме. '

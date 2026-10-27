@@ -9,6 +9,10 @@
   document.querySelectorAll('[data-care-date]').forEach(input => { if (!input.value) input.value = localDate; });
   document.querySelectorAll('[data-care-datetime]').forEach(input => { if (!input.value) input.value = `${localDate}T${pad(now.getHours())}:${pad(now.getMinutes())}`; });
   document.querySelectorAll('form[data-confirm]').forEach(form => form.addEventListener('submit', event => { if (!window.confirm(form.dataset.confirm)) event.preventDefault(); }));
+  document.querySelectorAll('form[data-wound-analysis]').forEach(form => form.addEventListener('submit', () => {
+    form.querySelector('button').disabled = true;
+    form.querySelector('[data-wound-status]').textContent = t('Рассматриваю фото… Это может занять до двух минут.');
+  }));
   const picker = document.querySelector('[data-prescription-picker]');
   picker?.addEventListener('change', () => {
     if (picker.value === '') return;

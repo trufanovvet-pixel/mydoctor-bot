@@ -11,7 +11,8 @@ from sqlalchemy.exc import IntegrityError
 import billing
 import storage
 import pet_care as care
-from care_models import CareInvite, CareMember, CarePreference, CarePrescription, CareSharing, HealthEntry, MedicationCourse, MedicationDose
+from care_models import CareInvite, CareMember, CarePreference, CarePrescription, CareSharing, HealthEntry, MedicationCourse, MedicationDose, WoundPhotoAnalysis
+import wound_photos
 from patient_records import OperationRecord, DocumentLabel
 from web_i18n import t
 
@@ -58,7 +59,7 @@ def install(app, WebDocument):
             statuses=STATUSES, doctor_csrf=session.get('doctor_csrf', ''),
             appetite_options=care.APPETITE, activity_options=care.ACTIVITY, pain_options=care.PAIN,
             wound_options=care.WOUND, flag_options=care.FLAGS, dose_states=care.STATES,
-            urgency_text=care.URGENCY, local_label=care.local_label, now=datetime.utcnow(),
+            urgency_text=care.URGENCY, wound_review=wound_photos, local_label=care.local_label, now=datetime.utcnow(),
             timezones=sorted(available_timezones()), **kwargs)
 
     def pet_page(db, pet, readonly=False, error=None, status=200):
@@ -92,13 +93,19 @@ def install(app, WebDocument):
         chart = [dict(at=e.observed_at.isoformat()+'Z', weight=e.weight, vomiting=e.vomiting, seizures=e.seizures) for e in reversed(entries[:30])]
         return render('pet', pet.name, pet=pet, owner=pet.user_id == uid, readonly=readonly,
             courses=courses, course_map={c.id: c for c in courses}, pending=pending, history=history,
-            entries=entries[:30], has_more=len(entries)>30, page_number=page, kind=kind, condition=condition,
+            entries=entries[:30], wound_analyses={a.entry_id: a for a in db.scalars(select(WoundPhotoAnalysis)
+                .where(WoundPhotoAnalysis.entry_id.in_([e.id for e in entries[:30]]))).all()},
+            has_more=len(entries)>30, page_number=page, kind=kind, condition=condition,
             conditions=conditions, actors=actors, chart=chart, members=members, reminders=bool(pref and pref.reminders),
             sharing=bool(sharing and sharing.doctor_enabled), prescription=prescription,
+            wound_cost=5 if uid and not readonly and not billing.is_owner_account(db, uid) and billing.metered(db, uid) else 0,
             operations=db.scalars(select(OperationRecord).where(OperationRecord.pet_id == pet.id).order_by(OperationRecord.id.desc())).all(),
             invites=db.scalars(select(CareInvite).where(CareInvite.pet_id == pet.id, CareInvite.revoked.is_(False),
                 CareInvite.used_at.is_(None), CareInvite.expires_at > datetime.utcnow())).all() if pet.user_id == uid else [],
             error=error, values=request.form if request.method == 'POST' else {}) , status
+
+    from web_wound_photos import install as install_wound_photos
+    install_wound_photos(app, pet_for, pet_page)
 
     @app.get('/care')
     def care_home():

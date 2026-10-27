@@ -102,6 +102,23 @@ class HealthEntry(storage.Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
+class WoundPhotoAnalysis(storage.Base):
+    """One shared result per immutable diary entry; leases prevent duplicate charges."""
+    __tablename__ = 'care_wound_photo_analyses'
+    entry_id: Mapped[int] = mapped_column(ForeignKey('care_health_entries.id'), primary_key=True)
+    state: Mapped[str] = mapped_column(String(16), default='pending')
+    lease: Mapped[str] = mapped_column(String(32))
+    requested_by: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    usage_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    result: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    previous_entry_ids: Mapped[list] = mapped_column(JSON, default=list)
+    model: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    prompt_version: Mapped[str] = mapped_column(String(40))
+    language: Mapped[str] = mapped_column(String(8))
+
+
 class CareNotice(storage.Base):
     __tablename__ = 'care_notices'
     __table_args__ = (UniqueConstraint('dose_id', 'user_id', 'channel', 'destination'),)

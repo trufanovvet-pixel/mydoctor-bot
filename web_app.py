@@ -356,7 +356,9 @@ def upload_document():
         else:
             uploaded=client.files.create(file=(secure_filename(f.filename) or "document.pdf",io.BytesIO(data),mime),purpose="user_data")
             inp=[{"role":"user","content":[{"type":"input_text","text":"Разбери ветеринарный документ. Извлеки ключевые результаты, интерпретируй их в контексте и укажи ограничения."},{"type":"input_file","file_id":uploaded.id}]}]
-        response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM+ai_language()+MEDIA_SPECIES_RULES+document_context,input=inp,max_output_tokens=3000);analysis=_plain(response.output_text)
+        from wound_photos import TELEGRAM_RULES
+        photo_rules = TELEGRAM_RULES if mime.startswith('image/') else ''
+        response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM+ai_language()+MEDIA_SPECIES_RULES+document_context+'\n'+photo_rules,input=inp,max_output_tokens=3000);analysis=_plain(response.output_text)
         if not analysis:raise ValueError('Empty AI output')
         ai_response=response
     except Exception:

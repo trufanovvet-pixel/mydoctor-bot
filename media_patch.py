@@ -167,10 +167,11 @@ def install(bot):
             user_request = (
                 "Прочитай изображение в контексте последних сообщений. Если оно прислано как ответ на твою просьбу показать упаковку, "
                 "определи препарат, действующее вещество и дозировку/концентрацию и продолжи отвечать на предыдущий клинический вопрос. "
+                "Если это фото раны или послеоперационного шва, оцени только видимые признаки и срочность, уточни срок после операции. "
                 "Если это самостоятельный документ, прочитай его и кратко объясни содержание."
             )
 
-        await update.message.reply_text("Читаю документ…", reply_markup=bot.MENU)
+        await update.message.reply_text("Рассматриваю фото…" if input_type == 'input_image' else "Читаю документ…", reply_markup=bot.MENU)
         await update.message.chat.send_action("typing")
 
         try:
@@ -196,6 +197,9 @@ def install(bot):
                 media_parts = [{"type": "input_image", "image_url": _data_url(part), "detail": "high"} for part in processed]
 
             instructions = bot.SYSTEM_PROMPT + MEDIA_ANALYSIS_MODE
+            if input_type == 'input_image':
+                from wound_photos import TELEGRAM_RULES
+                instructions += '\n' + TELEGRAM_RULES
             history = context.user_data.setdefault("history", [])
             response_input = _safe_history(history) + [{
                 "role": "user",
