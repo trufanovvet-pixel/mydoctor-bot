@@ -192,7 +192,7 @@ def install(app, WebDocument):
                     pref.reminders = True
                 db.commit(); flash('Расписание сохранено. Отмечайте каждый приём после наступления его времени.')
             except ValueError as exc:
-                db.rollback(); return pet_page(db, pet, error=str(exc), status=400)
+                db.rollback(); return pet_page(db, pet, error=str(exc), status=200)
         return redirect(url_for('care_pet', pid=pid)+'#medications', code=303)
 
     @app.post('/care/doses/<int:did>')
