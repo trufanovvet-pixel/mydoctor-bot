@@ -13,13 +13,76 @@
     form.querySelector('button').disabled = true;
     form.querySelector('[data-wound-status]').textContent = t('Рассматриваю фото… Это может занять до двух минут.');
   }));
+  const timesInput = document.querySelector('[data-medication-times]');
+  let setMedicationTimes = null;
+  if (timesInput) {
+    const fallback = timesInput.closest('label');
+    const group = document.createElement('fieldset');
+    group.className = 'care-full care-time-picker';
+    const legend = document.createElement('legend');
+    legend.textContent = t('Во сколько давать лекарство?');
+    const hint = document.createElement('p');
+    hint.textContent = t('Выберите время для каждого приёма по назначению врача.');
+    const rows = document.createElement('div');
+    const add = document.createElement('button');
+    add.type = 'button'; add.className = 'secondary';
+    add.textContent = t('＋ Добавить время');
+    const error = document.createElement('p');
+    error.id = 'medication-time-error'; error.setAttribute('role', 'alert'); error.hidden = true;
+    group.append(legend, hint, rows, add, error);
+    fallback.after(group);
+    function sync() {
+      const inputs = [...rows.querySelectorAll('input')];
+      const values = inputs.map(input => input.value);
+      const duplicate = values.some((v, i) => v && values.indexOf(v) !== i);
+      const message = duplicate ? t('Это время уже добавлено. Выберите другое.') : '';
+      inputs.forEach(input => input.setCustomValidity(message));
+      error.textContent = message; error.hidden = !duplicate;
+      timesInput.value = values.join(', ');
+      add.disabled = inputs.length >= 6;
+      rows.querySelectorAll('button').forEach(button => { button.hidden = inputs.length === 1; });
+    }
+    function addRow(value = '') {
+      const row = document.createElement('div'); row.className = 'care-time-row';
+      const label = document.createElement('label');
+      const input = document.createElement('input');
+      label.append(document.createTextNode(t('Время приёма')));
+      input.type = 'time'; input.required = true; input.step = '60'; input.value = value.trim();
+      input.setAttribute('aria-describedby', error.id);
+      input.addEventListener('input', sync); input.addEventListener('change', sync);
+      label.append(input);
+      const remove = document.createElement('button');
+      remove.type = 'button'; remove.className = 'secondary'; remove.textContent = t('Удалить время');
+      remove.addEventListener('click', () => { row.remove(); sync(); });
+      row.append(label, remove); rows.append(row);
+      sync(); return input;
+    }
+    setMedicationTimes = value => {
+      rows.replaceChildren();
+      const values = (value || '').split(',').map(v => v.trim()).filter(Boolean);
+      (values.length ? values : ['']).forEach(addRow);
+    };
+    const original = timesInput.value;
+    timesInput.required = false; timesInput.type = 'hidden'; fallback.hidden = true;
+    setMedicationTimes(original);
+    add.addEventListener('click', () => { if (rows.children.length < 6) addRow().focus(); });
+    timesInput.form.addEventListener('submit', sync);
+  }
+  const medicationError = document.querySelector('[data-medication-error]');
+  if (medicationError) {
+    document.querySelector('#new-medication').open = true;
+    medicationError.focus();
+    medicationError.scrollIntoView({block: 'center'});
+  }
   const picker = document.querySelector('[data-prescription-picker]');
   picker?.addEventListener('change', () => {
     if (picker.value === '') return;
     const medicines = JSON.parse(document.querySelector('#care-prescription').textContent);
     const chosen = medicines[Number(picker.value)];
     const form = document.querySelector('#care-medication-form');
-    for (const key of ['name', 'dose', 'instructions', 'times']) form.elements[key].value = chosen[key] || '';
+    for (const key of ['name', 'dose', 'instructions']) form.elements[key].value = chosen[key] || '';
+    if (setMedicationTimes) setMedicationTimes(chosen.times);
+    else form.elements.times.value = chosen.times || '';
     form.elements.confirmed.checked = false;
   });
   const kind = document.querySelector('[data-care-kind]');

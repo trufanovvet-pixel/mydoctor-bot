@@ -722,5 +722,11 @@
   "Продолжайте назначения и плановые осмотры у хирурга. Если состояние ухудшается, свяжитесь с клиникой. По фото нельзя подтвердить, что осложнений нет.": "Continue the surgeon’s instructions and scheduled examinations. Contact the clinic if your pet worsens. A photo cannot confirm that there are no complications.",
   "Свяжитесь с оперировавшей клиникой сейчас и согласуйте осмотр сегодня. При быстром ухудшении обращайтесь в ближайшую клинику сразу.": "Contact the operating clinic now and arrange an examination today. If your pet is deteriorating quickly, seek immediate care at the nearest clinic.",
   "Фото ещё разбирается. Обновите страницу через минуту. При тревожных симптомах не ждите результата.": "This photo is still being reviewed. Refresh the page in a minute. Do not wait for a result if there are concerning symptoms.",
-  "Не удалось разобрать фото. Баллы за эту попытку не списаны. Можно повторить разбор; при ухудшении не ждите ответа ИИ.": "The photo could not be reviewed. No credits were charged for this attempt. You may retry; do not wait for an AI reply if your pet is getting worse."
+  "Не удалось разобрать фото. Баллы за эту попытку не списаны. Можно повторить разбор; при ухудшении не ждите ответа ИИ.": "The photo could not be reviewed. No credits were charged for this attempt. You may retry; do not wait for an AI reply if your pet is getting worse.",
+  "Во сколько давать лекарство?": "What time should the medicine be given?",
+  "Выберите время для каждого приёма по назначению врача.": "Choose each dose time according to your veterinarian’s instructions.",
+  "＋ Добавить время": "+ Add time",
+  "Время приёма": "Dose time",
+  "Удалить время": "Remove time",
+  "Это время уже добавлено. Выберите другое.": "This time is already added. Choose another time."
 }
