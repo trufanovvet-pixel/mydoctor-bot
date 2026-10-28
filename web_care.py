@@ -148,6 +148,14 @@ def install(app, WebDocument):
             db.commit(); flash('Настройки ухода сохранены.')
         return redirect(url_for('care_pet', pid=pid), code=303)
 
+    # Opening a form endpoint directly (or refreshing a failed POST) must not
+    # expose a raw 405 page. The canonical user-facing URL is the pet page.
+    @app.get('/care/pets/<int:pid>/medications')
+    def care_medications_open(pid):
+        with storage.SessionLocal() as db:
+            pet_for(db, pid)
+        return redirect(url_for('care_pet', pid=pid) + '#medications', code=303)
+
     @app.post('/care/pets/<int:pid>/medications')
     def care_add_medication(pid):
         with storage.SessionLocal() as db:
