@@ -728,5 +728,9 @@
   "＋ Добавить время": "+ Add time",
   "Время приёма": "Dose time",
   "Удалить время": "Remove time",
-  "Это время уже добавлено. Выберите другое.": "This time is already added. Choose another time."
+  "Это время уже добавлено. Выберите другое.": "This time is already added. Choose another time.",
+  "Дневник состояния, восстановление после операции и лекарства по назначению.": "Health diary, recovery after surgery, and prescribed medications.",
+  "Карточка питомца": "Pet profile",
+  "Сначала добавьте питомца.": "Add your pet first.",
+  "Уведомления": "Notifications"
 }
