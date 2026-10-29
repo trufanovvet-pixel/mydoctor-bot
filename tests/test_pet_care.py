@@ -86,7 +86,12 @@ def test_schedule_confirmation_idempotency_and_free_manual_entry(monkeypatch):
     storage.set_bot_setting('billing_live','1')
     from test_clinical_safety_access import exhaust
     exhaust(uid)
-    assert post(a,f'/care/pets/{pid}/medications',{**values,'confirmed':'0'}).status_code==400
+    response = post(a,f'/care/pets/{pid}/medications',{**values,'confirmed':'0'})
+    assert response.status_code == 200
+    assert 'data-medication-error' in response.text
+    with storage.SessionLocal() as db:
+        assert db.scalar(select(func.count()).select_from(MedicationCourse)) == 0
+        assert db.scalar(select(func.count()).select_from(MedicationDose)) == 0
     for _ in range(2): assert post(a,f'/care/pets/{pid}/medications',values).status_code==303
     with storage.SessionLocal() as db:
         assert db.scalar(select(func.count()).select_from(MedicationCourse))==1
@@ -151,7 +156,12 @@ def test_duplicate_active_schedule_and_cross_pet_status_are_blocked():
     a,uid,pid=account();b,_,bpid=account('other@example.com')
     form=medication_form();form['enable_reminders']='1'
     assert post(a,f'/care/pets/{pid}/medications',form).status_code==303
-    assert post(a,f'/care/pets/{pid}/medications',medication_form()).status_code==400
+    response = post(a,f'/care/pets/{pid}/medications',medication_form())
+    assert response.status_code == 200
+    assert 'data-medication-error' in response.text
+    with storage.SessionLocal() as db:
+        assert db.scalar(select(func.count()).select_from(MedicationCourse)) == 1
+        assert db.scalar(select(func.count()).select_from(MedicationDose)) == 2
     with storage.SessionLocal() as db:
         assert db.get(CarePreference,(pid,uid)).reminders
         did=db.scalar(select(MedicationDose.id))
