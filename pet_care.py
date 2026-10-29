@@ -17,7 +17,7 @@ STATES = {'pending': 'Нет отметки', 'taken': 'Дал(а)', 'skipped': 
 URGENCY = {
     'urgent': 'Нужна экстренная ветеринарная помощь. Свяжитесь с ближайшей клиникой и выезжайте сейчас. Не ждите ответа в дневнике.',
     'contact': 'Свяжитесь с лечащим ветеринаром сегодня и сообщите об этих изменениях. При быстром ухудшении обращайтесь в ближайшую клинику сразу.',
-    'recorded': 'Наблюдение сохранено. Продолжайте выполнять назначения врача. Запись в дневнике не заменяет осмотр и не означает, что врач уже её прочитал.',
+    'recorded': 'Наблюдение сохранено в дневнике питомца.',
 }
 # Source for postoperative escalation: ACVS, Postoperative Care After Surgery.
 # https://www.acvs.org/small-animal/postoperative-care-after-surgery-what-animal-owners-should-expect/
