@@ -117,6 +117,35 @@ def install(app, WebDocument):
     def care_pet(pid):
         with storage.SessionLocal() as db: return pet_page(db, pet_for(db, pid))
 
+
+    @app.get('/care/pets/<int:pid>/export.docx')
+    @app.get('/doctor/care/pets/<int:pid>/export.docx')
+    def care_export_word(pid):
+        scope = request.args.get('scope', 'all')
+        if scope not in ('all', 'postop', 'chronic', 'medications'): abort(400)
+        with storage.SessionLocal() as db:
+            if request.path.startswith('/doctor/'):
+                if not doctor_access(db, pid): abort(404)
+                pet = db.get(storage.Pet, pid)
+            else:
+                pet = pet_for(db, pid)
+            from care_export import build_care_docx
+            query = select(HealthEntry).where(HealthEntry.pet_id == pid)
+            if scope in ('postop', 'chronic'): query = query.where(HealthEntry.kind == scope)
+            entries = db.scalars(query.order_by(HealthEntry.observed_at, HealthEntry.id)).all() if scope != 'medications' else []
+            courses = db.scalars(select(MedicationCourse).where(MedicationCourse.pet_id == pid)
+                .order_by(MedicationCourse.start_date, MedicationCourse.id)).all() if scope in ('all', 'medications') else []
+            doses = db.scalars(select(MedicationDose).where(MedicationDose.course_id.in_([c.id for c in courses]))
+                .order_by(MedicationDose.due_at, MedicationDose.id)).all() if courses else []
+            actor_ids = {e.created_by for e in entries} | {c.created_by for c in courses} | {d.marked_by for d in doses}
+            actors = {u.id: u.first_name or '№'+str(u.id) for u in db.scalars(select(storage.User).where(storage.User.id.in_(actor_ids))).all()}
+            operations = {o.id: o for o in db.scalars(select(OperationRecord).where(OperationRecord.pet_id == pid)).all()}
+            output = build_care_docx(pet, entries, courses, doses, operations, actors,
+                dict(appetite=care.APPETITE, activity=care.ACTIVITY, pain=care.PAIN, wound=care.WOUND,
+                     flags=care.FLAGS, states=care.STATES), t=t, scope=scope)
+        return send_file(output, as_attachment=True, download_name=f'pet-{pid}-{scope}-{datetime.utcnow():%Y-%m-%d}.docx',
+            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+
     @app.get('/care/pets/<int:pid>/dose-status')
     def care_dose_status(pid):
         ids = request.args.getlist('id', type=int)

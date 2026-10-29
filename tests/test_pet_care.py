@@ -350,3 +350,79 @@ async def test_telegram_care_entrypoint_uses_private_login(bot,ctx,update):
     csrf=re.search('name="login_csrf" value="([^"]+)"',page.text).group(1)
     r=c.post(url.split('https://mydoctor.vet')[1],data={'login_csrf':csrf,'next':'/care'})
     assert r.status_code==303 and r.headers['Location']=='/care'
+
+
+def test_word_export_full_history_photos_statuses_and_access():
+    from docx import Document
+    from zipfile import ZipFile
+    a,uid,pid=account()
+    b,buid,bpid=account('export-outsider@example.com')
+    cid,did=due_course(uid,pid)
+    assert post(a,f'/care/doses/{did}',{'state':'taken'}).status_code==303
+    with storage.SessionLocal() as db:
+        operation=OperationRecord(user_id=uid,pet_id=pid,title='Export operation')
+        db.add(operation);db.flush()
+        for index in range(35):
+            db.add(HealthEntry(pet_id=pid,created_by=uid,request_key=secrets.token_hex(16),
+                kind='postop' if index == 0 else 'chronic',operation_id=operation.id if index == 0 else None,
+                condition='Export condition',observed_at=datetime.utcnow()-timedelta(days=35-index),
+                timezone='Asia/Makassar',appetite='normal',activity='reduced',pain='none',wound='unchanged',
+                notes=f'Export entry {index:02}',weight=None,vomiting=0,seizures=None,
+                photo=picture().getvalue() if index == 0 else None))
+        db.add(HealthEntry(pet_id=bpid,created_by=buid,request_key=secrets.token_hex(16),
+            kind='chronic',observed_at=datetime.utcnow(),timezone='UTC',appetite='normal',
+            activity='normal',pain='none',notes='OUTSIDER PRIVATE ENTRY'))
+        for state in ('skipped','pending','cancelled'):
+            db.add(MedicationDose(course_id=cid,due_at=datetime.utcnow()-timedelta(hours=len(state)),state=state))
+        db.add(MedicationDose(course_id=cid,due_at=datetime.utcnow()+timedelta(days=1),state='pending'))
+        db.commit()
+    path=f'/care/pets/{pid}/export.docx'
+    response=a.get(path)
+    assert response.status_code == 200
+    assert response.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    assert 'attachment;' in response.headers['Content-Disposition']
+    assert 'no-store' in response.headers['Cache-Control']
+    with ZipFile(io.BytesIO(response.data)) as z:
+        xml=z.read('word/document.xml').decode()
+        assert any(name.startswith('word/media/') for name in z.namelist())
+    Document(io.BytesIO(response.data))
+    for index in range(35): assert f'Export entry {index:02}' in xml
+    for value in ('Export operation','Asia/Makassar','Test prescription','Дал(а)','Пропустил(а)',
+                  'Нет отметки','Курс остановлен','Предстоит','Не измеряли'):
+        assert value in xml
+    assert 'OUTSIDER PRIVATE ENTRY' not in xml
+    assert b.get(path).status_code == 404
+    assert web_app.app.test_client().get(path).status_code == 302
+    assert a.get(path+'?scope=invalid').status_code == 400
+    for scope, included, excluded in [
+        ('postop','Export entry 00','Export entry 34'),
+        ('chronic','Export entry 34','Export entry 00'),
+        ('medications','Test prescription','Export entry 00'),
+    ]:
+        with ZipFile(io.BytesIO(a.get(path+'?scope='+scope).data)) as z:
+            part=z.read('word/document.xml').decode()
+        assert included in part and excluded not in part
+        if scope != 'medications': assert 'Test prescription' not in part
+    a.get('/language/en')
+    with ZipFile(io.BytesIO(a.get(path+'?scope=medications').data)) as z:
+        english=z.read('word/document.xml').decode()
+    assert 'Prescription diary' in english and 'Дневник назначений' not in english
+
+
+def test_word_export_empty_and_doctor_permission_revocation():
+    from docx import Document
+    from test_doctor_portal import doctor
+    a,uid,pid=account()
+    response=a.get(f'/care/pets/{pid}/export.docx')
+    doc=Document(io.BytesIO(response.data))
+    assert 'Записей пока нет.' in [p.text for p in doc.paragraphs]
+    d=doctor();path=f'/doctor/care/pets/{pid}/export.docx'
+    assert d.get(path).status_code == 404
+    post(a,f'/care/pets/{pid}/preferences',{'doctor_enabled':'1'})
+    assert d.get(path).status_code == 404
+    with storage.SessionLocal() as db:
+        db.add(storage.Consultation(user_id=uid,pet_id=pid,kind='consult_request',user_text='test',assistant_text=''))
+        db.commit()
+    assert d.get(path).status_code == 200
+    post(a,f'/care/pets/{pid}/preferences',{})
+    assert d.get(path).status_code == 404

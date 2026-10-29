@@ -18,6 +18,16 @@
 {% if error and not medication_error %}<div class="care-alert" role="alert">{{t(error)}}</div>{% endif %}
 <nav class="care-tabs" aria-label="{{t('Разделы ухода')}}"><a href="#diary">{{t('Дневник состояния')}}</a><a href="#medications">{{t('Лекарства')}}</a>{% if not readonly %}<a href="#notifications">{{t('Уведомления')}}</a>{% endif %}</nav>
 {% if readonly %}<p class="notice">{{t('Владелец открыл врачу дневник ухода. Здесь записаны наблюдения семьи, а не результаты осмотра.')}}</p>{% endif %}
+
+<details class="panel" id="care-export"><summary>{{t('Скачать дневник в Word')}}</summary>
+<p class="muted">{{t('Все записи выбранного раздела, включая фотографии и отметки о лекарствах. Файл можно отправить врачу или распечатать.')}}</p>
+<form method="get" action="{{'/doctor' if readonly else ''}}/care/pets/{{pet.id}}/export.docx" class="form-grid">
+<label>{{t('Что включить в файл')}}<select name="scope">
+<option value="all">{{t('Весь дневник и назначения')}}</option>
+<option value="postop">{{t('Послеоперационный дневник')}}</option>
+<option value="chronic">{{t('Дневник наблюдений')}}</option>
+<option value="medications">{{t('Дневник назначений')}}</option>
+</select></label><button type="submit">{{t('Скачать Word')}}</button></form></details>
 <section id="diary" class="panel"><div class="care-heading"><h2>{{t('Дневник состояния')}}</h2>{% if not readonly %}<a href="#new-observation">{{t('＋ Записать наблюдение')}}</a>{% endif %}</div>
 <form method="get" class="form-grid"><label>{{t('Вид дневника')}}<select name="kind"><option value="">{{t('Все записи')}}</option><option value="postop" {{'selected' if kind=='postop'}}>{{t('После операции')}}</option><option value="chronic" {{'selected' if kind=='chronic'}}>{{t('Хроническое заболевание')}}</option></select></label><label>{{t('Заболевание или симптом')}}<select name="condition"><option value="">{{t('Все')}}</option>{% for c in conditions if c %}<option {{'selected' if c==condition}}>{{c}}</option>{% endfor %}</select></label><button class="secondary">{{t('Показать')}}</button></form>
 {% if chart %}<p class="muted">{{t('Графики по записям на этой странице. Пустое значение означает «не измеряли», а не ноль. Эпизоды относятся к указанному дню; записи не суммируются.')}}</p><script id="care-chart-data" type="application/json">{{chart|tojson}}</script><div class="care-charts" data-care-charts></div>{% endif %}
