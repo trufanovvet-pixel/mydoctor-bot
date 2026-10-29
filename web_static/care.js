@@ -13,9 +13,8 @@
     form.querySelector('button').disabled = true;
     form.querySelector('[data-wound-status]').textContent = t('Рассматриваю фото… Это может занять до двух минут.');
   }));
-  const timesInput = document.querySelector('[data-medication-times]');
-  let setMedicationTimes = null;
-  if (timesInput) {
+  document.querySelectorAll('[data-medication-times]').forEach((timesInput, index) => {
+    let setMedicationTimes = null;
     const fallback = timesInput.closest('label');
     const group = document.createElement('fieldset');
     group.className = 'care-full care-time-picker';
@@ -28,7 +27,7 @@
     add.type = 'button'; add.className = 'secondary';
     add.textContent = t('＋ Добавить время');
     const error = document.createElement('p');
-    error.id = 'medication-time-error'; error.setAttribute('role', 'alert'); error.hidden = true;
+    error.id = 'medication-time-error-' + index; error.setAttribute('role', 'alert'); error.hidden = true;
     group.append(legend, hint, rows, add, error);
     fallback.after(group);
     function sync() {
@@ -67,23 +66,37 @@
     setMedicationTimes(original);
     add.addEventListener('click', () => { if (rows.children.length < 6) addRow().focus(); });
     timesInput.form.addEventListener('submit', sync);
-  }
+  });
   const medicationError = document.querySelector('[data-medication-error]');
   if (medicationError) {
     document.querySelector('#new-medication').open = true;
     medicationError.focus();
     medicationError.scrollIntoView({block: 'center'});
   }
-  const picker = document.querySelector('[data-prescription-picker]');
-  picker?.addEventListener('change', () => {
-    if (picker.value === '') return;
-    const medicines = JSON.parse(document.querySelector('#care-prescription').textContent);
-    const chosen = medicines[Number(picker.value)];
-    const form = document.querySelector('#care-medication-form');
-    for (const key of ['name', 'dose', 'instructions']) form.elements[key].value = chosen[key] || '';
-    if (setMedicationTimes) setMedicationTimes(chosen.times);
-    else form.elements.times.value = chosen.times || '';
-    form.elements.confirmed.checked = false;
+  document.querySelectorAll('[data-medication-card]').forEach(card => {
+    const start = card.querySelector('[data-course-start]');
+    const duration = card.querySelector('[data-course-duration]');
+    const end = card.querySelector('[data-course-end]');
+    const hint = card.querySelector('[data-course-end-hint]');
+    if (!duration.value) {
+      const instructions = card.querySelector('[data-course-instructions]').value;
+      const match = instructions.match(/(?:^|\s)(\d{1,3})\s*(дней|дня|день|суток|сутки|days?|недели|недель|неделю|weeks?)(?=\s|[.,;]|$)/i);
+      if (match) duration.value = Number(match[1]) * (/нед|week/i.test(match[2]) ? 7 : 1);
+    }
+    function calculateEnd() {
+      const days = Number(duration.value);
+      if (!start.value || !Number.isInteger(days) || days < 1 || days > 180) {
+        end.readOnly = false; hint.textContent = ''; return;
+      }
+      const date = new Date(start.value + 'T12:00:00Z');
+      date.setUTCDate(date.getUTCDate() + days - 1);
+      end.value = date.toISOString().slice(0,10);
+      end.readOnly = true;
+      hint.textContent = t('Рассчитано автоматически, включая первый день курса.');
+    }
+    start.addEventListener('input', calculateEnd);
+    duration.addEventListener('input', calculateEnd);
+    calculateEnd();
   });
   const kind = document.querySelector('[data-care-kind]');
   function showKind() {

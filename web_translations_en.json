@@ -753,5 +753,14 @@
   "Назначения и отметки о приёме": "Prescriptions and medication records",
   "Курс": "Course",
   "По расписанию": "Scheduled time",
-  "Когда и кем отмечено": "Recorded at and by"
+  "Когда и кем отмечено": "Recorded at and by",
+  "Препарат": "Medication",
+  "Длительность курса, дней": "Course duration, days",
+  "Все препараты из назначения. Проверьте список и сохраните весь план одной кнопкой.": "All prescribed medications. Review the list and save the whole plan at once.",
+  "Сохранить весь план": "Save entire plan",
+  "Рассчитано автоматически, включая первый день курса.": "Calculated automatically, including the first day.",
+  "Загрузите назначение или добавьте лекарство вручную. Дата окончания рассчитывается по длительности курса. Для ступенчатой схемы укажите отдельные этапы.": "Upload a prescription or add a medication manually. The end date is calculated from the course duration. Enter separate stages for a changing dose.",
+  "Укажите длительность курса от 1 до 180 дней.": "Enter a course duration from 1 to 180 days.",
+  "Проверьте начало курса.": "Check the course start date.",
+  "Проверьте список препаратов.": "Check the medication list."
 }

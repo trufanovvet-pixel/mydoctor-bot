@@ -88,7 +88,7 @@ def install(app, WebDocument):
         actors = {u.id: u.first_name or '№'+str(u.id) for u in db.scalars(select(storage.User).where(storage.User.id.in_(actor_ids))).all()}
         pref = db.get(CarePreference, (pet.id, uid)) if uid else None
         sharing = db.get(CareSharing, pet.id)
-        prescription = db.get(CarePrescription, request.args.get('prescription', type=int)) if request.args.get('prescription') else None
+        prescription = db.get(CarePrescription, (request.args.get('prescription', type=int) or request.form.get('prescription_id', type=int))) if (request.args.get('prescription') or request.form.get('prescription_id')) else None
         if prescription and (prescription.pet_id != pet.id or prescription.user_id != uid): abort(404)
         chart = [dict(at=e.observed_at.isoformat()+'Z', weight=e.weight, vomiting=e.vomiting, seizures=e.seizures) for e in reversed(entries[:30])]
         return render('pet', pet.name, pet=pet, owner=pet.user_id == uid, readonly=readonly,
@@ -196,25 +196,40 @@ def install(app, WebDocument):
                     if previous.pet_id != pid: abort(409)
                     return redirect(url_for('care_pet', pid=pid), code=303)
                 if request.form.get('confirmed') != '1': raise ValueError('Сверьте препарат, дозу, даты и время с назначением врача и подтвердите их.')
-                name, dose, instructions = (request.form.get(k, '').strip() for k in ('name', 'dose', 'instructions'))
-                if not name or len(name)>160 or not dose or len(dose)>200 or len(instructions)>2000:
-                    raise ValueError('Укажите название и дозу из назначения. Сократите длинные заметки.')
-                if db.scalar(select(func.count()).select_from(MedicationCourse).where(MedicationCourse.pet_id == pid, MedicationCourse.active.is_(True))) >= 30:
-                    raise ValueError('Сначала остановите завершённые курсы.')
-                dates, slots = care.schedule(request.form)
-                overlapping = db.scalars(select(MedicationCourse).where(MedicationCourse.pet_id == pid,
-                    MedicationCourse.active.is_(True), func.lower(MedicationCourse.name) == name.lower(),
-                    MedicationCourse.end_date >= dates['start_date'], MedicationCourse.start_date <= dates['end_date'])).all()
-                if any(c.timezone != dates['timezone'] or set(c.times) & set(dates['times']) for c in overlapping):
-                    raise ValueError('Для этого препарата уже есть пересекающееся расписание. Проверьте существующий курс перед добавлением.')
-                did = request.form.get('prescription_id', type=int)
-                if did:
-                    source = db.get(CarePrescription, did)
-                    if not source or source.pet_id != pid: abort(404)
-                course = MedicationCourse(pet_id=pid, created_by=session['uid'], request_key=key, name=name,
-                    dose=dose, instructions=instructions, prescription_id=did, **dates)
-                db.add(course); db.flush()
-                db.add_all([MedicationDose(course_id=course.id, due_at=due) for due in slots])
+                count = request.form.get('batch_count', 1, type=int)
+                if count is None or not 1 <= count <= 12: raise ValueError('Проверьте список препаратов.')
+                for index in range(count):
+                    form = request.form.copy()
+                    if 'batch_count' in request.form:
+                        for field in ('name', 'dose', 'instructions', 'start_date', 'end_date', 'duration_days', 'times'):
+                            form[field] = request.form.get(f'med_{index}_{field}', '')
+                    item_key = key if index == 0 else key + '-' + str(index)
+                    name, dose, instructions = (form.get(k, '').strip() for k in ('name', 'dose', 'instructions'))
+                    if not name or len(name)>160 or not dose or len(dose)>200 or len(instructions)>2000:
+                        raise ValueError('Укажите название и дозу из назначения. Сократите длинные заметки.')
+                    if db.scalar(select(func.count()).select_from(MedicationCourse).where(MedicationCourse.pet_id == pid, MedicationCourse.active.is_(True))) >= 30:
+                        raise ValueError('Сначала остановите завершённые курсы.')
+                    duration = form.get('duration_days', '').strip()
+                    if duration:
+                        if not duration.isdigit() or not 1 <= int(duration) <= 180:
+                            raise ValueError('Укажите длительность курса от 1 до 180 дней.')
+                        try:
+                            form['end_date'] = (datetime.strptime(form.get('start_date', ''), '%Y-%m-%d') + timedelta(days=int(duration)-1)).date().isoformat()
+                        except ValueError: raise ValueError('Проверьте начало курса.') from None
+                    dates, slots = care.schedule(form)
+                    overlapping = db.scalars(select(MedicationCourse).where(MedicationCourse.pet_id == pid,
+                        MedicationCourse.active.is_(True), func.lower(MedicationCourse.name) == name.lower(),
+                        MedicationCourse.end_date >= dates['start_date'], MedicationCourse.start_date <= dates['end_date'])).all()
+                    if any(c.timezone != dates['timezone'] or set(c.times) & set(dates['times']) for c in overlapping):
+                        raise ValueError('Для этого препарата уже есть пересекающееся расписание. Проверьте существующий курс перед добавлением.')
+                    did = form.get('prescription_id', type=int)
+                    if did:
+                        source = db.get(CarePrescription, did)
+                        if not source or source.pet_id != pid: abort(404)
+                    course = MedicationCourse(pet_id=pid, created_by=session['uid'], request_key=item_key, name=name,
+                        dose=dose, instructions=instructions, prescription_id=did, **dates)
+                    db.add(course); db.flush()
+                    db.add_all([MedicationDose(course_id=course.id, due_at=due) for due in slots])
                 if request.form.get('enable_reminders') == '1':
                     pref = db.get(CarePreference, (pid, session['uid']))
                     if not pref: pref = CarePreference(pet_id=pid, user_id=session['uid']); db.add(pref)
@@ -385,7 +400,7 @@ def install(app, WebDocument):
                 uploaded = client.files.create(file=('prescription.pdf', io.BytesIO(data), mime), purpose='user_data')
                 content.append({'type': 'input_file', 'file_id': uploaded.id})
             response = client.responses.create(model=STANDARD_MODEL, max_output_tokens=2000,
-                instructions='Return JSON only: {"medicines":[{"name":"", "dose":"", "instructions":"", "times":""}]}. Up to 12 medicines. Transcribe exact drug names, strengths, prescribed amounts and instructions in the original language. Never calculate a dose, choose treatment, fill missing facts or convert frequency to clock times. times is empty unless explicit HH:MM times are printed. Omit unclear fields or use empty strings. If this is not a readable prescription return an empty medicines list.',
+                instructions='Return JSON only: {"medicines":[{"name":"", "dose":"", "instructions":"", "times":"", "duration_days":""}]}. Up to 12 medicines. Transcribe exact drug names, strengths, prescribed amounts and instructions in the original language. Never calculate a dose, choose treatment, fill missing facts or convert frequency to clock times. duration_days is a string containing the explicit course length in days (convert exact weeks to days), empty if unclear or variable. Preserve the duration and frequency in instructions too. times is empty unless explicit HH:MM times are printed. Omit unclear fields or use empty strings. If this is not a readable prescription return an empty medicines list.',
                 input=[{'role': 'user', 'content': content}])
             raw = (response.output_text or '').strip()
             if raw.startswith('```'): raw = raw.split('\n', 1)[-1].rsplit('```', 1)[0]
@@ -396,7 +411,7 @@ def install(app, WebDocument):
             for item in medicines:
                 if not isinstance(item, dict): raise ValueError('invalid medicine')
                 medicine = {}
-                for k, limit in [('name',160), ('dose',200), ('instructions',2000), ('times',60)]:
+                for k, limit in [('name',160), ('dose',200), ('instructions',2000), ('times',60), ('duration_days',3)]:
                     value = item.get(k, '')
                     if not isinstance(value,str) or len(value)>limit: raise ValueError('invalid field')
                     medicine[k] = value.strip()
@@ -419,3 +434,4 @@ def install(app, WebDocument):
                 try: client.files.delete(uploaded.id)
                 except Exception: pass
         return redirect(url_for('care_pet', pid=pid, prescription=did)+'#new-medication', code=303)
+
