@@ -372,8 +372,8 @@ def test_word_export_full_history_photos_statuses_and_access():
         db.add(HealthEntry(pet_id=bpid,created_by=buid,request_key=secrets.token_hex(16),
             kind='chronic',observed_at=datetime.utcnow(),timezone='UTC',appetite='normal',
             activity='normal',pain='none',notes='OUTSIDER PRIVATE ENTRY'))
-        for state in ('skipped','pending','cancelled'):
-            db.add(MedicationDose(course_id=cid,due_at=datetime.utcnow()-timedelta(hours=len(state)),state=state))
+        for index, state in enumerate(('skipped','pending','cancelled'), 1):
+            db.add(MedicationDose(course_id=cid,due_at=datetime.utcnow()-timedelta(hours=index),state=state))
         db.add(MedicationDose(course_id=cid,due_at=datetime.utcnow()+timedelta(days=1),state='pending'))
         db.commit()
     path=f'/care/pets/{pid}/export.docx'
