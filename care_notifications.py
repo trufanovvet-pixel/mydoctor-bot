@@ -149,7 +149,9 @@ def notice_payload(nid, now=None):
         else: valid = False
         if not valid:
             row.state = 'skipped'; db.commit(); return None
-        return dict(id=nid, dose_id=dose.id, pet_id=pet.id, channel=row.channel, destination=row.destination,
+        from care_delivery_probe import mode
+        test_mode = mode(db, row, dose, course)
+        return dict(test_mode=test_mode, id=nid, dose_id=dose.id, pet_id=pet.id, channel=row.channel, destination=row.destination,
             subscription=subscription, language=lang, time=care.local_label(dose.due_at, course.timezone), timezone=course.timezone)
 
 
@@ -172,7 +174,7 @@ def send_push(payload):
     try:
         with NoRedirectSession() as transport:
             result = webpush(subscription_info=payload['subscription'], data=json.dumps(dict(
-                language=payload['language'], kind='care', tag='mydoctor-dose-'+str(payload['dose_id']),
+                language=payload['language'], kind='care', test=bool(payload.get('test_mode')), tag='mydoctor-dose-'+str(payload['dose_id']),
                 url='/care/pets/'+str(payload['pet_id'])+'#medications')),
                 vapid_private_key=vapid_keys()['private'], vapid_claims={'sub':os.getenv('MYDOCTOR_WEB_URL','https://mydoctor.vet')},
                 ttl=900, timeout=10, requests_session=transport)
@@ -202,6 +204,10 @@ async def _deliver_channel(application, channel):
                 state = await asyncio.to_thread(send_push, payload)
                 provider_code = 'push_accepted' if state == 'delivered' else 'push_error'
             else:
+                if payload.get('test_mode') == 'retry':
+                    # Inject only for the persisted, owner-authorized test dose.
+                    # No request reaches Telegram on this deliberately failed attempt.
+                    raise RetryAfter(1)
                 english = payload['language'] == 'en'
                 text = ('A prescribed medicine is scheduled for '+payload['time']+' ('+payload['timezone']+'). '
                     'Open the care diary and check the latest family entry before giving it. '
@@ -209,6 +215,9 @@ async def _deliver_channel(application, channel):
                     'Приём лекарства по назначению запланирован на '+payload['time']+' ('+payload['timezone']+'). '
                     'Откройте дневник и проверьте последнюю отметку семьи перед приёмом. '
                     'При пропуске следуйте указаниям врача. Открыть дневник: /care')
+                if payload.get('test_mode'):
+                    text = ('TEST notification. Do not give any medicine. ' if english else
+                        'ТЕСТ уведомления. Никакие лекарства давать не нужно. ') + payload['time'] + ' (' + payload['timezone'] + ')'
                 # No blind "given" button in the message: the actual drug and dose must be reviewed in the diary.
                 result = await application.bot.send_message(chat_id=int(payload['destination']), text=text,
                     reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('Open diary' if english else 'Открыть дневник',
@@ -235,6 +244,10 @@ async def _deliver_channel(application, channel):
 async def care_loop(application):
     try: await asyncio.to_thread(audit_oct30_incident)
     except Exception as exc: log.warning('Care incident snapshot unavailable: %s', type(exc).__name__)
+    try:
+        from care_delivery_probe import seed
+        await asyncio.to_thread(seed)
+    except Exception as exc: log.warning('Care probe unavailable: %s', type(exc).__name__)
     log.warning('Care reminder worker started: independent telegram/push channels')
     while True:
         try: await deliver_care_notifications(application)

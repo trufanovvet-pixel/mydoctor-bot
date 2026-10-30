@@ -25,7 +25,7 @@ self.addEventListener('push', event => {
   const english = data.language === 'en';
   // The server and worker both use generic wording; no clinical message previews.
   event.waitUntil(self.registration.showNotification(english ? 'MyDoctor' : 'МойДоктор', {
-    body: data.kind === 'care' ? (english ? 'A medicine is scheduled. Check the care diary before giving it.' : 'Запланирован приём лекарства. Сначала проверьте дневник ухода.') : (english ? 'You have a new message. Open your conversation.' : 'У вас новое сообщение. Откройте переписку.'),
+    body: data.test === true ? (english ? 'TEST notification. Do not give any medicine.' : 'ТЕСТ уведомления. Никакие лекарства давать не нужно.') : data.kind === 'care' ? (english ? 'A medicine is scheduled. Check the care diary before giving it.' : 'Запланирован приём лекарства. Сначала проверьте дневник ухода.') : (english ? 'You have a new message. Open your conversation.' : 'У вас новое сообщение. Откройте переписку.'),
     icon: '/app-icon/192.png', badge: '/app-icon/96.png', tag: data.tag || 'mydoctor-message',
     data: {url: data.url || '/messages'}
   }));
