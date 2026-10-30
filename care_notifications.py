@@ -29,36 +29,6 @@ def telegram_destination(db, uid):
     return None
 
 
-def audit_oct30_incident():
-    """Bounded, read-only incident snapshot for the owner's Grom; expires Nov 1."""
-    if datetime.utcnow() >= datetime(2026, 11, 1):
-        return
-    from billing import is_owner_account
-    from web_push import PushSubscription
-    from doctor_access import DoctorWebAccount
-    from sqlalchemy import or_
-    from notification_patch import _admin_user_id
-    admin = _admin_user_id()
-    with storage.SessionLocal() as db:
-        users = db.scalars(select(storage.User).where(or_(storage.User.telegram_id == admin,
-            storage.User.id.in_(select(DoctorWebAccount.user_id).where(DoctorWebAccount.telegram_id == admin))))).all()
-        for user in users:
-            pets = db.scalars(select(storage.Pet).where(storage.Pet.user_id == user.id,
-                storage.Pet.name.in_(['Гром', 'ГРОМ', 'гром', 'ТЕСТ Гром']))).all()
-            for pet in pets:
-                pref = db.get(CarePreference, (pet.id, user.id))
-                log.warning('Care incident 20261030 user=%s pet=%s direct_telegram=%s verified_telegram=%s reminders=%s',
-                    user.id, pet.id, user.telegram_id > 0, bool(telegram_destination(db,user.id)), bool(pref and pref.reminders))
-                doses = db.execute(select(MedicationDose, MedicationCourse).join(MedicationCourse,
-                    MedicationCourse.id == MedicationDose.course_id).where(MedicationCourse.pet_id == pet.id,
-                    MedicationDose.due_at >= datetime(2026,10,29,17), MedicationDose.due_at < datetime(2026,10,30,17))
-                    .order_by(MedicationDose.due_at).limit(30)).all()
-                for dose, course in doses:
-                    rows = db.scalars(select(CareNotice).where(CareNotice.dose_id == dose.id, CareNotice.user_id == user.id)).all()
-                    log.warning('Care incident 20261030 dose=%s due_utc=%s timezone=%s dose_state=%s notices=%s',
-                        dose.id,dose.due_at.isoformat(),course.timezone,dose.state,
-                        [(r.id,r.channel,r.state,r.attempts) for r in rows])
-
 def enqueue_due(now=None):
     from web_push import PushSubscription
     now = now or datetime.utcnow()
@@ -204,10 +174,6 @@ async def _deliver_channel(application, channel):
                 state = await asyncio.to_thread(send_push, payload)
                 provider_code = 'push_accepted' if state == 'delivered' else 'push_error'
             else:
-                if payload.get('test_mode') == 'retry':
-                    # Inject only for the persisted, owner-authorized test dose.
-                    # No request reaches Telegram on this deliberately failed attempt.
-                    raise RetryAfter(1)
                 english = payload['language'] == 'en'
                 text = ('A prescribed medicine is scheduled for '+payload['time']+' ('+payload['timezone']+'). '
                     'Open the care diary and check the latest family entry before giving it. '
@@ -242,12 +208,6 @@ async def _deliver_channel(application, channel):
 
 
 async def care_loop(application):
-    try: await asyncio.to_thread(audit_oct30_incident)
-    except Exception as exc: log.warning('Care incident snapshot unavailable: %s', type(exc).__name__)
-    try:
-        from care_delivery_probe import seed
-        await asyncio.to_thread(seed)
-    except Exception as exc: log.warning('Care probe unavailable: %s', type(exc).__name__)
     log.warning('Care reminder worker started: independent telegram/push channels')
     while True:
         try: await deliver_care_notifications(application)
