@@ -131,3 +131,16 @@ class CareNotice(storage.Base):
     state: Mapped[str] = mapped_column(String(16), default='pending')
     attempts: Mapped[int] = mapped_column(Integer, default=0)
     next_attempt: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+
+class CareNoticeAttempt(storage.Base):
+    """Provider outcome per attempt; no tokens, endpoints or message bodies."""
+    __tablename__ = 'care_notice_attempts'
+    __table_args__ = (UniqueConstraint('notice_id', 'attempt'),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    notice_id: Mapped[int] = mapped_column(ForeignKey('care_notices.id'), index=True)
+    attempt: Mapped[int] = mapped_column(Integer)
+    outcome: Mapped[str] = mapped_column(String(24))
+    provider_code: Mapped[str] = mapped_column(String(80), default='')
+    message_id: Mapped[str] = mapped_column(String(40), default='')
+    recorded_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

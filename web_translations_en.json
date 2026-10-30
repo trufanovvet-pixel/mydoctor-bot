@@ -762,5 +762,14 @@
   "Загрузите назначение или добавьте лекарство вручную. Дата окончания рассчитывается по длительности курса. Для ступенчатой схемы укажите отдельные этапы.": "Upload a prescription or add a medication manually. The end date is calculated from the course duration. Enter separate stages for a changing dose.",
   "Укажите длительность курса от 1 до 180 дней.": "Enter a course duration from 1 to 180 days.",
   "Проверьте начало курса.": "Check the course start date.",
-  "Проверьте список препаратов.": "Check the medication list."
+  "Проверьте список препаратов.": "Check the medication list.",
+  "Telegram не привязан к этому аккаунту. Напоминания доступны только в приложении с включёнными уведомлениями.": "Telegram is not linked to this account. Only enabled app notifications are available.",
+  "Бот не может написать вам: Telegram запретил отправку. Откройте бота, снимите блокировку и нажмите Start.": "Telegram denied delivery. Open the bot, unblock it and press Start.",
+  "Telegram не подтвердил результат отправки. Автоповтор остановлен, чтобы не прислать дубль. Проверьте чат с ботом.": "Telegram did not confirm the outcome. Automatic retries are paused to prevent duplicates. Check the bot chat.",
+  "Telegram временно отклонил отправку. Повтор запланирован; уведомление приложения работает независимо.": "Telegram temporarily rejected delivery. A retry is scheduled; app notifications work independently.",
+  "Последнее напоминание не удалось отправить в Telegram. Нужна проверка подключения.": "The last Telegram reminder failed. The connection needs checking.",
+  "Telegram подтвердил приём последнего сообщения. Это не подтверждение прочтения.": "Telegram accepted the last message. This does not confirm it was read.",
+  "Telegram привязан. Подтверждённой отправки по этому питомцу пока нет.": "Telegram is linked. No confirmed delivery for this pet yet.",
+  "Уведомления приложения включены.": "App notifications are enabled.",
+  "Уведомления приложения не подключены или срок подписки истёк.": "App notifications are not connected or the subscription expired."
 }

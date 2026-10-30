@@ -71,7 +71,18 @@
 {% endfor %}
 <label class="check-row care-full"><input type="checkbox" name="enable_reminders" value="1" checked><span>{{t("Напоминать мне о приёмах лекарств этого питомца")}} · <a href="/install">{{t("Настроить уведомления на телефоне")}}</a></span></label>
 <label class="check-row care-full"><input type="checkbox" name="confirmed" value="1" required><span>{{t('Я сверил(а) препарат, дозу, даты и время с назначением врача.')}}</span></label><button>{{t('Сохранить весь план' if prescription else 'Сохранить расписание')}}</button></form></details>{% endif %}
-{% if not readonly %}<details id="notifications" class="panel"><summary>{{t('Уведомления')}}</summary><form method="post" action="/care/pets/{{pet.id}}/preferences">{{token()}}<label class="check-row"><input type="checkbox" name="reminders" value="1" {{'checked' if reminders}}><span>{{t('Напоминать мне о приёмах лекарств этого питомца')}}</span></label>{% if owner %}<label class="check-row"><input type="checkbox" name="doctor_enabled" value="1" {{'checked' if sharing}}><span>{{t('Открыть дневник и назначения врачу MyDoctor, к которому я обращался(ась)')}}</span></label>{% endif %}<button>{{t('Сохранить настройки')}}</button></form><p class="muted">{{t('Напоминания приходят в Telegram для аккаунта, открытого из бота, и на устройства с включёнными уведомлениями. Проверьте разрешения на телефоне. Задержка доставки не меняет назначенное время.')}}</p><a href="/install">{{t('Настроить уведомления на телефоне')}} →</a>
+{% if not readonly %}<details id="notifications" class="panel"><summary>{{t('Уведомления')}}</summary>
+{% if channel_status %}
+<p><strong>Telegram:</strong>
+{% if not channel_status.telegram_linked %}{{t('Telegram не привязан к этому аккаунту. Напоминания доступны только в приложении с включёнными уведомлениями.')}}
+{% elif channel_status.telegram_state == 'blocked' %}{{t('Бот не может написать вам: Telegram запретил отправку. Откройте бота, снимите блокировку и нажмите Start.')}}
+{% elif channel_status.telegram_state == 'uncertain' %}{{t('Telegram не подтвердил результат отправки. Автоповтор остановлен, чтобы не прислать дубль. Проверьте чат с ботом.')}}
+{% elif channel_status.telegram_state == 'retry' %}{{t('Telegram временно отклонил отправку. Повтор запланирован; уведомление приложения работает независимо.')}}
+{% elif channel_status.telegram_state == 'failed' %}{{t('Последнее напоминание не удалось отправить в Telegram. Нужна проверка подключения.')}}
+{% elif channel_status.telegram_state == 'delivered' %}{{t('Telegram подтвердил приём последнего сообщения. Это не подтверждение прочтения.')}}
+{% else %}{{t('Telegram привязан. Подтверждённой отправки по этому питомцу пока нет.')}}{% endif %}</p>
+<p>{{t('Уведомления приложения включены.' if channel_status.push_enabled else 'Уведомления приложения не подключены или срок подписки истёк.')}}</p>
+{% endif %}<form method="post" action="/care/pets/{{pet.id}}/preferences">{{token()}}<label class="check-row"><input type="checkbox" name="reminders" value="1" {{'checked' if reminders}}><span>{{t('Напоминать мне о приёмах лекарств этого питомца')}}</span></label>{% if owner %}<label class="check-row"><input type="checkbox" name="doctor_enabled" value="1" {{'checked' if sharing}}><span>{{t('Открыть дневник и назначения врачу MyDoctor, к которому я обращался(ась)')}}</span></label>{% endif %}<button>{{t('Сохранить настройки')}}</button></form><p class="muted">{{t('Напоминания приходят в Telegram для аккаунта, открытого из бота, и на устройства с включёнными уведомлениями. Проверьте разрешения на телефоне. Задержка доставки не меняет назначенное время.')}}</p><a href="/install">{{t('Настроить уведомления на телефоне')}} →</a>
 </details>{% endif %}
 <datalist id="care-timezones">{% for tz in timezones %}<option value="{{tz}}">{% endfor %}</datalist>
 {% endif %}

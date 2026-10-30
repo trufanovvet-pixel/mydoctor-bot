@@ -90,9 +90,23 @@ def install(app, WebDocument):
         sharing = db.get(CareSharing, pet.id)
         prescription = db.get(CarePrescription, (request.args.get('prescription', type=int) or request.form.get('prescription_id', type=int))) if (request.args.get('prescription') or request.form.get('prescription_id')) else None
         if prescription and (prescription.pet_id != pet.id or prescription.user_id != uid): abort(404)
+        from care_models import CareNotice, CareNoticeAttempt
+        from web_push import PushSubscription
+        recipient = db.get(storage.User, uid) if uid and not readonly else None
+        channel_status = None
+        if recipient:
+            latest_tg = db.scalar(select(CareNotice).join(MedicationDose, MedicationDose.id == CareNotice.dose_id)
+                .join(MedicationCourse, MedicationCourse.id == MedicationDose.course_id)
+                .where(MedicationCourse.pet_id == pet.id, CareNotice.user_id == uid, CareNotice.channel == 'telegram')
+                .order_by(CareNotice.id.desc()).limit(1))
+            from care_notifications import telegram_destination
+            channel_status = dict(telegram_linked=bool(telegram_destination(db, uid)),
+                telegram_state=latest_tg.state if latest_tg else '',
+                push_enabled=bool(db.scalar(select(PushSubscription.id).where(PushSubscription.role == 'owner',
+                    PushSubscription.subject_id == uid, PushSubscription.expires_at > datetime.utcnow()).limit(1))))
         chart = [dict(at=e.observed_at.isoformat()+'Z', weight=e.weight, vomiting=e.vomiting, seizures=e.seizures) for e in reversed(entries[:30])]
         return render('pet', pet.name, pet=pet, owner=pet.user_id == uid, readonly=readonly,
-            courses=courses, course_map={c.id: c for c in courses}, pending=pending, history=history,
+            channel_status=channel_status, courses=courses, course_map={c.id: c for c in courses}, pending=pending, history=history,
             entries=entries[:30], wound_analyses={a.entry_id: a for a in db.scalars(select(WoundPhotoAnalysis)
                 .where(WoundPhotoAnalysis.entry_id.in_([e.id for e in entries[:30]]))).all()},
             has_more=len(entries)>30, page_number=page, kind=kind, condition=condition,
