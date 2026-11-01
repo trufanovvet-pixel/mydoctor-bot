@@ -4,15 +4,17 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 import storage
-from care_models import HealthEntry
-from patient_records import OperationRecord
+from care_models import HealthEntry, MedicationCourse
+from patient_records import OperationRecord, OperationAttachment
 from web_patient_history import saved_history
 
 
 @pytest.fixture
 def db():
     engine = create_engine('sqlite:///:memory:')
-    storage.Base.metadata.create_all(engine)
+    storage.Base.metadata.create_all(engine, tables=[model.__table__ for model in (
+        storage.User, storage.Pet, OperationRecord, OperationAttachment,
+        HealthEntry, MedicationCourse)])
     with Session(engine) as session:
         session.add_all([storage.User(id=1, telegram_id=1), storage.User(id=2, telegram_id=2)])
         session.add_all([storage.Pet(id=1, user_id=1, name='Лада', species='dog'),
