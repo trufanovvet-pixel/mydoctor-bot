@@ -335,6 +335,8 @@ def upload_document():
         if pet_id and not db.scalar(select(storage.Pet.id).where(storage.Pet.id==pet_id,storage.Pet.user_id==session["uid"])):return "Not found",404
         document_pet=db.get(storage.Pet,pet_id) if pet_id else None
         document_context=knowledge.protocol_context("анализ", species=detect_species(document_pet.species+" "+(document_pet.breed or ""))) if document_pet else ""
+        from web_patient_history import saved_history, HISTORY_RULES
+        saved_document_context = saved_history(db, session['uid'], pet_id) if pet_id else ''
         paid_mode=billing.metered(db,session['uid'])
     if paid_mode and mime=='application/pdf':
         try:
@@ -355,13 +357,15 @@ def upload_document():
     try:
         if mime.startswith("image/"):
             encoded=base64.b64encode(data).decode()
-            inp=[{"role":"user","content":[{"type":"input_text","text":"Разбери ветеринарный документ/фото. Сначала перечисли объективно видимое, затем клиническую интерпретацию и ограничения. Не выдумывай невидимые данные."},{"type":"input_image","image_url":f"data:{mime};base64,{encoded}"}]}]
+            inp=[{"role":"user","content":[{"type":"input_text","text":"Разбери ветеринарный документ/фото. Сначала перечисли объективно видимое, затем клиническую интерпретацию и ограничения. Не выдумывай невидимые данные."},{"type":"input_image","image_url":f"data:{mime};base64,{encoded}","detail":"high"}]}]
         else:
             uploaded=client.files.create(file=(secure_filename(f.filename) or "document.pdf",io.BytesIO(data),mime),purpose="user_data")
             inp=[{"role":"user","content":[{"type":"input_text","text":"Разбери ветеринарный документ. Извлеки ключевые результаты, интерпретируй их в контексте и укажи ограничения."},{"type":"input_file","file_id":uploaded.id}]}]
+        if saved_document_context:
+            inp[0]['content'].insert(0, {'type': 'input_text', 'text': saved_document_context})
         from wound_photos import TELEGRAM_RULES
         photo_rules = TELEGRAM_RULES if mime.startswith('image/') else ''
-        response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM+ai_language()+MEDIA_SPECIES_RULES+document_context+'\n'+photo_rules,input=inp,max_output_tokens=3000);analysis=_plain(response.output_text)
+        response=client.responses.create(model="gpt-5.6-sol",instructions=SYSTEM+ai_language()+MEDIA_SPECIES_RULES+document_context+HISTORY_RULES+'\n'+photo_rules,input=inp,max_output_tokens=3000);analysis=_plain(response.output_text)
         if not analysis:raise ValueError('Empty AI output')
         ai_response=response
     except Exception:

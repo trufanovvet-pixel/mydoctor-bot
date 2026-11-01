@@ -30,7 +30,7 @@ def install(app, pet_for, pet_page):
             pet = pet_for(db, entry.pet_id, lock=True)
             if entry.kind != 'postop' or not entry.photo: abort(400)
             operation = db.get(OperationRecord, entry.operation_id)
-            if not operation or operation.pet_id != pet.id: abort(404)
+            if not operation or operation.pet_id != pet.id or operation.user_id != pet.user_id: abort(404)
             row = db.get(WoundPhotoAnalysis, eid)
             destination = result_url(db, entry)
             if row and row.state == 'success': return redirect(destination, code=303)
@@ -38,14 +38,16 @@ def install(app, pet_for, pet_page):
                 return pet_page(db, pet, error=wound.PENDING, status=409)
             if row and row.usage_id: stale_usage = (row.requested_by, row.usage_id)
             previous = wound.previous_photos(db, entry)
-            kwargs = wound.model_request(pet, operation, entry, previous, language(), STANDARD_MODEL)
+            context = wound.case_context(db, pet, operation, entry)
+            kwargs = wound.model_request(pet, operation, entry, previous, language(), STANDARD_MODEL, context)
+            audit = wound.request_audit(kwargs, entry, previous, context)
             if not row:
                 row = WoundPhotoAnalysis(entry_id=eid); db.add(row)
             row.state, row.lease, row.requested_by, row.started_at = 'pending', lease, uid, now
             row.result, row.finished_at, row.usage_id = None, None, None
             row.previous_entry_ids = [e.id for e in previous]
             row.prompt_version, row.language = wound.VERSION, language()
-            pid, reported_urgency, previous_count = pet.id, entry.urgency, len(previous)
+            pid, reported_urgency, previous_count = pet.id, context['current_reported_urgency'], len(previous)
             db.commit()
         if stale_usage: billing.fail(*stale_usage)
         usage = None
@@ -60,6 +62,10 @@ def install(app, pet_for, pet_page):
                 row.usage_id = usage.id; db.commit()
             response = client.responses.create(**kwargs, timeout=90)
             result = wound.parse_result(response.output_text, reported_urgency, previous_count)
+            result['input_audit'] = audit
+            print('wound_review', wound.VERSION, 'model='+str(getattr(response, 'model', STANDARD_MODEL)),
+                'image_sizes='+str([(im['width'], im['height']) for im in audit['images']]),
+                'observations='+str(len(audit['observation_ids'])), flush=True)
             with storage.SessionLocal() as db:
                 # Membership can be revoked while the remote call is in flight.
                 pet_for(db, pid, lock=True)

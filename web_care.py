@@ -292,6 +292,7 @@ def install(app, WebDocument):
                 if kind not in ('postop', 'chronic'): raise ValueError('Выберите вид дневника.')
                 form = request.form.copy()
                 if kind == 'chronic': form['wound'] = 'not_applicable'
+                else: form['condition'] = request.form.get('wound_site', '').strip()
                 values = care.observation(form)
                 oid = request.form.get('operation_id', type=int) if kind == 'postop' else None
                 if kind == 'postop':
@@ -303,7 +304,7 @@ def install(app, WebDocument):
                 photo = None
                 if request.files.get('photo') and request.files['photo'].filename:
                     from web_sections import verified_file
-                    photo, _ = verified_file(request.files['photo'], photo=True)
+                    photo, _ = verified_file(request.files['photo'], photo=True, max_side=2400)
                 entry = HealthEntry(pet_id=pid, created_by=session['uid'], request_key=key, kind=kind, operation_id=oid, photo=photo, **values)
                 db.add(entry); db.commit(); flash(care.URGENCY[entry.urgency])
             except ValueError as exc:

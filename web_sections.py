@@ -18,7 +18,7 @@ from consultation_chat import thread_context
 MAX_FILE=20*1024*1024
 KINDS={'vaccination':'Вакцинация','worms':'Обработка от гельминтов','ecto':'Блохи и клещи','checkup':'Контрольный осмотр'}
 
-def verified_file(file,photo=False):
+def verified_file(file,photo=False,max_side=None):
     if not file or not file.filename:raise ValueError('Выберите файл.')
     data=file.read(MAX_FILE+1)
     if not data or len(data)>MAX_FILE:raise ValueError('Максимальный размер файла — 20 МБ.')
@@ -26,7 +26,7 @@ def verified_file(file,photo=False):
     try:
         image=Image.open(io.BytesIO(data))
         if image.width*image.height>25_000_000:raise ValueError('Изображение слишком большое. Пришлите уменьшенную копию.')
-        image.load(); image=ImageOps.exif_transpose(image).convert('RGB');image.thumbnail((1200,1200) if photo else (3000,3000))
+        image.load(); image=ImageOps.exif_transpose(image).convert('RGB');image.thumbnail((max_side,max_side) if max_side else ((1200,1200) if photo else (3000,3000)))
         output=io.BytesIO();image.save(output,format='JPEG',quality=88)
         return output.getvalue(),'image/jpeg'
     except (UnidentifiedImageError,OSError,Image.DecompressionBombError):raise ValueError('Нужен файл изображения или PDF.' if not photo else 'Нужно фото в формате JPEG, PNG или WebP.')

@@ -167,7 +167,7 @@ def install(bot):
             user_request = (
                 "Прочитай изображение в контексте последних сообщений. Если оно прислано как ответ на твою просьбу показать упаковку, "
                 "определи препарат, действующее вещество и дозировку/концентрацию и продолжи отвечать на предыдущий клинический вопрос. "
-                "Если это фото раны или послеоперационного шва, оцени только видимые признаки и срочность, уточни срок после операции. "
+                "Если это фото раны или послеоперационного шва, оцени признаки, значение для срока операции и конкретные действия; сначала используй сохранённую историю. "
                 "Если это самостоятельный документ, прочитай его и кратко объясни содержание."
             )
 
@@ -200,6 +200,24 @@ def install(bot):
             if input_type == 'input_image':
                 from wound_photos import TELEGRAM_RULES
                 instructions += '\n' + TELEGRAM_RULES
+            from web_patient_history import saved_history, HISTORY_RULES
+            import storage
+            from sqlalchemy import select
+            target_pet = None
+            if context.user_data.get('records_target_explicit'):
+                target_pet = context.user_data.get('records_target_pet_id')
+            elif context.user_data.get('dialog_scope') == 'pet':
+                selected = await asyncio.to_thread(bot.get_active_pet, update.effective_user.id)
+                target_pet = selected['id'] if selected else None
+            def read_history():
+                if not target_pet: return ''
+                with storage.SessionLocal() as db:
+                    user = db.scalar(select(storage.User).where(storage.User.telegram_id == update.effective_user.id))
+                    return saved_history(db, user.id, target_pet) if user else ''
+            patient_history = await asyncio.to_thread(read_history)
+            if patient_history:
+                media_parts.insert(0, {'type': 'input_text', 'text': patient_history})
+                instructions += '\n' + HISTORY_RULES
             history = context.user_data.setdefault("history", [])
             response_input = _safe_history(history) + [{
                 "role": "user",

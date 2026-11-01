@@ -6,13 +6,23 @@
 {% set result = review.result %}
 <p class="muted">{{t('Оценка ИИ по снимку на момент записи')}} · {{local_label(review.finished_at, entry.timezone)}}</p>
 {% if not result.assessable %}<p><strong>{{t('По этому снимку шов оценить нельзя.')}}</strong></p><p>{{t(wound_review.RETAKE)}}</p>
-{% else %}<h5>{{t('Что видно на фото')}}</h5><ul>{% for finding in result.findings %}<li>{{finding}}</li>{% endfor %}</ul>
+{% else %}<h5>{{t('Что видно на фото')}}</h5>
+{% if result.features %}<ul>{% for finding in result.findings %}<li>{{finding}}</li>{% endfor %}</ul><dl>{% for key,label in wound_review.FEATURES.items() %}{% set feature=result.features[key] %}<dt><strong>{{t(label)}}</strong> — {{t(wound_review.STATUS[feature.status])}}</dt><dd>{{feature.description}}</dd>{% endfor %}</dl>
+{% else %}<ul>{% for finding in result.findings %}<li>{{finding}}</li>{% endfor %}</ul>{% endif %}
 {% if result.quality == 'limited' %}<p><strong>{{t('Качество фото ограничивает оценку.')}}</strong> {{t(wound_review.RETAKE)}}</p>{% endif %}{% endif %}
+{% if result.quality_reason %}<p>{{result.quality_reason}}</p>{% endif %}
+{% if result.context_used %}<h5>{{t('Что учтено из дневника')}}</h5><p>{{result.context_used}}</p>{% endif %}
+{% if result.interpretation %}<h5>{{t('Что это может означать')}}</h5><p>{{result.interpretation}}</p>{% endif %}
 {% if result.limitations %}<h5>{{t('Ограничения снимка')}}</h5><ul>{% for item in result.limitations %}<li>{{item}}</li>{% endfor %}</ul>{% endif %}
 {% if result.comparison %}<h5>{{t('Изменения по предыдущим фото')}}</h5><p>{{result.comparison}}</p>
 {% else %}<p class="muted">{{t('Визуальное сравнение недоступно: нужны сопоставимые снимки этого шва за разные даты.')}}</p>{% endif %}
 {% if review.previous_entry_ids %}<p>{{t('Предыдущие снимки этой операции')}}: {% for previous_id in review.previous_entry_ids %}<a href="{{'/doctor' if readonly else ''}}/care/photos/{{previous_id}}">№{{previous_id}}</a>{{', ' if not loop.last}}{% endfor %}</p>{% endif %}
-{% if result.urgency != 'recorded' %}<div class="care-alert care-{{'urgent' if result.urgency == 'urgent' else 'contact'}}">{{t(urgency_text['urgent'] if result.urgency == 'urgent' else wound_review.CONTACT)}}</div>
+{% if result.actions_now %}<h5>{{t('Что делать сейчас')}}</h5><ul>{% for item in result.actions_now %}<li>{{item}}</li>{% endfor %}</ul>{% endif %}
+{% if result.avoid %}<h5>{{t('Чего избегать')}}</h5><ul>{% for item in result.avoid %}<li>{{item}}</li>{% endfor %}</ul>{% endif %}
+{% if result.follow_up %}<h5>{{t('Когда нужен контроль')}}</h5><div class="care-alert care-{{result.urgency}}"><strong>{{t({'recorded':'Наблюдение и контроль','contact':'Связь с хирургом сегодня','urgent':'Неотложный осмотр'}[result.urgency])}}</strong><p>{{result.urgency_reason}}</p><p>{{result.follow_up}}</p></div>
+{% if result.remote_handoff %}<p>{{result.remote_handoff}}</p>{% endif %}
+{% if result.escalation_signs %}<p><strong>{{t('Не ждать повторного фото при следующих изменениях')}}</strong></p><ul>{% for item in result.escalation_signs %}<li>{{item}}</li>{% endfor %}</ul>{% endif %}
+{% elif result.urgency != 'recorded' %}<div class="care-alert care-{{'urgent' if result.urgency == 'urgent' else 'contact'}}">{{t(urgency_text['urgent'] if result.urgency == 'urgent' else wound_review.CONTACT)}}</div>
 {% elif result.assessable %}<p>{{t(wound_review.MONITOR)}}</p>{% endif %}
 {% if result.questions %}<h5>{{t('Что уточнить')}}</h5><ul>{% for question in result.questions %}<li>{{question}}</li>{% endfor %}</ul>{% endif %}
 <p class="muted">{{t(wound_review.LIMITATION)}}</p>

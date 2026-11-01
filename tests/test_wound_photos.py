@@ -33,7 +33,7 @@ def entry(uid,pid,**changes):
             db.add(op);db.flush();oid=op.id
         values=dict(created_by=uid,pet_id=pid,operation_id=oid,request_key=secrets.token_hex(16),kind='postop',
             observed_at=datetime.utcnow(),timezone='UTC',appetite='normal',activity='normal',pain='none',
-            wound='unchanged',urgency='recorded',photo=image())
+            wound='unchanged',urgency='recorded',condition='abdominal midline',photo=image())
         values.update(changes);row=HealthEntry(**values);db.add(row);db.commit();return row.id,oid
 
 
@@ -41,6 +41,12 @@ def result(**changes):
     value=dict(subject='surgical_wound',quality='adequate',urgency='recorded',trend='not_comparable',
         findings=['Края видимого участка сопоставлены.'],limitations=['Глубину по фото не оценить.'],
         questions=['Были ли выделения?'],concerns=[],comparison='')
+    value.update(features={k: {'status':'not_visible','description':'Не видно на снимке.'} for k in wound.FEATURES},
+        actions_now=['Не давать разлизывать.'], avoid=['Не срывать корочки.'],
+        escalation_signs=['При кровотечении — срочный осмотр.'],
+        quality_reason='Виден весь участок.', interpretation='Оценка с учётом срока.',
+        context_used='Дневник на дату снимка.', urgency_reason='Нет оснований повышать срочность.',
+        follow_up='Повторить фото завтра при стабильном состоянии.', remote_handoff='Отправить фото хирургу.')
     value.update(changes);return value
 
 
@@ -224,3 +230,65 @@ def test_free_wound_warning(text,word):
 def test_no_false_wound_emergency_for_denials_or_history(text):
     from safety_notice import free_safety_notice
     assert free_safety_notice(text)==''
+
+
+def test_full_context_and_audit_reach_real_route_without_other_patients_or_sites():
+    from care_models import MedicationCourse
+    a,uid,pid=account();now=datetime.utcnow();eid,oid=entry(uid,pid,observed_at=now)
+    old,_=entry(uid,pid,operation_id=oid,observed_at=now-timedelta(days=2),notes='OLD_PAIN',urgency='urgent')
+    entry(uid,pid,operation_id=oid,condition='other leg',notes='OTHER_SITE',photo=image('pink'))
+    entry(uid,pid,notes='OTHER_OPERATION')
+    b,buid,bpid=account('outside-v2@example.com'); entry(buid,bpid,notes='OTHER_PATIENT')
+    with storage.SessionLocal() as db:
+        op=db.get(OperationRecord,oid);op.notes='SURGEON_PLAN: keep dressing; clinic four hours away'
+        db.add(MedicationCourse(pet_id=pid,created_by=uid,request_key='medication-v2-test',name='SAVED_MEDICINE',dose='RECORDED_DOSE',instructions='SURGEON_ONLY',timezone='UTC',times=['10:00'],start_date=now.date(),end_date=now.date()))
+        db.commit()
+    with patch.object(web_app.client.responses,'create',return_value=response()) as model:
+        assert post(a,f'/care/photos/{eid}/analyse').status_code==303
+    call=model.call_args.kwargs
+    text=call['input'][0]['content'][0]['text']
+    assert all(x in text for x in ['SURGEON_PLAN','SAVED_MEDICINE','RECORDED_DOSE','OLD_PAIN'])
+    assert all(x not in text for x in ['OTHER_SITE','OTHER_OPERATION','OTHER_PATIENT'])
+    data=json.loads(text.split('Untrusted case data: ',1)[1])['saved_context']
+    assert data['current_reported_urgency']=='recorded'
+    assert data['selected_observation']['days_since_operation']==5
+    assert data['operation']['postoperative_day_today']==5
+    with storage.SessionLocal() as db:
+        audit=db.get(WoundPhotoAnalysis,eid).result['input_audit']
+        assert audit['pet_id']==pid and audit['operation_id']==oid
+        assert audit['images'][-1]['width']==40 and len(audit['images'][-1]['sha256'])==64
+    assert post(b,f'/care/photos/{eid}/analyse').status_code==404
+    assert b.get(f'/care/photos/{eid}').status_code==404
+
+
+def test_missing_site_disables_photo_comparison_and_incomplete_features_rejected():
+    a,uid,pid=account();eid,oid=entry(uid,pid,condition='')
+    entry(uid,pid,operation_id=oid,observed_at=datetime.utcnow()-timedelta(days=1),photo=image('red'),condition='')
+    with storage.SessionLocal() as db:
+        assert wound.previous_photos(db,db.get(HealthEntry,eid))==[]
+    bad=result();del bad['features']['crusts']
+    with pytest.raises(ValueError): wound.parse_result(json.dumps(bad),'recorded',0)
+
+
+def test_2400_pixel_diary_image_preserves_detail_and_exif_is_removed():
+    from web_sections import verified_file
+    from werkzeug.datastructures import FileStorage
+    data=io.BytesIO();Image.new('RGB',(3200,1600),'white').save(data,'JPEG');data.seek(0)
+    saved,mime=verified_file(FileStorage(stream=data,filename='wound.jpg'),photo=True,max_side=2400)
+    img=Image.open(io.BytesIO(saved))
+    assert img.size==(2400,1200) and not img.getexif()
+
+
+async def test_telegram_selected_pet_receives_saved_history(bot,ctx,update,raw,pet):
+    from patient_records import OperationRecord
+    with storage.SessionLocal() as db:
+        stored=db.get(storage.Pet,pet['id'])
+        db.add(OperationRecord(user_id=stored.user_id,pet_id=stored.id,title='EXPLICIT_TEST_OPERATION',notes='Do not remove dressing'))
+        db.commit()
+    ctx.user_data.update(records_target_explicit=True,records_target_pet_id=pet['id'],dialog_scope='pet')
+    data=image();ctx.bot.get_file.return_value=SimpleNamespace(download_as_bytearray=AsyncMock(return_value=data))
+    item=SimpleNamespace(file_id='wound',file_unique_id='wound',file_size=len(data))
+    await bot.media(update(photo=[item],caption='Оцени рану'),ctx)
+    calls=[c for c in raw.responses.calls if any(isinstance(x.get('content'),list) for x in c.get('input',[]))]
+    assert 'EXPLICIT_TEST_OPERATION' in str(calls[-1]['input'])
+    assert 'EXPLICIT_TEST_OPERATION' not in calls[-1]['instructions']
