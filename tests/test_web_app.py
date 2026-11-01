@@ -51,6 +51,30 @@ def test_named_pet_does_use_context():
     assert web_app._pet_requested("Грому назначили TPLO", type("Pet", (), {"name": "Гром"})()) is True
 
 
+def test_chat_sends_saved_operation_and_diary_only_for_named_pet():
+    from datetime import date, datetime
+    from patient_records import OperationRecord
+    from care_models import HealthEntry
+    reset_db(); c=web_app.app.test_client(); register(c)
+    c.post('/pets',data={'name':'Лада','species':'Собака','weight':'18'})
+    with c.session_transaction() as s: uid=s['uid']
+    with storage.SessionLocal() as db:
+        pid=db.get(storage.User,uid).active_pet_id
+        op=OperationRecord(user_id=uid,pet_id=pid,title='ОГЭ при пиометре',operation_date=date(2026,10,29),notes='До хирурга 4 часа')
+        db.add(op);db.flush()
+        db.add(HealthEntry(pet_id=pid,created_by=uid,request_key='history-test-0001',kind='postop',operation_id=op.id,
+            observed_at=datetime(2026,11,1),timezone='Asia/Bangkok',appetite='reduced',activity='reduced',pain='some',wound='worse',notes='Мутное отделяемое'))
+        db.commit()
+    with patch.object(web_app.client.responses,'create',return_value=type('Response',(),{'output_text':'Тестовый ответ'})()) as call:
+        assert c.post('/api/chat',json={'message':'Лада: оцени дневник после операции'}).status_code==200
+        prompt=call.call_args.kwargs['input'][-1]['content']
+        assert 'ОГЭ при пиометре' in prompt and '2026-10-29' in prompt
+        assert 'Мутное отделяемое' in prompt and 'До хирурга 4 часа' in prompt
+        c.post('/api/chat/clear')
+        assert c.post('/api/chat',json={'message':'Что такое остеосинтез?'}).status_code==200
+        assert 'Мутное отделяемое' not in str(call.call_args.kwargs['input'])
+
+
 def test_markdown_removed():
     assert web_app._plain("### Заголовок\n**текст**")=="Заголовок\nтекст"
 
@@ -135,3 +159,4 @@ def test_owner_account_does_not_spend_internal_credits():
     with storage.SessionLocal() as db:
         usage=db.scalar(select(__import__('billing').CreditUsage))
         assert usage.credits==0
+

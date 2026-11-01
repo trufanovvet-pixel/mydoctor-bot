@@ -17,6 +17,7 @@ import analytics
 import telegram_billing
 import payment_notifications
 import care_models
+from web_patient_history import saved_history, HISTORY_RULES
 
 app=Flask(__name__,template_folder="web_templates",static_folder="web_static",static_url_path="/static")
 app.secret_key=os.getenv("FLASK_SECRET_KEY",secrets.token_hex(32))
@@ -252,6 +253,8 @@ def chat():
                      "Сократите текст или пополните пакет на 500 ₽ для расширенного лимита.") if not paid_access else "Сообщение слишком длинное. Максимум 12000 символов."
             return jsonify({"error":t(message),"billing_url":"/billing","max_chars":max_chars}),413
         pctx=pet_context(db,user,text)
+        if pctx:
+            pctx += saved_history(db, user.id, user.active_pet_id)
         scope_pet=user.active_pet_id if pctx else None
         history_limit=4 if not paid_access else 6
         prev=db.scalars(select(storage.Consultation).where(storage.Consultation.user_id==user.id, storage.Consultation.pet_id==scope_pet, storage.Consultation.kind=="web_chat").order_by(storage.Consultation.id.desc()).limit(history_limit)).all()
@@ -288,7 +291,7 @@ def chat():
             routing_note=""
             if ai_complexity(text)=="master" and not (paid_access or owner_access):
                 routing_note="\nЭтот случай относится к сложным. Не выполняй углублённый Master-разбор. Дай безопасный ограниченный ответ: срочность, красные флаги, что подготовить для врача и какие данные нужны. Не делай вид, что проведён полный клинический разбор. В конце кратко сообщи, что расширенный разбор доступен после пополнения пакета."
-            response=client.responses.create(model=selected_model,instructions=SYSTEM+ai_language()+routing_note+extra,input=history+[{"role":"user","content":prompt}],max_output_tokens=3000 if paid_access else 1600)
+            response=client.responses.create(model=selected_model,instructions=SYSTEM+ai_language()+routing_note+extra+(HISTORY_RULES if pctx else ''),input=history+[{"role":"user","content":prompt}],max_output_tokens=3000 if paid_access else 1600)
             answer=_plain(response.output_text)
             if not answer:raise ValueError('Empty AI output')
             billing.lock_user(db,user.id)
@@ -466,3 +469,4 @@ web_push.install(app)
 
 import web_analytics
 web_analytics.install(app)
+
