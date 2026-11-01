@@ -261,7 +261,9 @@ def parse_result(raw, reported_urgency, previous_count):
         for feature in value['features'].values():
             feature['status'] = 'not_assessable'
             feature['description'] = ''
-    if not previous_count or not assessable or value['quality'] != 'adequate':
+    # Limited detail is not the same as an unusable image. Preserve the model's
+    # comparison or its specific explanation for declining comparison.
+    if not previous_count or not assessable:
         value['trend'], value['comparison'] = 'not_comparable', ''
     if urgency != value['urgency']:
         english = value.get('follow_up','').isascii()

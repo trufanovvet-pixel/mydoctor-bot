@@ -63,12 +63,21 @@ def test_risk_cannot_be_downgraded(reported,concerns,expected):
 
 
 @pytest.mark.parametrize('changes,count',[
-    ({},0),({'subject':'other'},2),({'subject':'uncertain'},2),({'quality':'unusable'},2),({'quality':'limited'},2)])
+    ({},0),({'subject':'other'},2),({'subject':'uncertain'},2),({'quality':'unusable'},2)])
 def test_unreadable_or_unrelated_images_cannot_claim_comparison(changes,count):
     actual=wound.parse_result(json.dumps(result(trend='less_concerning',comparison='Улучшение',**changes)),'recorded',count)
     assert actual['trend']=='not_comparable' and actual['comparison']==''
     if changes.get('subject') in ('other','uncertain') or changes.get('quality')=='unusable':
         assert not actual['assessable'] and actual['findings']==[]
+
+
+@pytest.mark.parametrize('trend,explanation',[
+    ('not_comparable','Разное освещение не позволяет сравнить красноту.'),
+    ('less_concerning','Открытая ранее щель теперь не видна; цвет сравнить нельзя.')])
+def test_limited_image_preserves_comparison_and_its_limitations(trend,explanation):
+    actual=wound.parse_result(json.dumps(result(quality='limited',trend=trend,
+        comparison=explanation)),'recorded',1)
+    assert actual['trend']==trend and actual['comparison']==explanation
 
 
 @pytest.mark.parametrize('changes',[
